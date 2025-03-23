@@ -1,84 +1,73 @@
--- Insertar datos en la tabla Roles
-INSERT INTO Roles (nombre_rol) VALUES ('Administrador');
-INSERT INTO Roles (nombre_rol) VALUES ('Medico');
-INSERT INTO Roles (nombre_rol) VALUES ('Paciente');
-INSERT INTO Roles (nombre_rol) VALUES ('Laboratorista');
+-- Insert sample data into Roles
+INSERT INTO Roles (role_name) VALUES ('Admin');
+INSERT INTO Roles (role_name) VALUES ('Doctor');
+INSERT INTO Roles (role_name) VALUES ('Patient');
+INSERT INTO Roles (role_name) VALUES ('Lab Technician');
 
--- Insertar datos en la tabla Permisos
-INSERT INTO Permisos (nombre_permiso) VALUES ('Crear_Cita');
-INSERT INTO Permisos (nombre_permiso) VALUES ('Editar_Cita');
-INSERT INTO Permisos (nombre_permiso) VALUES ('Ver_Historial');
-INSERT INTO Permisos (nombre_permiso) VALUES ('Gestionar_Usuarios');
+-- Insert sample data into Permissions
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_APPOINTMENTS');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_MEDICAL_HISTORY');
+INSERT INTO Permissions (permission_name) VALUES ('MANAGE_LABS');
 
--- Asignar permisos a roles en la tabla Roles_Permisos
-INSERT INTO Roles_Permisos (id_rol, id_permiso) VALUES (1, 1); -- Administrador puede Crear_Cita
-INSERT INTO Roles_Permisos (id_rol, id_permiso) VALUES (1, 2); -- Administrador puede Editar_Cita
-INSERT INTO Roles_Permisos (id_rol, id_permiso) VALUES (2, 3); -- Medico puede Ver_Historial
-INSERT INTO Roles_Permisos (id_rol, id_permiso) VALUES (4, 4); -- Laboratorista puede Gestionar_Usuarios
+-- Insert sample data into RolePermission
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 1); -- Admin can VIEW_APPOINTMENTS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (2, 2); -- Doctor can EDIT_MEDICAL_HISTORY
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (4, 3); -- Lab Technician can MANAGE_LABS
 
--- Insertar datos en la tabla Usuarios
-INSERT INTO Usuarios (nombre_completo, identificacion, fecha_nacimiento, genero, direccion, telefono, correo_electronico, rol_id, estado, contraseña)
-VALUES ('Juan Perez', '123456789', '1980-05-15', 'Masculino', 'Calle 123', '555-1234', 'juan@example.com', 2, 'activo', 'contraseña123');
+-- Insert sample data into Users
+INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, role_id, password, status)
+VALUES ('John Doe', '123456789', '1980-05-15', 'Male', '123 Main St', '555-1234', 'john.doe@example.com', 2, 'password123', 'active');
 
-INSERT INTO Usuarios (nombre_completo, identificacion, fecha_nacimiento, genero, direccion, telefono, correo_electronico, rol_id, estado, contraseña)
-VALUES ('Maria Lopez', '987654321', '1990-08-20', 'Femenino', 'Avenida 456', '555-5678', 'maria@example.com', 3, 'activo', 'contraseña456');
+INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, role_id, password, status)
+VALUES ('Jane Smith', '987654321', '1990-08-25', 'Female', '456 Elm St', '555-5678', 'jane.smith@example.com', 3, 'password456', 'active');
 
-INSERT INTO Usuarios (nombre_completo, identificacion, fecha_nacimiento, genero, direccion, telefono, correo_electronico, rol_id, estado, contraseña)
-VALUES ('Carlos Ramirez', '456789123', '1975-03-10', 'Masculino', 'Calle 789', '555-9876', 'carlos@example.com', 4, 'activo', 'contraseña789');
+INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, role_id, password, status)
+VALUES ('Alice Johnson', '456789123', '1985-03-10', 'Female', '789 Oak St', '555-9012', 'alice.johnson@example.com', 4, 'password789', 'active');
 
--- Insertar datos en la tabla Pacientes
-INSERT INTO Pacientes (id_usuario, grupo_sanguineo, alergias, historia_familiar)
-VALUES (2, 'O+', 'Polen', 'Diabetes');
+-- Insert sample data into Patients
+INSERT INTO Patients (user_id, blood_group, allergies, family_history)
+VALUES (2, 'A+', 'Pollen', 'Diabetes');
 
--- Insertar datos en la tabla Consultorios
-INSERT INTO Consultorios (nombre, direccion, telefono, especialidad, capacidad)
-VALUES ('Consultorio A', 'Hospital Central', '555-1111', 'Oncología', 10);
+-- Insert sample data into Clinics
+INSERT INTO Clinics (name, address, phone, specialty, capacity)
+VALUES ('City Clinic', '789 Clinic Rd', '555-3456', 'Oncology', 50);
 
-INSERT INTO Consultorios (nombre, direccion, telefono, especialidad, capacidad)
-VALUES ('Consultorio B', 'Clinica Norte', '555-2222', 'Cardiología', 5);
+-- Insert sample data into Specialty
+INSERT INTO Specialties (specialty_name) VALUES ('Oncology');
+INSERT INTO Specialties (specialty_name) VALUES ('Cardiology');
 
--- Insertar datos en la tabla Asignacion_Consultorio
-INSERT INTO Asignacion_Consultorio (hora_inicio, hora_fin, Consultorios_id, Usuarios_id_usuario)
+-- Insert sample data into UserSpecialty
+INSERT INTO User_Specialties (user_id, specialty_id) VALUES (1, 1); -- John Doe is an Oncologist
+
+-- Insert sample data into AppointmentType
+INSERT INTO Appointment_Types (type_name, standard_duration) VALUES ('Consultation', 30);
+INSERT INTO Appointment_Types (type_name, standard_duration) VALUES ('Follow-up', 15);
+
+-- Insert sample data into ClinicAssignment
+INSERT INTO Clinic_Assignments (start_time, end_time, clinic_id, user_id)
 VALUES ('2023-10-01 08:00:00', '2023-10-01 16:00:00', 1, 1);
 
--- Insertar datos en la tabla Tipos_Citas
-INSERT INTO Tipos_Citas (nombre_tipo_cita, duracion_estandar)
-VALUES ('Consulta General', 30);
+-- Insert sample data into Appointments
+INSERT INTO Appointments (date_time, status, patient_id, doctor_id, type_id, clinic_assignment_id)
+VALUES ('2023-10-02 10:00:00', 'pending', 1, 1, 1, 1);
 
-INSERT INTO Tipos_Citas (nombre_tipo_cita, duracion_estandar)
-VALUES ('Examen de Laboratorio', 60);
+-- Insert sample data into MedicalHistory
+INSERT INTO Medical_History (patient_id, diagnosis, treatment, medications)
+VALUES (1, 'Cancer', 'Chemotherapy', 'Medicine A, Medicine B');
 
--- Insertar datos en la tabla Citas
-INSERT INTO Citas (fecha_hora, estado, id_paciente, id_medico, id_tipo_cita, Asignacion_Consultorio_id, Asignacion_Consultorio_Consultorios_id, Asignacion_Consultorio_Usuarios_id_usuario)
-VALUES ('2023-10-05 10:00:00', 'pendiente', 1, 1, 1, 1, 1, 1);
+-- Insert sample data into Labs
+INSERT INTO Labs (patient_id, lab_technician_id, test_type, request_date, completion_date, result, attachment)
+VALUES (1, 3, 'Blood Test', '2023-10-01 10:00:00', '2023-10-02 12:00:00', 'Normal', 'path/to/attachment.pdf');
 
--- Insertar datos en la tabla Historial_Medico
-INSERT INTO Historial_Medico (id_paciente, diagnostico, tratamiento, medicamentos)
-VALUES (1, 'Hipertensión', 'Dieta baja en sal', 'Enalapril');
+-- Insert sample data into Tasks
+INSERT INTO Tasks (description, completed, start_date, end_date, appointment_id)
+VALUES ('Prepare patient report', TRUE, '2023-10-02 09:00:00', '2023-10-02 09:30:00', 1);
 
--- Insertar datos en la tabla Laboratorios
-INSERT INTO Laboratorios (id_paciente, id_laboratorista, tipo_examen, fecha_solicitud, fecha_realizacion, resultado, archivo_adjunto)
-VALUES (1, 3, 'Hemograma', '2023-10-01', '2023-10-03', 'Normal', 'archivo.pdf');
+-- Insert sample data into Schedules
+INSERT INTO Schedules (user_id, day_of_week, start_time, end_time)
+VALUES (1, 'Monday', '2023-10-02 08:00:00', '2023-10-02 16:00:00');
 
--- Insertar datos en la tabla Horarios
-INSERT INTO Horarios (id_usuario, dia_semana, hora_inicio, hora_fin)
-VALUES (1, '2023-10-02', '2023-10-01 08:00:00', '2023-10-01 16:00:00');
-
--- Insertar datos en la tabla Especialidades
-INSERT INTO Especialidades (nombre_especialidad)
-VALUES ('Oncología');
-
-INSERT INTO Especialidades (nombre_especialidad)
-VALUES ('Cardiología');
-
--- Insertar datos en la tabla Personal_Especialidad
-INSERT INTO Personal_Especialidad (id_usuario, id_especialidad)
-VALUES (1, 1);
-
--- Insertar datos en la tabla Roles_Asignados
-INSERT INTO Roles_Asignados (Usuarios_id_usuario, Roles_id_rol)
-VALUES (1, 2);
-
--- Insertar datos en la tabla Tareas
-INSERT INTO Tareas (descripcion, completado, fecha_inicio, fecha_final, cita)
-VALUES ('Realizar análisis de sangre', FALSE, '2023-10-05 10:00:00', '2023-10-05 11:00:00', 1);
+-- Insert sample data into AssignedRole
+INSERT INTO Assigned_Roles (user_id, role_id) VALUES (1, 2); -- John Doe is assigned as a Doctor
+INSERT INTO Assigned_Roles (user_id, role_id) VALUES (2, 3); -- Jane Smith is assigned as a Patient
+INSERT INTO Assigned_Roles (user_id, role_id) VALUES (3, 4); -- Alice Johnson is assigned as a Lab Technician
