@@ -11,7 +11,9 @@ import org.thevoids.oncologic.repository.RoleRepository;
 import org.thevoids.oncologic.service.impl.RoleServiceImpl;
 
 import java.util.List;
+import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -101,5 +103,55 @@ class RoleServiceUnitTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> roleService.createRole(role));
+    }
+
+    @Test
+    void updateRole_WhenCalled_UpdatesRole() {
+        // Arrange
+        Role role = new Role();
+        role.setRoleId(1L);
+        role.setRolePermissions(List.of(new RolePermission())); // Agregar permisos al rol
+        when(roleRepository.existsById(role.getRoleId())).thenReturn(true);
+
+        // Act
+        roleService.updateRole(role);
+
+        // Assert
+        verify(roleRepository, times(1)).save(role);
+    }
+
+    @Test
+    void updateRole_WhenRoleNotFound_ThrowsException() {
+        // Arrange
+        Role role = new Role();
+        role.setRoleId(1L);
+        when(roleRepository.existsById(role.getRoleId())).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> roleService.updateRole(role));
+    }
+
+    @Test
+    void getRole_WhenCalled_ReturnsRole() {
+        // Arrange
+        Role role = new Role();
+        role.setRoleId(1L);
+        when(roleRepository.findById(role.getRoleId())).thenReturn(Optional.of(role));
+
+        // Act
+        Role result = roleService.getRole(role.getRoleId());
+
+        // Assert
+        assertEquals(role, result);
+    }
+
+    @Test
+    void getRole_WhenRoleNotFound_ThrowsException() {
+        // Arrange
+        Long roleId = 1L;
+        when(roleRepository.findById(roleId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> roleService.getRole(roleId));
     }
 }

@@ -9,6 +9,9 @@ import org.thevoids.oncologic.entity.Permission;
 import org.thevoids.oncologic.repository.PermissionRepository;
 import org.thevoids.oncologic.service.impl.PermissionServiceImpl;
 
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -71,5 +74,55 @@ class PermissionServiceUnitTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> permissionService.deletePermission(permissionId));
+    }
+
+    @Test
+    void updatePermission_WhenCalled_UpdatesPermission() {
+        // Arrange
+        Permission permission = new Permission();
+        permission.setPermissionId(1L);
+        when(permissionRepository.existsById(permission.getPermissionId())).thenReturn(true);
+
+        // Act
+        permissionService.updatePermission(permission);
+
+        // Assert
+        verify(permissionRepository, times(1)).save(permission);
+    }
+
+    @Test
+    void updatePermission_WhenPermissionNotFound_ThrowsException() {
+        // Arrange
+        Permission permission = new Permission();
+        permission.setPermissionId(1L);
+        when(permissionRepository.existsById(permission.getPermissionId())).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> permissionService.updatePermission(permission));
+    }
+
+    @Test
+    void getPermission_WhenCalled_ReturnsPermission() {
+        // Arrange
+        Permission permission = new Permission();
+        permission.setPermissionId(1L);
+        when(permissionRepository.existsById(permission.getPermissionId())).thenReturn(true);
+        when(permissionRepository.findById(permission.getPermissionId())).thenReturn(Optional.of(permission));
+
+        // Act
+        Optional<Permission> result = permissionService.getPermission(permission.getPermissionId());
+
+        // Assert
+        assertEquals(permission, result.orElse(null));
+    }
+
+    @Test
+    void getPermission_WhenPermissionNotFound_ThrowsException() {
+        // Arrange
+        Long permissionId = 1L;
+        when(permissionRepository.existsById(permissionId)).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> permissionService.getPermission(permissionId));
     }
 }
