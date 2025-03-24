@@ -22,6 +22,4 @@ public class RolePermission {
     @ManyToOne
     @JoinColumn(name = "permission_id", nullable = false)
     private Permission permission;
-
-    // Getters and setters
 }

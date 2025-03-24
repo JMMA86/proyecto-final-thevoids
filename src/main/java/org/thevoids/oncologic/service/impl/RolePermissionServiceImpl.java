@@ -1,0 +1,70 @@
+package org.thevoids.oncologic.service.impl;
+
+import org.springframework.stereotype.Service;
+import org.thevoids.oncologic.entity.RolePermission;
+import org.thevoids.oncologic.repository.PermissionRepository;
+import org.thevoids.oncologic.repository.RolePermissionRepository;
+import org.thevoids.oncologic.repository.RoleRepository;
+import org.thevoids.oncologic.service.RolePermissionService;
+
+@Service
+public class RolePermissionServiceImpl implements RolePermissionService {
+    private final RolePermissionRepository rolePermissionRepository;
+    private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
+
+    public RolePermissionServiceImpl(
+            RolePermissionRepository rolePermissionRepository,
+            RoleRepository roleRepository,
+            PermissionRepository permissionRepository
+    ) {
+        this.rolePermissionRepository = rolePermissionRepository;
+        this.roleRepository = roleRepository;
+        this.permissionRepository = permissionRepository;
+    }
+
+    @Override
+    public void assignPermissionToRole(Long permissionId, Long roleId) {
+        var permission = permissionRepository.findById(permissionId).orElse(null);
+
+        if (permission == null) {
+            throw new IllegalArgumentException("Permission does not exist");
+        }
+
+        var role = roleRepository.findById(roleId).orElse(null);
+
+        if (role == null) {
+            throw new IllegalArgumentException("Role does not exist");
+        }
+
+        if (rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)) {
+            throw new IllegalArgumentException("Role already has this permission");
+        }
+
+        var newPermission = new RolePermission();
+        newPermission.setRole(role);
+        newPermission.setPermission(permission);
+
+        rolePermissionRepository.save(newPermission);
+    }
+
+    @Override
+    public void removePermissionFromRole(Long permissionId, Long roleId) {
+        if (!permissionRepository.existsById(permissionId)) {
+            throw new IllegalArgumentException("Permission does not exist");
+        }
+
+        if (!roleRepository.existsById(roleId)) {
+            throw new IllegalArgumentException("Role does not exist");
+        }
+
+        if (!rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)) {
+            throw new IllegalArgumentException("This role does not have this permission");
+        }
+
+        var rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId)
+                .orElseThrow(() -> new IllegalArgumentException("This role does not have this permission"));
+
+        rolePermissionRepository.deleteById(rolePermission.getId());
+    }
+}

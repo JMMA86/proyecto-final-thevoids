@@ -1,6 +1,5 @@
 package org.thevoids.oncologic.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.repository.UserRepository;
@@ -10,13 +9,37 @@ import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
+    private final UserRepository userRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public List<User> getAllUsers() {
-        List<User> userList = userRepository.findAll();
-        return userList;
+        return userRepository.findAll();
+    }
+
+    @Override
+    public void createUser(User user) {
+        if (userRepository.existsById(user.getUserId())) {
+            throw new IllegalArgumentException("User with id " + user.getUserId() + " already exists");
+        }
+
+        this.userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUser(User user) {
+        if (!userRepository.existsById(user.getUserId())) {
+            throw new IllegalArgumentException("User with id " + user.getUserId() + " does not exist");
+        }
+
+        this.userRepository.delete(user);
+    }
+
+    @Override
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElse(null);
     }
 }

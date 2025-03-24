@@ -1,11 +1,11 @@
 package org.thevoids.oncologic.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Date;
 import java.util.List;
 
@@ -77,6 +77,4 @@ public class User {
     @OneToMany(mappedBy = "user")
     @JsonIgnore
     private List<AssignedRole> assignedRoles;
-
-    // Getters and setters
 }
