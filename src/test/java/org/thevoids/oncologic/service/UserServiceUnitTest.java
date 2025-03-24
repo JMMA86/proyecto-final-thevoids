@@ -133,4 +133,32 @@ class UserServiceUnitTest {
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
     }
+
+    @Test
+    void updateUser_WhenCalled_UpdatesUser() {
+        // Arrange
+        User user = new User();
+        user.setUserId(1L);
+        Role role = new Role();
+        role.setRoleId(1L);
+        user.setRole(role); // Agregar rol al usuario
+        when(userRepository.existsById(user.getUserId())).thenReturn(true);
+
+        // Act
+        userService.updateUser(user);
+
+        // Assert
+        verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    void updateUser_WhenUserNotFound_ThrowsException() {
+        // Arrange
+        User user = new User();
+        user.setUserId(1L);
+        when(userRepository.existsById(user.getUserId())).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> userService.updateUser(user));
+    }
 }
