@@ -26,6 +26,10 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("User with id " + user.getUserId() + " already exists");
         }
 
+        if (user.getRole() == null) {
+            throw new IllegalArgumentException("User must have at least one role");
+        }
+
         this.userRepository.save(user);
     }
 

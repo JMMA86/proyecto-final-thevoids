@@ -67,4 +67,17 @@ public class RolePermissionServiceImpl implements RolePermissionService {
 
         rolePermissionRepository.deleteById(rolePermission.getId());
     }
+
+    @Override
+    public boolean roleHasPermission(Long roleId, Long permissionId) {
+        if (!roleRepository.existsById(roleId)) {
+            throw new IllegalArgumentException("Role does not exist");
+        }
+        
+        if (!permissionRepository.existsById(permissionId)) {
+            throw new IllegalArgumentException("Permission does not exist");
+        }
+
+        return rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId);
+    }
 }

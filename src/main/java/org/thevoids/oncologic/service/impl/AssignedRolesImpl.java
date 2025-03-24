@@ -55,7 +55,7 @@ public class AssignedRolesImpl implements AssignedRoles {
             throw new IllegalArgumentException("Role does not exists");
         }
 
-        var assignedRole = assignedRoleRepository.findById(roleId).orElse(null);
+        var assignedRole = assignedRoleRepository.findByRoleIdAndUserId(roleId, userId).orElse(null);
 
         if (assignedRole == null) {
             throw new IllegalArgumentException("This assigment was never made");

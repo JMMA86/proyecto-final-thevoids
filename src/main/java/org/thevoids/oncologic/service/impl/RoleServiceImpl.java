@@ -26,6 +26,10 @@ public class RoleServiceImpl implements RoleService {
             throw new IllegalArgumentException("Role with id " + role.getRoleId() + " already exists");
         }
 
+        if (role.getRolePermissions() == null || role.getRolePermissions().isEmpty()) {
+            throw new IllegalArgumentException("Role must have at least one permission");
+        }
+
         roleRepository.save(role);
     }
 
