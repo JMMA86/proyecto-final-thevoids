@@ -26,21 +26,20 @@ public class AssignedRolesImpl implements AssignedRoles {
     public void assignRoleToUser(Long roleId, Long userId) {
         var newAssignedRole = new AssignedRole();
 
-        var user = userRepository.findById(userId).orElse(null);
-
-        if (user == null) {
+        if (!userRepository.existsById(userId)) {
             throw new IllegalArgumentException("User does not exists");
         }
 
-        var role = roleRepository.findById(roleId).orElse(null);
-
-        if (role == null) {
+        if (!roleRepository.existsById(roleId)) {
             throw new IllegalArgumentException("Role does not exists");
         }
 
         if (assignedRoleRepository.existsByRoleIdAndUserId(roleId, userId)) {
             throw new IllegalArgumentException("Role already assigned");
         }
+
+        var user = userRepository.findById(userId).orElse(null);
+        var role = roleRepository.findById(roleId).orElse(null);
 
         newAssignedRole.setUser(user);
         newAssignedRole.setRole(role);
@@ -58,12 +57,12 @@ public class AssignedRolesImpl implements AssignedRoles {
             throw new IllegalArgumentException("Role does not exists");
         }
 
-        var assignedRole = assignedRoleRepository.findByRoleIdAndUserId(roleId, userId).orElse(null);
-
-        if (assignedRole == null) {
+        if (!assignedRoleRepository.existsByRoleIdAndUserId(roleId, userId)) {
             throw new IllegalArgumentException("This assigment was never made");
         }
 
+        var assignedRole = assignedRoleRepository.findByRoleIdAndUserId(roleId, userId).orElse(null);
+        
         assignedRoleRepository.deleteById(assignedRole.getId());
     }
 
@@ -77,12 +76,12 @@ public class AssignedRolesImpl implements AssignedRoles {
             throw new IllegalArgumentException("Role does not exists");
         }
 
-        var assignedRole = assignedRoleRepository.findByRoleIdAndUserId(roleId, userId).orElse(null);
-
-        if (assignedRole == null) {
+        if (!assignedRoleRepository.existsByRoleIdAndUserId(roleId, userId)) {
             throw new IllegalArgumentException("This assigment was never made");
         }
 
+        var assignedRole = assignedRoleRepository.findByRoleIdAndUserId(roleId, userId).orElse(null);
+        
         assignedRole.setRole(roleRepository.findById(roleId).orElse(null));
 
         assignedRoleRepository.save(assignedRole);
