@@ -38,7 +38,7 @@ class RoleServiceUnitTest {
         List<Role> result = roleService.getAllRoles();
 
         // Assert
-        verify(roleRepository, times(1)).findAll();
+        assert result.size() == 2;
     }
 
     @Test

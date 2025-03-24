@@ -11,7 +11,7 @@ public interface RolePermissionService {
 
     boolean roleHasPermission(Long roleId, Long permissionId);
 
-    void updatePermissionForRole(Long permissionId, Long roleId);
+    void updatePermissionForRole(Long lastPermissionId, Long newPermissionId, Long roleId);
 
     List<Permission> getPermissionsFromRole(Long roleId);
 }

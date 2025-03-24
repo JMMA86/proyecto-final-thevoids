@@ -28,21 +28,20 @@ public class RolePermissionServiceImpl implements RolePermissionService {
 
     @Override
     public void assignPermissionToRole(Long permissionId, Long roleId) {
-        var permission = permissionRepository.findById(permissionId).orElse(null);
-
-        if (permission == null) {
+        if (!permissionRepository.existsById(permissionId)) {
             throw new IllegalArgumentException("Permission does not exist");
         }
 
-        var role = roleRepository.findById(roleId).orElse(null);
-
-        if (role == null) {
+        if (!roleRepository.existsById(roleId)) {
             throw new IllegalArgumentException("Role does not exist");
         }
 
         if (rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)) {
             throw new IllegalArgumentException("Role already has this permission");
         }
+
+        var role = roleRepository.findById(roleId).orElse(null);
+        var permission = permissionRepository.findById(permissionId).orElse(null);
 
         var newPermission = new RolePermission();
         newPermission.setRole(role);
@@ -85,23 +84,27 @@ public class RolePermissionServiceImpl implements RolePermissionService {
     }
 
     @Override
-    public void updatePermissionForRole(Long permissionId, Long roleId) {
-        if (!permissionRepository.existsById(permissionId)) {
-            throw new IllegalArgumentException("Permission does not exist");
-        }
-
+    public void updatePermissionForRole(Long lastPermissionId, Long newPermissionId, Long roleId) {
         if (!roleRepository.existsById(roleId)) {
             throw new IllegalArgumentException("Role does not exist");
         }
 
-        if (!rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)) {
+        if (!permissionRepository.existsById(lastPermissionId)) {
+            throw new IllegalArgumentException("Last permission does not exist");
+        }
+
+        if (!permissionRepository.existsById(newPermissionId)) {
+            throw new IllegalArgumentException("New permission does not exist");
+        }
+
+        if (!rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, lastPermissionId)) {
             throw new IllegalArgumentException("This role does not have this permission");
         }
 
-        var rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId)
+        var rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, lastPermissionId)
                 .orElseThrow(() -> new IllegalArgumentException("This role does not have this permission"));
 
-        rolePermission.setPermission(permissionRepository.findById(permissionId).orElse(null));
+        rolePermission.setPermission(permissionRepository.findById(newPermissionId).orElse(null));
 
         rolePermissionRepository.save(rolePermission);
     }

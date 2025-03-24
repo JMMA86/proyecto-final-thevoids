@@ -39,7 +39,7 @@ class UserServiceUnitTest {
         List<User> result = userService.getAllUsers();
 
         // Assert
-        verify(userRepository, times(1)).findAll();
+        assert result.size() == 2;
     }
 
     @Test
@@ -107,7 +107,7 @@ class UserServiceUnitTest {
         User result = userService.getUserById(userId);
 
         // Assert
-        verify(userRepository, times(1)).findById(userId);
+        assert result.getUserId().equals(userId);
     }
 
     @Test
@@ -120,7 +120,7 @@ class UserServiceUnitTest {
         User result = userService.getUserById(userId);
 
         // Assert
-        verify(userRepository, times(1)).findById(userId);
+        assert result == null;
     }
 
     @Test
