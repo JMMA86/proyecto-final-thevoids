@@ -1,5 +1,7 @@
 package org.thevoids.oncologic.service.impl;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.Permission;
@@ -27,5 +29,23 @@ public class PermissionServiceImpl implements PermissionService {
         }
 
         permissionRepository.deleteById(permissionId);
+    }
+
+    @Override
+    public void updatePermission(Permission permission) {
+        if (!permissionRepository.existsById(permission.getPermissionId())) {
+            throw new IllegalArgumentException("Permission does not exist");
+        }
+
+        permissionRepository.save(permission);
+    }
+
+    @Override
+    public Optional<Permission> getPermission(Long permissionId) {
+        if (!permissionRepository.existsById(permissionId)) {
+            throw new IllegalArgumentException("Permission does not exist");
+        }
+
+        return permissionRepository.findById(permissionId);
     }
 }

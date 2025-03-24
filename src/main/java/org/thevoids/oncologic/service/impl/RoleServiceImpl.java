@@ -41,4 +41,18 @@ public class RoleServiceImpl implements RoleService {
 
         roleRepository.delete(role);
     }
+
+    @Override
+    public void updateRole(Role role) {
+        if (!roleRepository.existsById(role.getRoleId())) {
+            throw new IllegalArgumentException("Role with id " + role.getRoleId() + " does not exist");
+        }
+
+        roleRepository.save(role);
+    }
+
+    @Override
+    public Role getRole(Long roleId) {
+        return roleRepository.findById(roleId).orElseThrow(() -> new IllegalArgumentException("Role with id " + roleId + " does not exist"));
+    }
 }

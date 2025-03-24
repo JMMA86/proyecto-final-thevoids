@@ -1,6 +1,9 @@
 package org.thevoids.oncologic.service.impl;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
+import org.thevoids.oncologic.entity.Permission;
 import org.thevoids.oncologic.entity.RolePermission;
 import org.thevoids.oncologic.repository.PermissionRepository;
 import org.thevoids.oncologic.repository.RolePermissionRepository;
@@ -79,5 +82,36 @@ public class RolePermissionServiceImpl implements RolePermissionService {
         }
 
         return rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId);
+    }
+
+    @Override
+    public void updatePermissionForRole(Long permissionId, Long roleId) {
+        if (!permissionRepository.existsById(permissionId)) {
+            throw new IllegalArgumentException("Permission does not exist");
+        }
+
+        if (!roleRepository.existsById(roleId)) {
+            throw new IllegalArgumentException("Role does not exist");
+        }
+
+        if (!rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)) {
+            throw new IllegalArgumentException("This role does not have this permission");
+        }
+
+        var rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId)
+                .orElseThrow(() -> new IllegalArgumentException("This role does not have this permission"));
+
+        rolePermission.setPermission(permissionRepository.findById(permissionId).orElse(null));
+
+        rolePermissionRepository.save(rolePermission);
+    }
+
+    @Override
+    public List<Permission> getPermissionsFromRole(Long roleId) {
+        if (!roleRepository.existsById(roleId)) {
+            throw new IllegalArgumentException("Role does not exist");
+        }
+
+        return rolePermissionRepository.getPermissionsFromRole(roleId);
     }
 }

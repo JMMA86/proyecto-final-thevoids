@@ -1,8 +1,11 @@
 package org.thevoids.oncologic.service.impl;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.AssignedRole;
+import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.repository.AssignedRoleRepository;
 import org.thevoids.oncologic.repository.RoleRepository;
 import org.thevoids.oncologic.repository.UserRepository;
@@ -62,5 +65,35 @@ public class AssignedRolesImpl implements AssignedRoles {
         }
 
         assignedRoleRepository.deleteById(assignedRole.getId());
+    }
+
+    @Override
+    public void updateRoleForUser(Long roleId, Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User does not exists");
+        }
+
+        if (!roleRepository.existsById(roleId)) {
+            throw new IllegalArgumentException("Role does not exists");
+        }
+
+        var assignedRole = assignedRoleRepository.findByRoleIdAndUserId(roleId, userId).orElse(null);
+
+        if (assignedRole == null) {
+            throw new IllegalArgumentException("This assigment was never made");
+        }
+
+        assignedRole.setRole(roleRepository.findById(roleId).orElse(null));
+
+        assignedRoleRepository.save(assignedRole);
+    }
+
+    @Override
+    public List<Role> getRolesFromUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User does not exists");
+        }
+
+        return roleRepository.findRolesByUserId(userId);
     }
 }

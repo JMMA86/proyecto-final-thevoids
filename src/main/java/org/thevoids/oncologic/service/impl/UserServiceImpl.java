@@ -43,6 +43,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void updateUser(User user) {
+        if (!userRepository.existsById(user.getUserId())) {
+            throw new IllegalArgumentException("User with id " + user.getUserId() + " does not exist");
+        }
+
+        this.userRepository.save(user);
+    }
+
+    @Override
     public User getUserById(Long id) {
         return userRepository.findById(id).orElse(null);
     }

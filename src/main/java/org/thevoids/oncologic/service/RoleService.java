@@ -10,4 +10,8 @@ public interface RoleService {
     void createRole(Role role);
 
     void deleteRole(Role role);
+
+    void updateRole(Role role);
+
+    Role getRole(Long roleId);
 }
