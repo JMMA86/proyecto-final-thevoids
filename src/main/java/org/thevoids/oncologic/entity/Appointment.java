@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.sql.ast.tree.update.Assignment;
 
 import java.util.Date;
 import java.util.List;
