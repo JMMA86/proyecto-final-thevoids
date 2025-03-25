@@ -24,4 +24,5 @@ public class AssignedRole {
     private Role role;
 
     // Getters and setters
+
 }
