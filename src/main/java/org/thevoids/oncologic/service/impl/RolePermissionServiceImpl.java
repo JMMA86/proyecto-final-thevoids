@@ -64,8 +64,7 @@ public class RolePermissionServiceImpl implements RolePermissionService {
             throw new IllegalArgumentException("This role does not have this permission");
         }
 
-        var rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId)
-                .orElseThrow(() -> new IllegalArgumentException("This role does not have this permission"));
+        var rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId).orElse(null);
 
         rolePermissionRepository.deleteById(rolePermission.getId());
     }
@@ -101,8 +100,7 @@ public class RolePermissionServiceImpl implements RolePermissionService {
             throw new IllegalArgumentException("This role does not have this permission");
         }
 
-        var rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, lastPermissionId)
-                .orElseThrow(() -> new IllegalArgumentException("This role does not have this permission"));
+        var rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, lastPermissionId).orElse(null);
 
         rolePermission.setPermission(permissionRepository.findById(newPermissionId).orElse(null));
 
