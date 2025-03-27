@@ -18,13 +18,28 @@ In this project, a comprehensive web application will be developed for a special
 
 ## Execution Instructions
 
+To run the project, simply use the command:
+```
+.\mvnw spring-boot:run
+```
+
+To run the tests, use the command:
+```
+.\mvnw test
+```
+
+A total of 64 tests must be run.
+
 ## Annexes
 
 ### Test Coverage
 
-here Marin guarro will attach the image of the test coverage
+Currently, test coverage is 100%, having tested all implemented services and controllers (currently, the user controller).
+
+<a href="https://ibb.co/d4KgFh5J"><img src="https://i.ibb.co/JjkQVhsF/image.png" alt="image" border="0"></a>
 
 ### Successful Execution
 
-here Marin guarro will attach the image of the project compilation
-also, an image of the JSON returned by the user route
+The project compiles correctly and runs all the tests.
+
+<a href="https://ibb.co/RpGBtBFC"><img src="https://i.ibb.co/HDLxRxSr/image.png" alt="image" border="0"></a>
