@@ -21,7 +21,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public void createRole(Role role) {
+    public Role createRole(Role role) {
         if (roleRepository.existsById(role.getRoleId())) {
             throw new IllegalArgumentException("Role with id " + role.getRoleId() + " already exists");
         }
@@ -31,6 +31,8 @@ public class RoleServiceImpl implements RoleService {
         }
 
         roleRepository.save(role);
+
+        return role;
     }
 
     @Override

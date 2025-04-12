@@ -51,7 +51,7 @@ public class User {
     @JsonIgnore
     private Patient patient;
 
-    @Column(name = "password", length = 20, nullable = false)
+    @Column(name = "password", length = 60, nullable = false)
     private String password;
 
     @OneToMany(mappedBy = "user")
