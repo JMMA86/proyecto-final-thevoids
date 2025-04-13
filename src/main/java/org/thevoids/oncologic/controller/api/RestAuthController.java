@@ -1,5 +1,7 @@
 package org.thevoids.oncologic.controller.api;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,8 +15,6 @@ import org.thevoids.oncologic.dto.AuthRequest;
 import org.thevoids.oncologic.dto.AuthResponse;
 import org.thevoids.oncologic.service.impl.CustomUserDetailsServiceImpl;
 import org.thevoids.oncologic.utils.JwtService;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")

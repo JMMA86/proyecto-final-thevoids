@@ -1,17 +1,23 @@
-package org.thevoids.oncologic.controller;
+package org.thevoids.oncologic.controller.web;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.thevoids.oncologic.dto.ErrorResponse;
 import org.thevoids.oncologic.dto.UserResponseDTO;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.service.AssignedRoles;
 import org.thevoids.oncologic.service.UserService;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")

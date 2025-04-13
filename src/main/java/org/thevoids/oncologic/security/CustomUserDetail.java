@@ -1,11 +1,11 @@
 package org.thevoids.oncologic.security;
 
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.thevoids.oncologic.entity.User;
-
-import java.util.Collection;
-import java.util.List;
 
 public class CustomUserDetail implements UserDetails {
     private User user;
