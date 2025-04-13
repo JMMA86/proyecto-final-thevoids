@@ -16,13 +16,14 @@ import org.thevoids.oncologic.dto.ErrorResponse;
 import org.thevoids.oncologic.dto.UserResponseDTO;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.AssignedRoles;
 import org.thevoids.oncologic.service.RoleService;
 import org.thevoids.oncologic.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/users")
-public class UserController {
+public class RestUserController {
 
     @Autowired
     private UserService userService;
@@ -30,6 +31,8 @@ public class UserController {
     private AssignedRoles assignedRolesService;
     @Autowired
     private RoleService roleService;
+    @Autowired
+    private UserMapper userMapper;
 
     /**
      * Retrieves a list of all users in the system.
@@ -40,7 +43,7 @@ public class UserController {
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<User> userList = userService.getAllUsers();
         List<UserResponseDTO> userResponseDTOList = userList.stream()
-                .map(this::convertToResponseDTO)
+                .map(userMapper::toUserResponseDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(userResponseDTOList);
     }
@@ -55,7 +58,7 @@ public class UserController {
     public ResponseEntity<?> registerUser(@RequestBody User user) {
         try {
             User createdUser = userService.createUser(user);
-            return ResponseEntity.ok().body(convertToResponseDTO(createdUser));
+            return ResponseEntity.ok().body(userMapper.toUserResponseDTO(createdUser));
         } catch (Exception e) {
             return ResponseEntity.status(400).body(new ErrorResponse("Bad Request", e.getMessage()));
         }
@@ -77,7 +80,7 @@ public class UserController {
             }
             assignedRolesService.assignRoleToUser(roleId, userId);
             User user = userService.getUserById(userId);
-            return ResponseEntity.ok().body(convertToResponseDTO(user));
+            return ResponseEntity.ok().body(userMapper.toUserResponseDTO(user));
         } catch (Exception e) {
             return ResponseEntity.status(400).body(new ErrorResponse("Bad Request", e.getMessage()));
         }
@@ -95,24 +98,9 @@ public class UserController {
         try {
             assignedRolesService.removeRoleFromUser(roleId, userId);
             User user = userService.getUserById(userId);
-            return ResponseEntity.ok().body(convertToResponseDTO(user));
+            return ResponseEntity.ok().body(userMapper.toUserResponseDTO(user));
         } catch (Exception e) {
             return ResponseEntity.status(400).body(new ErrorResponse("Bad Request", e.getMessage()));
         }
-    }
-
-    /**
-     * Converts a {@link User} entity to a {@link UserResponseDTO} object.
-     *
-     * @param user The {@link User} entity to be converted.
-     * @return A {@link UserResponseDTO} object containing the user's details.
-     */
-    public UserResponseDTO convertToResponseDTO(User user) {
-        UserResponseDTO userResponseDTO = new UserResponseDTO();
-        userResponseDTO.setIdentification(user.getIdentification());
-        userResponseDTO.setFullName(user.getFullName());
-        userResponseDTO.setEmail(user.getEmail());
-        userResponseDTO.setRoleName(user.getRole().getRoleName());
-        return userResponseDTO;
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.service.RoleService;
 import org.thevoids.oncologic.service.UserService;
 
 @Controller
@@ -16,25 +17,24 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private RoleService roleService;
+
     @GetMapping("/signup")
     public String signup(Model model) {
         model.addAttribute("user", new User());
-        return "signup";
+        model.addAttribute("roles", roleService.getAllRoles());
+        return "auth/signup";
     }
 
     @PostMapping("/signup")
     public String signupCreate(@ModelAttribute User user) {
         userService.createUser(user);
-        return "redirect:/login";
+        return "redirect:/web/auth/login";
     }
 
     @GetMapping("/login")
     public String login() {
         return "auth/login";
-    }
-
-    @GetMapping("/home")
-    public String home() {
-        return "home";
     }
 }

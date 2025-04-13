@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{base}">
+<head>
+    <title>User List</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="text-center text-2xl font-bold mb-6">User List</h1>
+    <table class="table-auto w-full bg-white shadow-md rounded">
+        <thead>
+            <tr class="bg-gray-200">
+                <th class="px-4 py-2">ID</th>
+                <th class="px-4 py-2">Full Name</th>
+                <th class="px-4 py-2">Email</th>
+                <th class="px-4 py-2">Roles</th>
+                <th class="px-4 py-2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="user : ${users}">
+                <td class="border px-4 py-2" th:text="${user.userId}"></td>
+                <td class="border px-4 py-2" th:text="${user.fullName}"></td>
+                <td class="border px-4 py-2" th:text="${user.email}"></td>
+                <td class="border px-4 py-2">
+                    <ul>
+                        <li th:each="role : ${user.roles}" th:text="${role.roleName}"></li>
+                    </ul>
+                </td>
+                <td class="border px-4 py-2">
+                    <a th:href="@{/web/users/{id}/roles(id=${user.userId})}" 
+                       class="text-blue-500 hover:underline">Manage Roles</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/web/users/register}" 
+       class="mt-4 inline-block bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">
+        Register New User
+    </a>
+</div>
+</body>
+</html>

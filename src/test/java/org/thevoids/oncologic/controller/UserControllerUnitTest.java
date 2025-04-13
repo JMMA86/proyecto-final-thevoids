@@ -8,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.thevoids.oncologic.controller.api.UserController;
+import org.thevoids.oncologic.controller.api.RestUserController;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.service.UserService;
 
@@ -19,7 +19,7 @@ class UserControllerUnitTest {
     private UserService userService;
 
     @InjectMocks
-    private UserController userController;
+    private RestUserController userController;
 
     private List<User> userList;
 
