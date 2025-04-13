@@ -5,14 +5,19 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.thevoids.oncologic.dto.ErrorResponse;
 import org.thevoids.oncologic.dto.UserResponseDTO;
+import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.service.AssignedRoles;
+import org.thevoids.oncologic.service.RoleService;
 import org.thevoids.oncologic.service.UserService;
 
 @RestController
@@ -21,6 +26,10 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private AssignedRoles assignedRolesService;
+    @Autowired
+    private RoleService roleService;
 
     /**
      * Retrieves a list of all users in the system.
@@ -47,6 +56,46 @@ public class UserController {
         try {
             User createdUser = userService.createUser(user);
             return ResponseEntity.ok().body(convertToResponseDTO(createdUser));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(new ErrorResponse("Bad Request", e.getMessage()));
+        }
+    }
+
+        /**
+     * Assigns a role to a user.
+     *
+     * @param userId     The ID of the user to whom the role will be assigned.
+     * @param roleId The ID of the role to be assigned.
+     * @return A {@link ResponseEntity} containing the updated {@link UserResponseDTO} object or an error response.
+     */
+    @PostMapping("/{id}/roles/{roleId}")
+    public ResponseEntity<?> assignRoleToUser(@PathVariable Long userId, @PathVariable Long roleId) {
+        try {
+            Role role = roleService.getRole(roleId);
+            if (role == null) {
+                return ResponseEntity.status(404).body(new ErrorResponse("Not Found", "Role not found"));
+            }
+            assignedRolesService.assignRoleToUser(roleId, userId);
+            User user = userService.getUserById(userId);
+            return ResponseEntity.ok().body(convertToResponseDTO(user));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(new ErrorResponse("Bad Request", e.getMessage()));
+        }
+    }
+
+    /**
+     * Removes a role from a user.
+     *
+     * @param userId     The ID of the user from whom the role will be removed.
+     * @param roleId The ID of the role to be removed.
+     * @return A {@link ResponseEntity} containing the updated {@link UserResponseDTO} object or an error response.
+     */
+    @DeleteMapping("/{id}/roles/{roleId}")
+    public ResponseEntity<?> removeRoleFromUser(@PathVariable Long userId, @PathVariable Long roleId) {
+        try {
+            assignedRolesService.removeRoleFromUser(roleId, userId);
+            User user = userService.getUserById(userId);
+            return ResponseEntity.ok().body(convertToResponseDTO(user));
         } catch (Exception e) {
             return ResponseEntity.status(400).body(new ErrorResponse("Bad Request", e.getMessage()));
         }
