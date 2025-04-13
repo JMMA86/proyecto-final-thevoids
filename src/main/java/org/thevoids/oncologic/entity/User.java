@@ -74,7 +74,7 @@ public class User {
     @JsonIgnore
     private List<UserSpecialty> userSpecialties;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     @JsonIgnore
     private List<AssignedRole> assignedRoles;
 }

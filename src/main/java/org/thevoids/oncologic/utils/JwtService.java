@@ -50,7 +50,7 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .getSubject();
+                .get("identification", String.class);
     }
     
     public boolean validateToken(String token, UserDetails userDetails) {
@@ -67,5 +67,5 @@ public class JwtService {
                 .getExpiration();
         return expiration.before(new Date());
     }
-    
+
 }
