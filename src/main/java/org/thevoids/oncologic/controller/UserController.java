@@ -5,9 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.thevoids.oncologic.dto.ErrorResponse;
 import org.thevoids.oncologic.dto.UserResponseDTO;
-import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
-import org.thevoids.oncologic.service.AssignedRoles;
 import org.thevoids.oncologic.service.UserService;
 
 import java.util.List;
@@ -19,9 +17,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private AssignedRoles assignedRolesService;
 
     /**
      * Retrieves a list of all users in the system.
@@ -48,42 +43,6 @@ public class UserController {
         try {
             User createdUser = userService.createUser(user);
             return ResponseEntity.ok().body(convertToResponseDTO(createdUser));
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(new ErrorResponse("Bad Request", e.getMessage()));
-        }
-    }
-
-    /**
-     * Assigns a role to a user.
-     *
-     * @param id   The ID of the user to whom the role will be assigned.
-     * @param role The {@link Role} object containing the role details.
-     * @return A {@link ResponseEntity} containing the updated {@link UserResponseDTO} object or an error response.
-     */
-    @PostMapping("/{id}/roles")
-    public ResponseEntity<?> assignRoleToUser(@PathVariable Long id, @RequestBody Role role) {
-        try {
-            assignedRolesService.assignRoleToUser(role.getRoleId(), id);
-            User user = userService.getUserById(id);
-            return ResponseEntity.ok().body(convertToResponseDTO(user));
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(new ErrorResponse("Bad Request", e.getMessage()));
-        }
-    }
-
-    /**
-     * Removes a role from a user.
-     *
-     * @param id     The ID of the user from whom the role will be removed.
-     * @param roleId The ID of the role to be removed.
-     * @return A {@link ResponseEntity} containing the updated {@link UserResponseDTO} object or an error response.
-     */
-    @DeleteMapping("/{id}/roles/{roleId}")
-    public ResponseEntity<?> removeRoleFromUser(@PathVariable Long id, @PathVariable Long roleId) {
-        try {
-            assignedRolesService.removeRoleFromUser(roleId, id);
-            User user = userService.getUserById(id);
-            return ResponseEntity.ok().body(convertToResponseDTO(user));
         } catch (Exception e) {
             return ResponseEntity.status(400).body(new ErrorResponse("Bad Request", e.getMessage()));
         }
