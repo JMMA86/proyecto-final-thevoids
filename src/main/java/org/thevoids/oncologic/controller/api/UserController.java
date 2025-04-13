@@ -1,4 +1,4 @@
-package org.thevoids.oncologic.controller.web;
+package org.thevoids.oncologic.controller.api;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,7 +16,7 @@ import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.service.UserService;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1/users")
 public class UserController {
 
     @Autowired

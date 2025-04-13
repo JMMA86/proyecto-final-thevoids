@@ -1,4 +1,4 @@
-package org.thevoids.oncologic.controller.web;
+package org.thevoids.oncologic.controller.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import org.thevoids.oncologic.service.RoleService;
 import org.thevoids.oncologic.service.UserService;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1/roles")
 public class RoleController {
 
     @Autowired

@@ -6,10 +6,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.service.UserService;
 
 @Controller
+@RequestMapping("/web/auth")
 public class AuthController {
     @Autowired
     private UserService userService;
@@ -28,7 +30,7 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
-        return "login";
+        return "auth/login";
     }
 
     @GetMapping("/home")
