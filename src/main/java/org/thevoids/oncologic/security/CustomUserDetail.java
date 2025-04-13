@@ -1,13 +1,15 @@
 package org.thevoids.oncologic.security;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.thevoids.oncologic.entity.User;
 
 public class CustomUserDetail implements UserDetails {
+    
     private User user;
 
     public CustomUserDetail(User user) {
@@ -21,11 +23,13 @@ public class CustomUserDetail implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return user.getIdentification();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return user.getAssignedRoles().stream()
+                .map(assignedRole -> new SimpleGrantedAuthority(assignedRole.getRole().getRoleName()))
+                .collect(Collectors.toList());
     }
 }
