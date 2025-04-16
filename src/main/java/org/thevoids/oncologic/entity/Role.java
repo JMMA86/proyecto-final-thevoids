@@ -1,17 +1,13 @@
 package org.thevoids.oncologic.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 
 @Entity
 @Table(name = "Roles")
-@Getter
-@Setter
 @ToString
 public class Role {
     @Id
@@ -33,5 +29,43 @@ public class Role {
     @JsonIgnore
     private List<RolePermission> rolePermissions;
 
-    // Getters and setters
+    public Long getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Long roleId) {
+        this.roleId = roleId;
+    }
+
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+
+    public List<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<User> users) {
+        this.users = users;
+    }
+
+    public List<AssignedRole> getAssignedRoles() {
+        return assignedRoles;
+    }
+
+    public void setAssignedRoles(List<AssignedRole> assignedRoles) {
+        this.assignedRoles = assignedRoles;
+    }
+
+    public List<RolePermission> getRolePermissions() {
+        return rolePermissions;
+    }
+
+    public void setRolePermissions(List<RolePermission> rolePermissions) {
+        this.rolePermissions = rolePermissions;
+    }
 }
