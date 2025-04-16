@@ -8,8 +8,6 @@ import java.util.List;
 public interface LabService {
     Lab getLabById(Long id);
 
-    Lab createLab(Lab lab);
-
     Lab updateLab(Lab lab);
 
     void deleteLab(Long id);

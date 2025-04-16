@@ -2,9 +2,12 @@ package org.thevoids.oncologic.service.impl;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.thevoids.oncologic.entity.Clinic;
 import org.thevoids.oncologic.entity.ClinicAssignment;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.repository.AppointmentTypeRepository;
 import org.thevoids.oncologic.repository.ClinicAssignmentRepository;
+import org.thevoids.oncologic.repository.ClinicRepository;
 import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.ClinicAssigmentService;
 
@@ -13,14 +16,19 @@ import java.util.List;
 @Service
 public class ClinicAssigmentImpl implements ClinicAssigmentService {
     private final ClinicAssignmentRepository clinicAssignmentRepository;
+    private final ClinicRepository clinicRepository;
     private final UserRepository userRepository;
+    private final AppointmentTypeRepository appointmentTypeRepository;
 
     public ClinicAssigmentImpl(
             ClinicAssignmentRepository clinicAssignmentRepository,
-            UserRepository userRepository
-    ) {
+            UserRepository userRepository,
+            ClinicRepository clinicRepository,
+            AppointmentTypeRepository appointmentTypeRepository) {
         this.clinicAssignmentRepository = clinicAssignmentRepository;
         this.userRepository = userRepository;
+        this.clinicRepository = clinicRepository;
+        this.appointmentTypeRepository = appointmentTypeRepository;
     }
 
     @Override
@@ -31,15 +39,6 @@ public class ClinicAssigmentImpl implements ClinicAssigmentService {
     @Override
     public ClinicAssignment getClinicAssignmentById(Long id) {
         return clinicAssignmentRepository.findById(id).orElse(null);
-    }
-
-    @Override
-    public ClinicAssignment createClinicAssignment(ClinicAssignment clinicAssigment) {
-        if (clinicAssigment == null) {
-            throw new IllegalArgumentException("ClinicAssignment cannot be null");
-        }
-
-        return clinicAssignmentRepository.save(clinicAssigment);
     }
 
     @Override
@@ -70,7 +69,7 @@ public class ClinicAssigmentImpl implements ClinicAssigmentService {
 
     @Transactional
     @Override
-    public void assignClinicToUser(Long userId, Long clinicId) {
+    public void assignClinic(Long userId, Long clinicId) {
         if (userId == null) {
             throw new IllegalArgumentException("User ID cannot be null");
         }
@@ -79,13 +78,15 @@ public class ClinicAssigmentImpl implements ClinicAssigmentService {
             throw new IllegalArgumentException("Clinic ID cannot be null");
         }
 
-        ClinicAssignment clinicAssignment = clinicAssignmentRepository.findById(clinicId)
-                .orElseThrow(() -> new IllegalArgumentException("ClinicAssignment with id " + clinicId + " does not exist"));
+        Clinic clinic = clinicRepository.findById(clinicId)
+                .orElseThrow(() -> new IllegalArgumentException("Clinic with id " + clinicId + " does not exist"));
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User with id " + userId + " does not exist"));
 
+        ClinicAssignment clinicAssignment = new ClinicAssignment();
         clinicAssignment.setUser(user);
+        clinicAssignment.setClinic(clinic);
         clinicAssignmentRepository.save(clinicAssignment);
     }
 }

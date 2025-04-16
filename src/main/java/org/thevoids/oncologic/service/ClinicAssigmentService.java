@@ -9,11 +9,9 @@ public interface ClinicAssigmentService {
 
     ClinicAssignment getClinicAssignmentById(Long id);
 
-    ClinicAssignment createClinicAssignment(ClinicAssignment clinicAssigment);
-
     ClinicAssignment updateClinicAssignment(ClinicAssignment clinicAssigment);
 
     void deleteClinicAssigment(Long id);
 
-    void assignClinicToUser(Long userId, Long clinicId);
+    void assignClinic(Long userId, Long clinicId);
 }

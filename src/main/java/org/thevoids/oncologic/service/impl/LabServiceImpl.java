@@ -1,5 +1,6 @@
 package org.thevoids.oncologic.service.impl;
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.Lab;
 import org.thevoids.oncologic.entity.Patient;
@@ -35,15 +36,6 @@ public class LabServiceImpl implements LabService {
     }
 
     @Override
-    public Lab createLab(Lab lab) {
-        if (lab == null) {
-            throw new IllegalArgumentException("Lab cannot be null");
-        }
-
-        return labRepository.save(lab);
-    }
-
-    @Override
     public Lab updateLab(Lab lab) {
         if (lab == null) {
             throw new IllegalArgumentException("Lab cannot be null");
@@ -75,6 +67,7 @@ public class LabServiceImpl implements LabService {
     }
 
     @Override
+    @Transactional
     public void assignLab(Long patientId, Long userId, Date requestDate) {
         if (patientId == null || userId == null || requestDate == null) {
             throw new IllegalArgumentException("Patient ID, User ID, and Request Date cannot be null");

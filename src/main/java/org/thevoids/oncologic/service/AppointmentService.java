@@ -2,6 +2,7 @@ package org.thevoids.oncologic.service;
 
 import org.thevoids.oncologic.entity.Appointment;
 
+import java.util.Date;
 import java.util.List;
 
 public interface AppointmentService {
@@ -9,7 +10,7 @@ public interface AppointmentService {
 
     Appointment getAppointmentById(Long id);
 
-    Appointment createAppointment(Appointment appointment);
+    void createAppointment(Long patientId, Long ClinicAssigmentId, Long appointmentTypeId, Date dateTime);
 
     Appointment updateAppointment(Appointment appointment);
 
