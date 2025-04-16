@@ -68,7 +68,7 @@ public class LabServiceImpl implements LabService {
 
     @Override
     @Transactional
-    public void assignLab(Long patientId, Long userId, Date requestDate) {
+    public Lab assignLab(Long patientId, Long userId, Date requestDate) {
         if (patientId == null || userId == null || requestDate == null) {
             throw new IllegalArgumentException("Patient ID, User ID, and Request Date cannot be null");
         }
@@ -84,5 +84,6 @@ public class LabServiceImpl implements LabService {
         lab.setPatient(patient);
 
         labRepository.save(lab);
+        return lab;
     }
 }

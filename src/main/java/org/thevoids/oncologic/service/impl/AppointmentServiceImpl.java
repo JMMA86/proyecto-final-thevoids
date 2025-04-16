@@ -49,7 +49,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public void createAppointment(Long patientId, Long clinicAssignmentId, Long appointmentTypeId, Date dateTime) {
+    public Appointment createAppointment(Long patientId, Long clinicAssignmentId, Long appointmentTypeId, Date dateTime) {
         if (patientId == null || clinicAssignmentId == null || appointmentTypeId == null || dateTime == null) {
             StringBuilder errorMessage = new StringBuilder("Missing required parameter(s): ");
 
@@ -85,6 +85,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setDoctor(clinicAssignment.getUser());
 
         appointmentRepository.save(appointment);
+        return appointment;
     }
 
     @Override

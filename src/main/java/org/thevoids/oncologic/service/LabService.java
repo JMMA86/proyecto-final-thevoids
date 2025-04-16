@@ -14,5 +14,5 @@ public interface LabService {
 
     List<Lab> getAllLabs();
 
-    void assignLab(Long patientId, Long userId, Date requestDate);
+    Lab assignLab(Long patientId, Long userId, Date requestDate);
 }

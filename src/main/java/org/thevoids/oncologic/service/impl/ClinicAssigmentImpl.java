@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.Clinic;
 import org.thevoids.oncologic.entity.ClinicAssignment;
 import org.thevoids.oncologic.entity.User;
-import org.thevoids.oncologic.repository.AppointmentTypeRepository;
 import org.thevoids.oncologic.repository.ClinicAssignmentRepository;
 import org.thevoids.oncologic.repository.ClinicRepository;
 import org.thevoids.oncologic.repository.UserRepository;
@@ -18,17 +17,15 @@ public class ClinicAssigmentImpl implements ClinicAssigmentService {
     private final ClinicAssignmentRepository clinicAssignmentRepository;
     private final ClinicRepository clinicRepository;
     private final UserRepository userRepository;
-    private final AppointmentTypeRepository appointmentTypeRepository;
 
     public ClinicAssigmentImpl(
             ClinicAssignmentRepository clinicAssignmentRepository,
             UserRepository userRepository,
-            ClinicRepository clinicRepository,
-            AppointmentTypeRepository appointmentTypeRepository) {
+            ClinicRepository clinicRepository
+    ) {
         this.clinicAssignmentRepository = clinicAssignmentRepository;
         this.userRepository = userRepository;
         this.clinicRepository = clinicRepository;
-        this.appointmentTypeRepository = appointmentTypeRepository;
     }
 
     @Override

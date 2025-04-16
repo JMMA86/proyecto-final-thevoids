@@ -10,7 +10,7 @@ public interface AppointmentService {
 
     Appointment getAppointmentById(Long id);
 
-    void createAppointment(Long patientId, Long ClinicAssigmentId, Long appointmentTypeId, Date dateTime);
+    Appointment createAppointment(Long patientId, Long ClinicAssigmentId, Long appointmentTypeId, Date dateTime);
 
     Appointment updateAppointment(Appointment appointment);
 
