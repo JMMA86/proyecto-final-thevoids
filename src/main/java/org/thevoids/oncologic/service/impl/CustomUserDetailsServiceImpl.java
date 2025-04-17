@@ -5,6 +5,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.security.CustomUserDetail;
 import org.thevoids.oncologic.service.UserService;
 
@@ -19,6 +20,10 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return new CustomUserDetail(userService.getUserByIdentification(username));
+        User user = userService.getUserByIdentification(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+        return new CustomUserDetail(user);
     }
 }

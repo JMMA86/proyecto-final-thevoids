@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.repository.UserRepository;
@@ -13,13 +14,19 @@ import org.thevoids.oncologic.service.impl.UserServiceImpl;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class UserServiceUnitTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -46,28 +53,61 @@ class UserServiceUnitTest {
     void createUser_WhenCalled_SavesUser() {
         // Arrange
         User user = new User();
-        user.setUserId(1L);
+        user.setIdentification("123456");
+        user.setPassword("password");
         Role role = new Role();
-        role.setRoleId(1L);
-        user.setRole(role); // Agregar rol al usuario
-        when(userRepository.existsById(user.getUserId())).thenReturn(false);
+        user.setRole(role);
+
+        when(userRepository.findByIdentification("123456")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(user.getPassword())).thenReturn("encodedPassword");
+        when(userRepository.save(user)).thenReturn(user);
 
         // Act
-        userService.createUser(user);
+        User createdUser = userService.createUser(user);
 
         // Assert
+        assertNotNull(createdUser);
+        assertEquals("encodedPassword", createdUser.getPassword());
         verify(userRepository, times(1)).save(user);
     }
 
     @Test
     void createUser_WhenUserExists_ThrowsException() {
         // Arrange
-        User user = new User();
-        user.setUserId(1L);
-        when(userRepository.existsById(user.getUserId())).thenReturn(true);
+        User existingUser = new User();
+        existingUser.setIdentification("123456");
+
+        when(userRepository.findByIdentification("123456")).thenReturn(Optional.of(existingUser));
+
+        User newUser = new User();
+        newUser.setIdentification("123456");
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.createUser(newUser);
+        });
+
+        assertEquals("User with identification 123456 already exists", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void createUser_ThrowsException_WhenRoleIsNull() {
+        // Arrange
+        User user = new User();
+        user.setIdentification("123456");
+        user.setPassword("password");
+        user.setRole(null);
+
+        when(userRepository.findByIdentification("123456")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.createUser(user);
+        });
+
+        assertEquals("User must have at least one role", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test

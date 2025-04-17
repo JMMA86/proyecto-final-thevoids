@@ -2,6 +2,9 @@ package org.thevoids.oncologic.utils;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
+import lombok.Setter;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,9 +19,13 @@ import java.util.stream.Collectors;
 public class JwtService {
 
     @Value("${app.security.secretkey}")
+    @Setter
+    @Getter
     private String secret;
 
     @Value("${app.security.expirationMinutes}")
+    @Setter
+    @Getter
     private int expirationMinutes;
 
     public String generateToken(UserDetails userDetails) {
@@ -54,8 +61,12 @@ public class JwtService {
     }
     
     public boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        try {
+            final String username = extractUsername(token);
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
     
     private boolean isTokenExpired(String token) {

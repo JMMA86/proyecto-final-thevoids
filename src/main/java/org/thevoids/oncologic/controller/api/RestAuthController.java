@@ -28,6 +28,10 @@ public class RestAuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    /**
+     * Login method to authenticate user and generate JWT token.
+     * @param request AuthRequest object containing username and password
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
         try {

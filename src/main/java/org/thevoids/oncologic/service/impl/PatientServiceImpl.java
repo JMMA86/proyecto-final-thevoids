@@ -3,7 +3,6 @@ package org.thevoids.oncologic.service.impl;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.Patient;
 import org.thevoids.oncologic.repository.PatientRepository;
-import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.PatientService;
 
 import java.util.List;
@@ -11,14 +10,11 @@ import java.util.List;
 @Service
 public class PatientServiceImpl implements PatientService {
     private final PatientRepository patientRepository;
-    private final UserRepository userRepository;
 
     public PatientServiceImpl(
-            PatientRepository patientRepository,
-            UserRepository userRepository
+            PatientRepository patientRepository
     ) {
         this.patientRepository = patientRepository;
-        this.userRepository = userRepository;
     }
 
     @Override
