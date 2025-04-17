@@ -44,8 +44,7 @@ public class ClinicServiceImpl implements ClinicService {
             throw new IllegalArgumentException("Clinic with id " + id + " does not exist");
         }
 
-        Clinic existingClinic = clinicRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Clinic with id " + id + " does not exist"));
+        Clinic existingClinic = clinicRepository.findById(id).orElse(null);
 
         existingClinic.setName(clinic.getName());
         existingClinic.setAddress(clinic.getAddress());

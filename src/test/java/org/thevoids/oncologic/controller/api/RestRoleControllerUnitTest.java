@@ -243,4 +243,72 @@ class RestRoleControllerUnitTest {
         assertNotNull(errorResponse);
         assertEquals("Failed to assign role", errorResponse.getError());
     }
+
+    @Test
+    void testRemoveRoleFromUser_Success() {
+        // Arrange
+        when(userService.getUserById(1L)).thenReturn(testUser);
+        when(roleService.getRole(1L)).thenReturn(adminRole);
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(roleRepository.existsById(1L)).thenReturn(true);
+        when(assignedRoleRepository.existsByRoleIdAndUserId(1L, 1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(java.util.Optional.of(testUser));
+        when(roleRepository.findById(1L)).thenReturn(java.util.Optional.of(adminRole));
+        when(userMapper.toUserResponseDTO(any())).thenReturn(new UserResponseDTO(testUser.getUserId(), testUser.getFullName(), null, null, null));
+
+        // Act
+        ResponseEntity<?> response = restRoleController.removeRoleFromUser(1L, 1L);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void testRemoveRoleFromUser_RoleNotFound() {
+        // Arrange
+        when(roleService.getRole(1L)).thenReturn(null);
+
+        // Act
+        ResponseEntity<?> response = restRoleController.removeRoleFromUser(1L, 1L);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        ErrorResponse errorResponse = (ErrorResponse) response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Role not found", errorResponse.getError());
+    }
+
+    @Test
+    void testRemoveRoleFromUser_UserNotFound() {
+        // Arrange
+        when(roleService.getRole(1L)).thenReturn(adminRole);
+        when(userService.getUserById(1L)).thenReturn(null);
+
+        // Act
+        ResponseEntity<?> response = restRoleController.removeRoleFromUser(1L, 1L);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        ErrorResponse errorResponse = (ErrorResponse) response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("User not found", errorResponse.getError());
+    }
+
+    @Test
+    void testRemoveRoleFromUser_RemovalFailure() {
+        // Arrange
+        when(roleService.getRole(1L)).thenReturn(adminRole);
+        when(userService.getUserById(1L)).thenReturn(testUser);
+        doThrow(new RuntimeException("Failed to remove role")).when(assignedRolesService).removeRoleFromUser(1L, 1L);
+
+        // Act
+        ResponseEntity<?> response = restRoleController.removeRoleFromUser(1L, 1L);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ErrorResponse errorResponse = (ErrorResponse) response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Failed to remove role", errorResponse.getError());
+    }
 }

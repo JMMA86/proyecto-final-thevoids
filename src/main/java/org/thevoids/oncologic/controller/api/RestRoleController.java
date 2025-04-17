@@ -128,9 +128,19 @@ public class RestRoleController {
     @DeleteMapping("/{roleId}/users/{userId}")
     public ResponseEntity<?> removeRoleFromUser(@PathVariable Long userId, @PathVariable Long roleId) {
         try {
-            assignedRolesService.removeRoleFromUser(roleId, userId);
+            Role role = roleService.getRole(roleId);
+            if (role == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ErrorResponse("Role not found", "Role not found"));
+            }
             User user = userService.getUserById(userId);
-            return ResponseEntity.ok(userMapper.toUserResponseDTO(user));
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ErrorResponse("User not found", "User not found"));
+            }
+
+            assignedRolesService.removeRoleFromUser(roleId, userId);
+            return ResponseEntity.ok(userMapper.toUserResponseDTO(userService.getUserById(userId)));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("Failed to remove role", e.getMessage()));
