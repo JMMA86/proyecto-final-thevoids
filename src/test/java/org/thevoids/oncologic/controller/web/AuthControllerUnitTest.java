@@ -1,20 +1,23 @@
 package org.thevoids.oncologic.controller.web;
 
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.ui.Model;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.service.AssignedRoles;
 import org.thevoids.oncologic.service.RoleService;
 import org.thevoids.oncologic.service.UserService;
-
-import java.util.Arrays;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
 
 public class AuthControllerUnitTest {
 
@@ -23,6 +26,9 @@ public class AuthControllerUnitTest {
 
     @Mock
     private RoleService roleService;
+
+    @Mock
+    private AssignedRoles assignedRolesService;
 
     @Mock
     private Model model;
@@ -62,15 +68,19 @@ public class AuthControllerUnitTest {
     void testSignupCreate() {
         // Arrange
         User user = new User();
-        user.setIdentification("123");
-        user.setPassword("password");
+        user.setUserId(1L);
+        user.setFullName("John Doe");
+        Long roleId = 1L;
+
+        when(userService.createUser(user)).thenReturn(user);
 
         // Act
-        String viewName = authController.signupCreate(user);
+        String viewName = authController.signupCreate(user, roleId);
 
         // Assert
         assertEquals("redirect:/web/auth/login", viewName);
         verify(userService).createUser(user);
+        verify(assignedRolesService).assignRoleToUser(roleId, user.getUserId());
     }
 
     @Test

@@ -9,7 +9,7 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 import org.thevoids.oncologic.dto.RoleDTO;
 import org.thevoids.oncologic.dto.UserDTO;
-import org.thevoids.oncologic.dto.UserResponseDTO;
+import org.thevoids.oncologic.dto.UserDTO;
 import org.thevoids.oncologic.dto.UserWithRolesDTO;
 import org.thevoids.oncologic.entity.AssignedRole;
 import org.thevoids.oncologic.entity.User;
@@ -25,9 +25,6 @@ public interface UserMapper {
 
     @Mapping(source = "assignedRoles", target = "roles", qualifiedByName = "mapAssignedRolesToRoleDTOs")
     UserWithRolesDTO toUserWithRolesDTO(User user);
-
-    @Mapping(source = "role.roleName", target = "roleName")
-    UserResponseDTO toUserResponseDTO(User user);
 
     @Named("mapAssignedRolesToRoleDTOs")
     static List<RoleDTO> mapAssignedRolesToRoleDTOs(List<AssignedRole> assignedRoles) {

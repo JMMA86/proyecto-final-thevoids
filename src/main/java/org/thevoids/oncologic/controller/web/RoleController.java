@@ -5,8 +5,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.thevoids.oncologic.dto.RoleDTO;
+import org.thevoids.oncologic.dto.RoleWithPermissionsDTO;
 import org.thevoids.oncologic.entity.Role;
+import org.thevoids.oncologic.mapper.RoleMapper;
 import org.thevoids.oncologic.service.RoleService;
+import org.thevoids.oncologic.service.RolePermissionService;
 
 import java.util.List;
 
@@ -17,6 +20,12 @@ public class RoleController {
     @Autowired
     private RoleService roleService;
 
+    @Autowired
+    private RolePermissionService rolePermissionService;
+
+    @Autowired
+    private RoleMapper roleMapper;
+
     /**
      * Displays a list of all roles.
      *
@@ -25,7 +34,9 @@ public class RoleController {
      */
     @GetMapping
     public String listRoles(Model model) {
-        List<Role> roles = roleService.getAllRoles();
+        List<RoleWithPermissionsDTO> roles = roleService.getAllRoles().stream()
+                .map(roleMapper::toRoleWithPermissionsDTO)
+                .toList();
         model.addAttribute("roles", roles);
         return "roles/list";
     }

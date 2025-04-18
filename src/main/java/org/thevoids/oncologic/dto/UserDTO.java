@@ -1,9 +1,9 @@
 package org.thevoids.oncologic.dto;
 
+import java.util.Date;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Date;
 
 @Getter
 @Setter
@@ -16,7 +16,7 @@ public class UserDTO {
     private String address;
     private String phoneNumber;
     private String email;
-    private String roleName;
+    private long roleId;
     private String status;
     private String password;
 

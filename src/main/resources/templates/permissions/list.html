@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{base}">
+<head>
+    <title>Permissions</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="text-center text-2xl font-bold mb-6">Permissions</h1>
+    <table class="table-auto w-full bg-white shadow-md rounded">
+        <thead>
+            <tr class="bg-gray-200">
+                <th class="px-4 py-2">ID</th>
+                <th class="px-4 py-2">Permission Name</th>
+                <th class="px-4 py-2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="permission : ${permissions}">
+                <td class="border px-4 py-2" th:text="${permission.permissionId}"></td>
+                <td class="border px-4 py-2" th:text="${permission.permissionName}"></td>
+                <td class="border px-4 py-2">
+                    <a th:href="@{/web/permissions/{id}/edit(id=${permission.permissionId})}" 
+                       class="text-blue-500 hover:underline">Edit</a>
+                    <form th:action="@{/web/permissions/{id}/delete(id=${permission.permissionId})}" method="post" class="inline">
+                        <button type="submit" 
+                                class="text-red-500 hover:underline ml-2">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/web/permissions/create}" 
+       class="mt-4 inline-block bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">
+        Create New Permission
+    </a>
+</div>
+</body>
+</html>

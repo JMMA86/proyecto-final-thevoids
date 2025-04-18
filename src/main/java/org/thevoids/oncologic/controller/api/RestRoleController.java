@@ -1,9 +1,18 @@
 package org.thevoids.oncologic.controller.api;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.thevoids.oncologic.dto.ErrorResponse;
 import org.thevoids.oncologic.dto.RoleDTO;
 import org.thevoids.oncologic.entity.Role;
@@ -12,9 +21,6 @@ import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.AssignedRoles;
 import org.thevoids.oncologic.service.RoleService;
 import org.thevoids.oncologic.service.UserService;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/roles")
@@ -111,7 +117,7 @@ public class RestRoleController {
             }
 
             assignedRolesService.assignRoleToUser(roleId, userId);
-            return ResponseEntity.ok(userMapper.toUserResponseDTO(userService.getUserById(userId)));
+            return ResponseEntity.ok(userMapper.toUserDTO(userService.getUserById(userId)));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("Failed to assign role", e.getMessage()));
@@ -140,7 +146,7 @@ public class RestRoleController {
             }
 
             assignedRolesService.removeRoleFromUser(roleId, userId);
-            return ResponseEntity.ok(userMapper.toUserResponseDTO(userService.getUserById(userId)));
+            return ResponseEntity.ok(userMapper.toUserDTO(userService.getUserById(userId)));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("Failed to remove role", e.getMessage()));

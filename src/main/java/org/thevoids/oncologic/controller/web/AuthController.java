@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.service.AssignedRoles;
 import org.thevoids.oncologic.service.RoleService;
 import org.thevoids.oncologic.service.UserService;
 
@@ -20,6 +22,9 @@ public class AuthController {
     @Autowired
     private RoleService roleService;
 
+    @Autowired
+    private AssignedRoles assignedRolesService;
+
     @GetMapping("/signup")
     public String signup(Model model) {
         model.addAttribute("user", new User());
@@ -28,8 +33,9 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public String signupCreate(@ModelAttribute User user) {
-        userService.createUser(user);
+    public String signupCreate(@ModelAttribute User user, @RequestParam Long roleId) {
+        User createdUser = userService.createUser(user);
+        assignedRolesService.assignRoleToUser(roleId, createdUser.getUserId());
         return "redirect:/web/auth/login";
     }
 

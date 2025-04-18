@@ -1,31 +1,34 @@
 package org.thevoids.oncologic.controller.api;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.thevoids.oncologic.dto.RoleDTO;
-import org.thevoids.oncologic.dto.UserResponseDTO;
-import org.thevoids.oncologic.dto.ErrorResponse;
-import org.thevoids.oncologic.entity.Role;
-import org.thevoids.oncologic.entity.User;
-import org.thevoids.oncologic.repository.AssignedRoleRepository;
-import org.thevoids.oncologic.repository.RoleRepository;
-import org.thevoids.oncologic.repository.UserRepository;
-import org.thevoids.oncologic.mapper.UserMapper;
-import org.thevoids.oncologic.service.AssignedRoles;
-import org.thevoids.oncologic.service.RoleService;
-import org.thevoids.oncologic.service.UserService;
-
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.thevoids.oncologic.dto.ErrorResponse;
+import org.thevoids.oncologic.dto.RoleDTO;
+import org.thevoids.oncologic.dto.UserDTO;
+import org.thevoids.oncologic.entity.Role;
+import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.mapper.UserMapper;
+import org.thevoids.oncologic.repository.AssignedRoleRepository;
+import org.thevoids.oncologic.repository.RoleRepository;
+import org.thevoids.oncologic.repository.UserRepository;
+import org.thevoids.oncologic.service.AssignedRoles;
+import org.thevoids.oncologic.service.RoleService;
+import org.thevoids.oncologic.service.UserService;
 
 class RestRoleControllerUnitTest {
 
@@ -54,7 +57,7 @@ class RestRoleControllerUnitTest {
     private UserMapper userMapper;
 
     @Mock
-    private UserResponseDTO userResponseDTO;
+    private UserDTO UserDTO;
 
     private Role adminRole;
     private Role userRole;
@@ -180,20 +183,13 @@ class RestRoleControllerUnitTest {
         // Arrange
         when(userService.getUserById(1L)).thenReturn(testUser);
         when(roleService.getRole(1L)).thenReturn(adminRole);
-        when(userRepository.existsById(1L)).thenReturn(true);
-        when(roleRepository.existsById(1L)).thenReturn(true);
-        when(assignedRoleRepository.existsByRoleIdAndUserId(1L, 1L)).thenReturn(false);
-        when(userRepository.findById(1L)).thenReturn(java.util.Optional.of(testUser));
-        when(roleRepository.findById(1L)).thenReturn(java.util.Optional.of(adminRole));
-        when(assignedRoleRepository.save(any())).thenReturn(null);
-        when(userMapper.toUserResponseDTO(any())).thenReturn(new UserResponseDTO(testUser.getUserId(), testUser.getFullName(), null, null, null));
 
         // Act
         ResponseEntity<?> response = restRoleController.assignRoleToUser(1L, 1L);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        verify(assignedRolesService, times(1)).assignRoleToUser(1L, 1L);
     }
 
     @Test
@@ -249,19 +245,13 @@ class RestRoleControllerUnitTest {
         // Arrange
         when(userService.getUserById(1L)).thenReturn(testUser);
         when(roleService.getRole(1L)).thenReturn(adminRole);
-        when(userRepository.existsById(1L)).thenReturn(true);
-        when(roleRepository.existsById(1L)).thenReturn(true);
-        when(assignedRoleRepository.existsByRoleIdAndUserId(1L, 1L)).thenReturn(true);
-        when(userRepository.findById(1L)).thenReturn(java.util.Optional.of(testUser));
-        when(roleRepository.findById(1L)).thenReturn(java.util.Optional.of(adminRole));
-        when(userMapper.toUserResponseDTO(any())).thenReturn(new UserResponseDTO(testUser.getUserId(), testUser.getFullName(), null, null, null));
 
         // Act
         ResponseEntity<?> response = restRoleController.removeRoleFromUser(1L, 1L);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        verify(assignedRolesService, times(1)).removeRoleFromUser(1L, 1L);
     }
 
     @Test

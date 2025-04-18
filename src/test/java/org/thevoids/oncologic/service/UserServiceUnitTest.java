@@ -1,24 +1,26 @@
 package org.thevoids.oncologic.service;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.thevoids.oncologic.entity.Role;
-import org.thevoids.oncologic.entity.User;
-import org.thevoids.oncologic.repository.UserRepository;
-import org.thevoids.oncologic.service.impl.UserServiceImpl;
-
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.repository.UserRepository;
+import org.thevoids.oncologic.service.impl.UserServiceImpl;
 
 class UserServiceUnitTest {
 
@@ -27,6 +29,9 @@ class UserServiceUnitTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private AssignedRoles assignedRolesService;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -46,17 +51,16 @@ class UserServiceUnitTest {
         List<User> result = userService.getAllUsers();
 
         // Assert
-        assert result.size() == 2;
+        assertEquals(2, result.size());
+        verify(userRepository, times(1)).findAll();
     }
 
     @Test
-    void createUser_WhenCalled_SavesUser() {
+    void createUser_WhenCalled_SavesUserAndAssignsRole() {
         // Arrange
         User user = new User();
         user.setIdentification("123456");
         user.setPassword("password");
-        Role role = new Role();
-        user.setRole(role);
 
         when(userRepository.findByIdentification("123456")).thenReturn(Optional.empty());
         when(passwordEncoder.encode(user.getPassword())).thenReturn("encodedPassword");
@@ -92,25 +96,6 @@ class UserServiceUnitTest {
     }
 
     @Test
-    void createUser_ThrowsException_WhenRoleIsNull() {
-        // Arrange
-        User user = new User();
-        user.setIdentification("123456");
-        user.setPassword("password");
-        user.setRole(null);
-
-        when(userRepository.findByIdentification("123456")).thenReturn(Optional.empty());
-
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            userService.createUser(user);
-        });
-
-        assertEquals("User must have at least one role", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
     void deleteUser_WhenCalled_DeletesUser() {
         // Arrange
         User user = new User();
@@ -132,7 +117,11 @@ class UserServiceUnitTest {
         when(userRepository.existsById(user.getUserId())).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.deleteUser(user));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.deleteUser(user);
+        });
+
+        assertEquals("User with id 1 does not exist", exception.getMessage());
     }
 
     @Test
@@ -147,7 +136,8 @@ class UserServiceUnitTest {
         User result = userService.getUserById(userId);
 
         // Assert
-        assert result.getUserId().equals(userId);
+        assertNotNull(result);
+        assertEquals(userId, result.getUserId());
     }
 
     @Test
@@ -160,18 +150,7 @@ class UserServiceUnitTest {
         User result = userService.getUserById(userId);
 
         // Assert
-        assert result == null;
-    }
-
-    @Test
-    void createUser_WhenUserHasNoRole_ThrowsException() {
-        // Arrange
-        User user = new User();
-        user.setUserId(1L);
-        user.setRole(null); // Usuario sin rol
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
+        assertNull(result);
     }
 
     @Test
@@ -179,9 +158,6 @@ class UserServiceUnitTest {
         // Arrange
         User user = new User();
         user.setUserId(1L);
-        Role role = new Role();
-        role.setRoleId(1L);
-        user.setRole(role); // Agregar rol al usuario
         when(userRepository.existsById(user.getUserId())).thenReturn(true);
 
         // Act
@@ -199,6 +175,10 @@ class UserServiceUnitTest {
         when(userRepository.existsById(user.getUserId())).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.updateUser(user));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateUser(user);
+        });
+
+        assertEquals("User with id 1 does not exist", exception.getMessage());
     }
 }

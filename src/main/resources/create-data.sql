@@ -15,14 +15,14 @@ INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (2, 2); -- Doctor 
 INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (4, 3); -- Lab Technician can MANAGE_LABS
 
 -- Insert sample data into Users
-INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, role_id, password, status)
-VALUES ('John Doe', '123456789', '1980-05-15', 'Male', '123 Main St', '555-1234', 'john.doe@example.com', 2, 'password123', 'active');
+INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, password, status)
+VALUES ('John Doe', '123456789', '1980-05-15', 'Male', '123 Main St', '555-1234', 'john.doe@example.com', '$2a$12$bvKiQLOf1zhcFThcgVVNT.4MHfP6VZE23vVMhkHoZepYCN3z03X2G', 'active');
 
-INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, role_id, password, status)
-VALUES ('Jane Smith', '987654321', '1990-08-25', 'Female', '456 Elm St', '555-5678', 'jane.smith@example.com', 3, 'password456', 'active');
+INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, password, status)
+VALUES ('Jane Smith', '987654321', '1990-08-25', 'Female', '456 Elm St', '555-5678', 'jane.smith@example.com', 'password456', 'active');
 
-INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, role_id, password, status)
-VALUES ('Alice Johnson', '456789123', '1985-03-10', 'Female', '789 Oak St', '555-9012', 'alice.johnson@example.com', 4, 'password789', 'active');
+INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, password, status)
+VALUES ('Alice Johnson', '456789123', '1985-03-10', 'Female', '789 Oak St', '555-9012', 'alice.johnson@example.com', 'password789', 'active');
 
 -- Insert sample data into Patients
 INSERT INTO Patients (user_id, blood_group, allergies, family_history)

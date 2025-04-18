@@ -1,13 +1,22 @@
 package org.thevoids.oncologic.entity;
 
+import java.util.Date;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.util.Date;
-import java.util.List;
 
 @Entity
 @Table(name = "Users")
@@ -40,18 +49,14 @@ public class User {
     @Column(name = "email", length = 255)
     private String email;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id", nullable = false)
-    private Role role;
-
-    @Column(name = "status", length = 20, nullable = false)
+    @Column(name = "status", length = 20)
     private String status = "active";
 
     @OneToOne(mappedBy = "user")
     @JsonIgnore
     private Patient patient;
 
-    @Column(name = "password", length = 60, nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @OneToMany(mappedBy = "user")

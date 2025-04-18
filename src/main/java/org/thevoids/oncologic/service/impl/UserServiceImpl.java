@@ -33,10 +33,6 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("User with identification " + user.getIdentification() + " already exists");
         }
 
-        if (user.getRole() == null) {
-            throw new IllegalArgumentException("User must have at least one role");
-        }
-
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         this.userRepository.save(user);

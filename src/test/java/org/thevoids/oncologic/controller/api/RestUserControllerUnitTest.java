@@ -1,26 +1,32 @@
 package org.thevoids.oncologic.controller.api;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.thevoids.oncologic.dto.UserResponseDTO;
+import org.thevoids.oncologic.dto.UserDTO;
+import org.thevoids.oncologic.entity.AssignedRole;
+import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.AssignedRoles;
 import org.thevoids.oncologic.service.RoleService;
 import org.thevoids.oncologic.service.UserService;
-
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class RestUserControllerUnitTest {
 
@@ -54,12 +60,21 @@ class RestUserControllerUnitTest {
         user.setUserId(1L);
         user.setFullName("John Doe");
 
-        UserResponseDTO userResponseDTO = new UserResponseDTO();
-        userResponseDTO.setUserId(1L);
-        userResponseDTO.setFullName("John Doe");
+        Role role = new Role();
+        role.setRoleId(1L);
+        role.setRoleName("Admin");
+
+        AssignedRole assignedRole = new AssignedRole();
+        assignedRole.setUser(user);
+        assignedRole.setRole(role);
+        user.setAssignedRoles(List.of(assignedRole));
+
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUserId(1L);
+        userDTO.setFullName("John Doe");
 
         when(userService.getAllUsers()).thenReturn(List.of(user));
-        when(userMapper.toUserResponseDTO(user)).thenReturn(userResponseDTO);
+        when(userMapper.toUserDTO(user)).thenReturn(userDTO);
 
         // Act
         var result = mockMvc.perform(get("/api/v1/users")
@@ -79,12 +94,12 @@ class RestUserControllerUnitTest {
         user.setUserId(1L);
         user.setFullName("John Doe");
 
-        UserResponseDTO userResponseDTO = new UserResponseDTO();
-        userResponseDTO.setUserId(1L);
-        userResponseDTO.setFullName("John Doe");
+        UserDTO UserDTO = new UserDTO();
+        UserDTO.setUserId(1L);
+        UserDTO.setFullName("John Doe");
 
         when(userService.createUser(any(User.class))).thenReturn(user);
-        when(userMapper.toUserResponseDTO(user)).thenReturn(userResponseDTO);
+        when(userMapper.toUserDTO(user)).thenReturn(UserDTO);
 
         // Act
         var result = mockMvc.perform(post("/api/v1/users/register")

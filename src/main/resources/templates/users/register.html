@@ -8,7 +8,7 @@
 <body>
 <div layout:fragment="content">
     <h1 class="text-center text-2xl font-bold mb-6">Register New User</h1>
-    <form th:action="@{/web/users/register}" method="post" th:object="${user}" class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
+    <form th:action="@{/web/users/register}" method="post" th:object="${userDTO}" class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
         <div class="mb-4">
             <label for="fullName" class="block text-gray-700 font-bold mb-2">Full Name:</label>
             <input type="text" id="fullName" name="fullName" th:field="*{fullName}" required 
@@ -30,10 +30,10 @@
                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div class="mb-4">
-            <label for="role" class="block text-gray-700 font-bold mb-2">Role:</label>
-            <select id="role" name="role.roleId" th:field="*{role.roleId}" required 
+            <label for="roleId" class="block text-gray-700 font-bold mb-2">Role:</label>
+            <select id="roleId" name="roleId" th:field="*{roleId}" required 
                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="" disabled selected>Select a role</option>
+                <option value="-1" disabled selected>Select a role</option>
                 <option th:each="role : ${roles}" th:value="${role.roleId}" th:text="${role.roleName}"></option>
             </select>
         </div>

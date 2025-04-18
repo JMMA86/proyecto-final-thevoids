@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.thevoids.oncologic.dto.RoleDTO;
 import org.thevoids.oncologic.dto.UserDTO;
 import org.thevoids.oncologic.dto.UserWithRolesDTO;
+import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.mapper.RoleMapper;
 import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.AssignedRoles;
@@ -41,8 +42,8 @@ public class UserController {
 
     @GetMapping
     public String listUsers(Model model) {
-        List<UserDTO> userDTOs = userService.getAllUsers().stream()
-                .map(userMapper::toUserDTO)
+        List<UserWithRolesDTO> userDTOs = userService.getAllUsers().stream()
+                .map(userMapper::toUserWithRolesDTO)
                 .toList();
         model.addAttribute("users", userDTOs);
         return "users/list";
@@ -50,15 +51,17 @@ public class UserController {
 
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
-        model.addAttribute("user", new UserDTO());
+        model.addAttribute("userDTO", new UserDTO());
         model.addAttribute("roles", roleService.getAllRoles());
         return "users/register";
     }
 
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute UserDTO userDTO, Model model) {
+    public String registerUser(@ModelAttribute UserDTO userDTO, @RequestParam Long roleId, Model model) {
         try {
-            userService.createUser(userMapper.toUser(userDTO));
+            User user = userMapper.toUser(userDTO);
+            User createdUser = userService.createUser(user);
+            assignedRolesService.assignRoleToUser(roleId, createdUser.getUserId());
             return "redirect:/web/users";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());

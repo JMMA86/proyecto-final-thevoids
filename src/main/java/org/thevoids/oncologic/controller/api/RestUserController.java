@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thevoids.oncologic.dto.UserResponseDTO;
+import org.thevoids.oncologic.dto.UserDTO;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.UserService;
@@ -28,29 +28,29 @@ public class RestUserController {
     /**
      * Retrieves a list of all users in the system.
      *
-     * @return A {@link ResponseEntity} containing a list of {@link UserResponseDTO} objects.
+     * @return A {@link ResponseEntity} containing a list of {@link UserDTO} objects.
      */
     @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<User> userList = userService.getAllUsers();
-        List<UserResponseDTO> userResponseDTOList = userList.stream()
-                .map(userMapper::toUserResponseDTO)
+        List<UserDTO> UserDTOList = userList.stream()
+                .map(userMapper::toUserDTO)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(userResponseDTOList);
+        return ResponseEntity.ok(UserDTOList);
     }
 
     /**
      * Registers a new user in the system.
      *
      * @param user The {@link User} object containing the user's details.
-     * @return A {@link ResponseEntity} containing the created {@link UserResponseDTO} object or an error response.
+     * @return A {@link ResponseEntity} containing the created {@link UserDTO} object or an error response.
      */
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
         try {
             User createdUser = userService.createUser(user);
-            UserResponseDTO userResponseDTO = userMapper.toUserResponseDTO(createdUser);
-            return ResponseEntity.ok(userResponseDTO);
+            UserDTO UserDTO = userMapper.toUserDTO(createdUser);
+            return ResponseEntity.ok(UserDTO);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }

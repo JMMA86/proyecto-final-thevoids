@@ -13,13 +13,21 @@
             <h1 class="text-xl font-bold">Oncologic</h1>
             <nav>
                 <ul class="flex space-x-4">
-                    <li><a href="/" class="hover:underline">Home</a></li>
-                    <li><a href="/web/auth/login" class="hover:underline">Login</a></li>
-                    <li><a href="/web/auth/signup" class="hover:underline">Signup</a></li>
+                    <li><a th:href="@{/}" class="hover:underline">Home</a></li>
+                    <li><a th:href="@{/web/auth/login}" class="hover:underline">Login</a></li>
+                    <li><a th:href="@{/web/auth/signup}" class="hover:underline">Signup</a></li>
+                    <li><a th:href="@{/web/users}" class="hover:underline">Users</a></li>
+                    <li><a th:href="@{/web/roles}" class="hover:underline">Roles</a></li>
+                    <li><a th:href="@{/web/permissions}" class="hover:underline">Permissions</a></li>
                 </ul>
             </nav>
         </div>
     </header>
+    <div class="container mx-auto mt-4">
+        <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            <span th:text="${error}"></span>
+        </div>
+    </div>
     <main class="container mx-auto p-4">
         <div layout:fragment="content"></div>
     </main>
