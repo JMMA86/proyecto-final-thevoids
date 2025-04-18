@@ -1,6 +1,7 @@
 package org.thevoids.oncologic.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 import org.thevoids.oncologic.dto.PermissionDTO;
 import org.thevoids.oncologic.entity.Permission;
@@ -12,5 +13,6 @@ public interface PermissionMapper {
 
     PermissionDTO toPermissionDTO(Permission permission);
 
+    @Mapping(target = "permissionId", ignore = true) // Ensure permissionId is ignored during mapping
     Permission toPermission(PermissionDTO permissionDTO);
 }

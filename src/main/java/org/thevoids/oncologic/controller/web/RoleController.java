@@ -59,26 +59,30 @@ public class RoleController {
      */
     @GetMapping("/create")
     public String showCreateForm(Model model) {
-        model.addAttribute("role", new RoleDTO());
+        model.addAttribute("roleDTO", new RoleDTO());
+        model.addAttribute("permissions", rolePermissionService.getAllPermissions());
         return "roles/create";
     }
 
     /**
      * Handles the creation of a new role.
      *
-     * @param roleDTO the role data submitted by the user.
-     * @param model   the model to populate in case of errors.
+     * @param roleDTO      the role data submitted by the user.
+     * @param permissionId the ID of the permission to assign to the role.
+     * @param model        the model to populate in case of errors.
      * @return a redirect to the roles list or the creation form in case of errors.
      */
     @PostMapping("/create")
-    public String createRole(@ModelAttribute RoleDTO roleDTO, Model model) {
+    public String createRole(@ModelAttribute RoleDTO roleDTO, @RequestParam Long permissionId, Model model) {
         try {
             Role role = new Role();
             role.setRoleName(roleDTO.getRoleName());
-            roleService.createRole(role);
+            Role createdRole = roleService.createRole(role);
+            rolePermissionService.assignPermissionToRole(permissionId, createdRole.getRoleId());
             return "redirect:/web/roles";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
+            model.addAttribute("permissions", rolePermissionService.getAllPermissions());
             return "roles/create";
         }
     }

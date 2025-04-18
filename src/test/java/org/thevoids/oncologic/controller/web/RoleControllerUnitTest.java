@@ -90,39 +90,51 @@ public class RoleControllerUnitTest {
 
     @Test
     void testShowCreateForm() {
+        // Arrange
+        when(rolePermissionService.getAllPermissions()).thenReturn(List.of(new Permission()));
+
         // Act
         String viewName = roleController.showCreateForm(model);
 
         // Assert
         assertEquals("roles/create", viewName);
-        verify(model).addAttribute(eq("role"), any(RoleDTO.class));
+        verify(model).addAttribute(eq("roleDTO"), any(RoleDTO.class));
+        verify(model).addAttribute(eq("permissions"), any(List.class));
     }
 
     @Test
     void testCreateRole_Success() {
         // Arrange
         RoleDTO roleDTO = new RoleDTO(null, "Admin");
+        Role createdRole = new Role();
+        createdRole.setRoleId(1L);
+        createdRole.setRoleName("Admin");
+
+        when(roleService.createRole(any(Role.class))).thenReturn(createdRole);
 
         // Act
-        String viewName = roleController.createRole(roleDTO, model);
+        String viewName = roleController.createRole(roleDTO, 1L, model);
 
         // Assert
         assertEquals("redirect:/web/roles", viewName);
         verify(roleService).createRole(any(Role.class));
+        verify(rolePermissionService).assignPermissionToRole(1L, createdRole.getRoleId());
     }
 
     @Test
     void testCreateRole_Failure() {
         // Arrange
         RoleDTO roleDTO = new RoleDTO(null, "Admin");
-        doThrow(new RuntimeException("Error creating role")).when(roleService).createRole(any(Role.class));
+        when(roleService.createRole(any(Role.class))).thenThrow(new RuntimeException("Error creating role"));
+        when(rolePermissionService.getAllPermissions()).thenReturn(List.of(new Permission()));
 
         // Act
-        String viewName = roleController.createRole(roleDTO, model);
+        String viewName = roleController.createRole(roleDTO, 1L, model);
 
         // Assert
         assertEquals("roles/create", viewName);
         verify(model).addAttribute("error", "Error creating role");
+        verify(model).addAttribute(eq("permissions"), any(List.class));
     }
 
     @Test

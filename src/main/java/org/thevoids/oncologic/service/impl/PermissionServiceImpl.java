@@ -21,7 +21,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public void createPermission(Permission permission) {
-        if (permissionRepository.existsById(permission.getPermissionId())) {
+        if (permission.getPermissionId() != null && permissionRepository.existsById(permission.getPermissionId())) {
             throw new IllegalArgumentException("Permission already exists");
         }
 

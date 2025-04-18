@@ -1,14 +1,19 @@
 package org.thevoids.oncologic.controller.web;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.thevoids.oncologic.dto.PermissionDTO;
 import org.thevoids.oncologic.entity.Permission;
+import org.thevoids.oncologic.mapper.PermissionMapper;
 import org.thevoids.oncologic.service.PermissionService;
-
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/web/permissions")
@@ -16,6 +21,8 @@ public class PermissionController {
 
     @Autowired
     private PermissionService permissionService;
+    @Autowired
+    private PermissionMapper permissionMapper;
 
     @GetMapping
     public String listPermissions(Model model) {
@@ -25,15 +32,14 @@ public class PermissionController {
 
     @GetMapping("/create")
     public String showCreateForm(Model model) {
-        model.addAttribute("permission", new PermissionDTO());
+        model.addAttribute("permissionDTO", new PermissionDTO());
         return "permissions/create";
     }
 
     @PostMapping("/create")
     public String createPermission(@ModelAttribute PermissionDTO permissionDTO, Model model) {
         try {
-            Permission permission = new Permission();
-            permission.setPermissionName(permissionDTO.getPermissionName());
+            Permission permission = permissionMapper.toPermission(permissionDTO);
             permissionService.createPermission(permission);
             return "redirect:/web/permissions";
         } catch (Exception e) {
