@@ -2,6 +2,7 @@ package org.thevoids.oncologic.controller.web;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -12,6 +13,9 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 public class HomeControllerUnitTest {
 
     private MockMvc mockMvc;
+
+    @InjectMocks
+    private HomeController homeController;
 
     @BeforeEach
     void setUp() {
