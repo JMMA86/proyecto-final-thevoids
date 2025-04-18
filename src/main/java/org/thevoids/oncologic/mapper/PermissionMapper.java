@@ -13,6 +13,5 @@ public interface PermissionMapper {
 
     PermissionDTO toPermissionDTO(Permission permission);
 
-    @Mapping(target = "permissionId", ignore = true) // Ensure permissionId is ignored during mapping
     Permission toPermission(PermissionDTO permissionDTO);
 }

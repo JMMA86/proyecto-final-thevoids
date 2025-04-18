@@ -1,27 +1,34 @@
 package org.thevoids.oncologic.controller.web;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.ui.Model;
-import org.thevoids.oncologic.dto.PermissionDTO;
-import org.thevoids.oncologic.entity.Permission;
-import org.thevoids.oncologic.service.PermissionService;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.springframework.ui.Model;
+import org.thevoids.oncologic.dto.PermissionDTO;
+import org.thevoids.oncologic.entity.Permission;
+import org.thevoids.oncologic.mapper.PermissionMapper;
+import org.thevoids.oncologic.service.PermissionService;
 
 public class PermissionControllerUnitTest {
 
     @Mock
     private PermissionService permissionService;
+
+    @Mock
+    private PermissionMapper permissionMapper;
 
     @Mock
     private Model model;
@@ -37,13 +44,15 @@ public class PermissionControllerUnitTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        // Initialize permissions
+        // Initialize permissions with unique IDs
         permission1 = new Permission();
-        permission1.setPermissionId(1L);
+        permission1.setPermissionId(1L); // Unique ID
         permission1.setPermissionName("READ");
+
         permission2 = new Permission();
-        permission2.setPermissionId(2L);
+        permission2.setPermissionId(2L); // Unique ID
         permission2.setPermissionName("WRITE");
+
         permissions = Arrays.asList(permission1, permission2);
     }
 
@@ -68,36 +77,65 @@ public class PermissionControllerUnitTest {
 
         // Assert
         assertEquals("permissions/create", viewName);
-        verify(model).addAttribute(eq("permission"), any(PermissionDTO.class));
+        verify(model).addAttribute(eq("permissionDTO"), any(PermissionDTO.class));
     }
 
     @Test
     void testCreatePermission_Success() {
         // Arrange
-        PermissionDTO permissionDTO = new PermissionDTO(null, "EXECUTE");
+        PermissionDTO permissionDTO = new PermissionDTO();
+        permissionDTO.setPermissionName("READ");
+
+        Permission permission = new Permission();
+        permission.setPermissionName("READ");
+
+        when(permissionMapper.toPermission(permissionDTO)).thenReturn(permission);
 
         // Act
         String viewName = permissionController.createPermission(permissionDTO, model);
 
         // Assert
         assertEquals("redirect:/web/permissions", viewName);
-        ArgumentCaptor<Permission> captor = ArgumentCaptor.forClass(Permission.class);
-        verify(permissionService).createPermission(captor.capture());
-        assertEquals(permissionDTO.getPermissionName(), captor.getValue().getPermissionName());
+        verify(permissionService).createPermission(permission);
     }
 
     @Test
     void testCreatePermission_Failure() {
         // Arrange
-        PermissionDTO permissionDTO = new PermissionDTO(null, "EXECUTE");
-        doThrow(new RuntimeException("Error creating permission")).when(permissionService).createPermission(any(Permission.class));
+        PermissionDTO permissionDTO = new PermissionDTO();
+        permissionDTO.setPermissionName("READ");
+
+        Permission permission = new Permission();
+        permission.setPermissionName("READ");
+
+        when(permissionMapper.toPermission(permissionDTO)).thenReturn(permission);
+        doThrow(new RuntimeException("Error creating permission")).when(permissionService).createPermission(permission);
 
         // Act
         String viewName = permissionController.createPermission(permissionDTO, model);
 
         // Assert
         assertEquals("permissions/create", viewName);
-        verify(model).addAttribute("error", "Error creating permission");
+        verify(model).addAttribute(eq("error"), eq("Error creating permission"));
+    }
+
+    @Test
+    void testCreatePermission_WithIdProvided_Failure() {
+        // Arrange
+        PermissionDTO permissionDTO = new PermissionDTO(3L, "READ"); // Unique ID
+        Permission permission = new Permission();
+        permission.setPermissionId(3L); // Unique ID
+        permission.setPermissionName("READ");
+
+        when(permissionMapper.toPermission(permissionDTO)).thenReturn(permission);
+        doThrow(new IllegalArgumentException("ID must not be provided when creating a new permission")).when(permissionService).createPermission(permission);
+
+        // Act
+        String viewName = permissionController.createPermission(permissionDTO, model);
+
+        // Assert
+        assertEquals("permissions/create", viewName);
+        verify(model).addAttribute(eq("error"), eq("ID must not be provided when creating a new permission"));
     }
 
     @Test
