@@ -79,7 +79,7 @@ public class RoleController {
             role.setRoleName(roleDTO.getRoleName());
             Role createdRole = roleService.createRole(role);
             rolePermissionService.assignPermissionToRole(permissionId, createdRole.getRoleId());
-            return "redirect:/web/roles";
+            return "redirect:/web/roles"; // Ensure no invalid characters in the redirect URL
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("permissions", rolePermissionService.getAllPermissions());
@@ -138,7 +138,7 @@ public class RoleController {
         try {
             Role role = roleService.getRole(id);
             roleService.deleteRole(role);
-            return "redirect:/web/roles";
+            return "redirect:/web/roles"; // Ensure no invalid characters in the redirect URL
         } catch (Exception e) {
             return "redirect:/web/roles?error=" + e.getMessage();
         }

@@ -23,7 +23,8 @@
                 <td class="border px-4 py-2">
                     <a th:href="@{/web/permissions/{id}/edit(id=${permission.permissionId})}" 
                        class="text-blue-500 hover:underline">Edit</a>
-                    <form th:action="@{/web/permissions/{id}/delete(id=${permission.permissionId})}" method="post" class="inline">
+                    <form th:action="@{/web/permissions/{id}/delete(id=${permission.permissionId})}" method="post" class="inline" 
+                          onsubmit="return confirm('Are you sure you want to delete this permission? This action cannot be undone.')">
                         <button type="submit" 
                                 class="text-red-500 hover:underline ml-2">Delete</button>
                     </form>
