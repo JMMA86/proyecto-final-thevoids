@@ -4,6 +4,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
 import org.thevoids.oncologic.dto.RoleDTO;
 import org.thevoids.oncologic.dto.UserDTO;
@@ -32,6 +33,15 @@ public class UserMapperUnitTest {
     }
 
     @Test
+    void testToUserDTO_NullInput() {
+        // Act
+        UserDTO userDTO = userMapper.toUserDTO(null);
+
+        // Assert
+        assertNull(userDTO);
+    }
+
+    @Test
     public void testToUser() {
         UserDTO userDTO = new UserDTO();
         userDTO.setUserId(1L);
@@ -44,6 +54,15 @@ public class UserMapperUnitTest {
         assertEquals(userDTO.getUserId(), user.getUserId());
         assertEquals(userDTO.getFullName(), user.getFullName());
         assertEquals(userDTO.getEmail(), user.getEmail());
+    }
+
+    @Test
+    void testToUser_NullInput() {
+        // Act
+        User user = userMapper.toUser(null);
+
+        // Assert
+        assertNull(user);
     }
 
     @Test
@@ -71,6 +90,15 @@ public class UserMapperUnitTest {
         assertEquals(1, userWithRolesDTO.getRoles().size());
         assertEquals(role.getRoleId(), userWithRolesDTO.getRoles().get(0).getRoleId());
         assertEquals(role.getRoleName(), userWithRolesDTO.getRoles().get(0).getRoleName());
+    }
+
+    @Test
+    void testToUserWithRolesDTO_NullInput() {
+        // Act
+        UserWithRolesDTO userWithRolesDTO = userMapper.toUserWithRolesDTO(null);
+
+        // Assert
+        assertNull(userWithRolesDTO);
     }
 
     @Test
