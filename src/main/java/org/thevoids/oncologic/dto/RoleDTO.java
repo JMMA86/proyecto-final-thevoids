@@ -13,4 +13,7 @@ public class RoleDTO {
         this.roleId = roleId;
         this.roleName = roleName;
     }
+
+    public RoleDTO() {
+    }
 }

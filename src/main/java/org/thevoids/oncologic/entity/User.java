@@ -2,6 +2,8 @@ package org.thevoids.oncologic.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Date;
@@ -9,6 +11,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "Users")
+@Getter
+@Setter
 @ToString
 public class User {
     @Id
@@ -73,148 +77,4 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     @JsonIgnore
     private List<AssignedRole> assignedRoles;
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public String getIdentification() {
-        return identification;
-    }
-
-    public void setIdentification(String identification) {
-        this.identification = identification;
-    }
-
-    public Date getBirthDate() {
-        return birthDate;
-    }
-
-    public void setBirthDate(Date birthDate) {
-        this.birthDate = birthDate;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public Patient getPatient() {
-        return patient;
-    }
-
-    public void setPatient(Patient patient) {
-        this.patient = patient;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public List<ClinicAssignment> getClinicAssignments() {
-        return clinicAssignments;
-    }
-
-    public void setClinicAssignments(List<ClinicAssignment> clinicAssignments) {
-        this.clinicAssignments = clinicAssignments;
-    }
-
-    public List<Appointment> getDoctorAppointments() {
-        return doctorAppointments;
-    }
-
-    public void setDoctorAppointments(List<Appointment> doctorAppointments) {
-        this.doctorAppointments = doctorAppointments;
-    }
-
-    public List<Schedule> getSchedules() {
-        return schedules;
-    }
-
-    public void setSchedules(List<Schedule> schedules) {
-        this.schedules = schedules;
-    }
-
-    public List<Lab> getLabs() {
-        return labs;
-    }
-
-    public void setLabs(List<Lab> labs) {
-        this.labs = labs;
-    }
-
-    public List<UserSpecialty> getUserSpecialties() {
-        return userSpecialties;
-    }
-
-    public void setUserSpecialties(List<UserSpecialty> userSpecialties) {
-        this.userSpecialties = userSpecialties;
-    }
-
-    public List<AssignedRole> getAssignedRoles() {
-        return assignedRoles;
-    }
-
-    public void setAssignedRoles(List<AssignedRole> assignedRoles) {
-        this.assignedRoles = assignedRoles;
-    }
 }

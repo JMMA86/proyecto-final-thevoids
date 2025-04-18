@@ -19,4 +19,7 @@ public class UserDTO {
     private String roleName;
     private String status;
     private String password;
+
+    public UserDTO() {
+    }
 }

@@ -13,11 +13,14 @@ public class UserWithRolesDTO {
     private String email;
     private List<RoleDTO> roles;
 
-    public void setRoles(List<RoleDTO> roles) {
+    public UserWithRolesDTO(Long userId, String fullName, String email, List<RoleDTO> roles) {
+        this.userId = userId;
+        this.fullName = fullName;
+        this.email = email;
         this.roles = roles;
     }
-    public List<RoleDTO> getRoles() {
-        return roles;
+
+    public UserWithRolesDTO() {
     }
 
     public boolean hasRole(long roleId) {

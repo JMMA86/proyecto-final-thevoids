@@ -63,36 +63,56 @@ class JwtServiceUnitTests {
         assertEquals("testuser", username);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
-    void validateToken_ValidToken_ReturnsTrue() {
+    void validateToken_UsernameMatchesAndTokenNotExpired_ReturnsTrue() {
         // Arrange
         when(userDetails.getUsername()).thenReturn("testuser");
-        Collection<? extends GrantedAuthority> authorities = (Collection<? extends GrantedAuthority>) List.of(new SimpleGrantedAuthority("ROLE_USER"));
-        when(userDetails.getAuthorities()).thenReturn((Collection<GrantedAuthority>) authorities);
-
         String token = jwtService.generateToken(userDetails);
-
+    
         // Act
         boolean isValid = jwtService.validateToken(token, userDetails);
-
+    
         // Assert
         assertTrue(isValid);
     }
-
-    @SuppressWarnings("unchecked")
+    
     @Test
-    void validateToken_InvalidToken_ReturnsFalse() {
+    void validateToken_UsernameMatchesAndTokenExpired_ReturnsFalse() {
+        // Arrange
+        jwtService.setExpirationMinutes(-1);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        String token = jwtService.generateToken(userDetails);
+    
+        // Act
+        boolean isValid = jwtService.validateToken(token, userDetails);
+    
+        // Assert
+        assertFalse(isValid);
+    }
+    
+    @Test
+    void validateToken_UsernameDoesNotMatchAndTokenNotExpired_ReturnsFalse() {
         // Arrange
         when(userDetails.getUsername()).thenReturn("testuser");
-        Collection<? extends GrantedAuthority> authorities = (Collection<? extends GrantedAuthority>) List.of(new SimpleGrantedAuthority("ROLE_USER"));
-        when(userDetails.getAuthorities()).thenReturn((Collection<GrantedAuthority>) authorities);
-
         String token = jwtService.generateToken(userDetails);
-
+    
         // Act
-        boolean isValid = jwtService.validateToken(token + "tampered", userDetails);
-
+        boolean isValid = jwtService.validateToken(token, mock(CustomUserDetail.class)); // Different userDetails
+    
+        // Assert
+        assertFalse(isValid);
+    }
+    
+    @Test
+    void validateToken_UsernameDoesNotMatchAndTokenExpired_ReturnsFalse() {
+        // Arrange
+        jwtService.setExpirationMinutes(-1);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        String token = jwtService.generateToken(userDetails);
+    
+        // Act
+        boolean isValid = jwtService.validateToken(token, mock(CustomUserDetail.class)); // Different userDetails
+    
         // Assert
         assertFalse(isValid);
     }
@@ -101,7 +121,7 @@ class JwtServiceUnitTests {
     @Test
     void isTokenExpired_ExpiredToken_ReturnsTrue() {
         // Arrange
-        jwtService.setExpirationMinutes(-1); // Set expiration in the past
+        jwtService.setExpirationMinutes(-1);
         when(userDetails.getUsername()).thenReturn("testuser");
         Collection<? extends GrantedAuthority> authorities = (Collection<? extends GrantedAuthority>) List.of(new SimpleGrantedAuthority("ROLE_USER"));
         when(userDetails.getAuthorities()).thenReturn((Collection<GrantedAuthority>) authorities);
@@ -112,7 +132,7 @@ class JwtServiceUnitTests {
         boolean isExpired = jwtService.validateToken(token, userDetails);
 
         // Assert
-        assertFalse(isExpired); // Token should be invalid due to expiration
+        assertFalse(isExpired);
     }
 
     @SuppressWarnings("unchecked")

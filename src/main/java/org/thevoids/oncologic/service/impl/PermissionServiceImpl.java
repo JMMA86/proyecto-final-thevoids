@@ -1,5 +1,6 @@
 package org.thevoids.oncologic.service.impl;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,11 @@ import org.thevoids.oncologic.service.PermissionService;
 public class PermissionServiceImpl implements PermissionService {
     @Autowired
     private PermissionRepository permissionRepository;
+
+    @Override
+    public List<Permission> getAllPermissions() {
+        return permissionRepository.findAll();
+    }
 
     @Override
     public void createPermission(Permission permission) {

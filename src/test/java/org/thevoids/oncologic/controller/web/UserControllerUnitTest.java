@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.thevoids.oncologic.dto.UserDTO;
 import org.thevoids.oncologic.dto.UserWithRolesDTO;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.mapper.RoleMapper;
@@ -93,40 +94,45 @@ class UserControllerUnitTest {
     @Test
     void registerUser_SuccessfulRegistration_RedirectsToUserList() throws Exception {
         // Arrange
-        User user = new User();
-        user.setIdentification("123456");
+        UserDTO userDTO = new UserDTO();
+        userDTO.setIdentification("123456");
     
+        when(userMapper.toUser(any(UserDTO.class))).thenReturn(new User());
         when(userService.createUser(any(User.class))).thenReturn(new User());
     
         // Act
         var result = mockMvc.perform(post("/web/users/register")
-                            .flashAttr("user", user));
+                            .flashAttr("user", userDTO));
     
         // Assert
         result.andExpect(status().is3xxRedirection())
               .andExpect(redirectedUrl("/web/users"));
+        verify(userMapper, times(1)).toUser(any(UserDTO.class));
         verify(userService, times(1)).createUser(any(User.class));
     }
     
     @Test
     void registerUser_FailedRegistration_ReturnsRegisterViewWithError() throws Exception {
         // Arrange
-        User user = new User();
-        user.setIdentification("123456");
+        UserDTO userDTO = new UserDTO();
+        userDTO.setIdentification("123456");
     
+        when(userMapper.toUser(any(UserDTO.class))).thenReturn(new User());
         doThrow(new IllegalArgumentException("Error creating user")).when(userService).createUser(any(User.class));
         when(roleService.getAllRoles()).thenReturn(List.of());
     
         // Act
         var result = mockMvc.perform(post("/web/users/register")
-                            .flashAttr("user", user));
+                            .flashAttr("user", userDTO));
     
         // Assert
         result.andExpect(status().isOk())
               .andExpect(view().name("users/register"))
               .andExpect(model().attributeExists("error"))
               .andExpect(model().attributeExists("roles"));
+        verify(userMapper, times(1)).toUser(any(UserDTO.class));
         verify(userService, times(1)).createUser(any(User.class));
+        verify(roleService, times(1)).getAllRoles();
     }
     
     @Test
@@ -167,11 +173,41 @@ class UserControllerUnitTest {
               .andExpect(redirectedUrl("/web/users/1/roles"));
         verify(assignedRolesService, times(1)).assignRoleToUser(1L, 1L);
     }
+
+    @Test
+    void assignRole_FailedAssignment_ReturnsManageRolesViewWithError() throws Exception {
+        // Arrange
+        doThrow(new IllegalArgumentException("Error assigning role")).when(assignedRolesService).assignRoleToUser(1L, 1L);
+    
+        // Act
+        var result = mockMvc.perform(post("/web/users/1/roles/assign")
+                            .param("roleId", "1"));
+    
+        // Assert
+        result.andExpect(status().is3xxRedirection())
+              .andExpect(redirectedUrl("/web/users/1/roles"));
+        verify(assignedRolesService, times(1)).assignRoleToUser(1L, 1L);
+    }
     
     @Test
     void removeRole_SuccessfulRemoval_RedirectsToManageRoles() throws Exception {
         // Arrange
         doNothing().when(assignedRolesService).removeRoleFromUser(1L, 1L);
+    
+        // Act
+        var result = mockMvc.perform(post("/web/users/1/roles/remove")
+                            .param("roleId", "1"));
+    
+        // Assert
+        result.andExpect(status().is3xxRedirection())
+              .andExpect(redirectedUrl("/web/users/1/roles"));
+        verify(assignedRolesService, times(1)).removeRoleFromUser(1L, 1L);
+    }
+
+    @Test
+    void removeRole_FailedRemoval_ReturnsManageRolesViewWithError() throws Exception {
+        // Arrange
+        doThrow(new IllegalArgumentException("Error removing role")).when(assignedRolesService).removeRoleFromUser(1L, 1L);
     
         // Act
         var result = mockMvc.perform(post("/web/users/1/roles/remove")

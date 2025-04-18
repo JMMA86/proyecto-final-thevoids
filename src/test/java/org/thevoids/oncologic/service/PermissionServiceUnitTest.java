@@ -9,6 +9,7 @@ import org.thevoids.oncologic.entity.Permission;
 import org.thevoids.oncologic.repository.PermissionRepository;
 import org.thevoids.oncologic.service.impl.PermissionServiceImpl;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +27,22 @@ class PermissionServiceUnitTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void getAllPermissions_WhenCalled_ReturnsListOfPermissions() {
+        // Arrange
+        Permission permission1 = new Permission();
+        permission1.setPermissionId(1L);
+        Permission permission2 = new Permission();
+        permission2.setPermissionId(2L);
+        when(permissionRepository.findAll()).thenReturn(List.of(permission1, permission2));
+
+        // Act
+        List<Permission> result = permissionService.getAllPermissions();
+
+        // Assert
+        assertEquals(2, result.size());
     }
 
     @Test
