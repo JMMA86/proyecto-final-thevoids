@@ -1,17 +1,24 @@
 package org.thevoids.oncologic.controller.web;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.thevoids.oncologic.dto.PermissionDTO;
 import org.thevoids.oncologic.dto.RoleDTO;
 import org.thevoids.oncologic.dto.RoleWithPermissionsDTO;
 import org.thevoids.oncologic.entity.Role;
+import org.thevoids.oncologic.mapper.PermissionMapper;
 import org.thevoids.oncologic.mapper.RoleMapper;
-import org.thevoids.oncologic.service.RoleService;
 import org.thevoids.oncologic.service.RolePermissionService;
-
-import java.util.List;
+import org.thevoids.oncologic.service.RoleService;
 
 @Controller
 @RequestMapping("/web/roles")
@@ -25,6 +32,9 @@ public class RoleController {
 
     @Autowired
     private RoleMapper roleMapper;
+
+    @Autowired
+    private PermissionMapper permissionMapper;
 
     /**
      * Displays a list of all roles.
@@ -127,6 +137,65 @@ public class RoleController {
             return "redirect:/web/roles";
         } catch (Exception e) {
             return "redirect:/web/roles?error=" + e.getMessage();
+        }
+    }
+
+    /**
+     * Displays the form to manage permissions for a role.
+     *
+     * @param id    the ID of the role.
+     * @param model the model to populate with the role and available permissions.
+     * @return the view name for managing permissions.
+     */
+    @GetMapping("/{id}/permissions")
+    public String managePermissions(@PathVariable Long id, Model model) {
+        RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(id));
+        List<PermissionDTO> permissions = rolePermissionService.getAllPermissions()
+            .stream()
+            .filter(p -> !roleWithPermissionsDTO.getPermissions().stream()
+                        .anyMatch(rp -> rp.getPermissionId().equals(p.getPermissionId())))
+            .map(permissionMapper::toPermissionDTO)
+            .toList();
+        model.addAttribute("role", roleWithPermissionsDTO);
+        model.addAttribute("permissions", permissions);
+        return "roles/manage_permissions";
+    }
+
+    /**
+     * Handles assigning a permission to a role.
+     *
+     * @param id           the ID of the role.
+     * @param permissionId the ID of the permission to assign.
+     * @param model        the model to populate in case of errors.
+     * @return a redirect to the manage permissions view.
+     */
+    @PostMapping("/{id}/permissions/assign")
+    public String assignPermission(@PathVariable Long id, @RequestParam Long permissionId, Model model) {
+        try {
+            rolePermissionService.assignPermissionToRole(permissionId, id);
+            return "redirect:/web/roles/" + id + "/permissions";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "redirect:/web/roles/" + id + "/permissions";
+        }
+    }
+
+    /**
+     * Handles removing a permission from a role.
+     *
+     * @param id           the ID of the role.
+     * @param permissionId the ID of the permission to remove.
+     * @param model        the model to populate in case of errors.
+     * @return a redirect to the manage permissions view.
+     */
+    @PostMapping("/{id}/permissions/remove")
+    public String removePermission(@PathVariable Long id, @RequestParam Long permissionId, Model model) {
+        try {
+            rolePermissionService.removePermissionFromRole(permissionId, id);
+            return "redirect:/web/roles/" + id + "/permissions";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "redirect:/web/roles/" + id + "/permissions";
         }
     }
 }
