@@ -3,6 +3,7 @@ package org.thevoids.oncologic.controller.web;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,6 +43,7 @@ public class RoleController {
      * @param model the model to populate with roles.
      * @return the view name for the roles list.
      */
+    @PreAuthorize("hasAuthority('VIEW_ROLES')")
     @GetMapping
     public String listRoles(Model model) {
         List<RoleWithPermissionsDTO> roles = roleService.getAllRoles().stream()
@@ -57,6 +59,7 @@ public class RoleController {
      * @param model the model to populate with a new role object.
      * @return the view name for the role creation form.
      */
+    @PreAuthorize("hasAuthority('ADD_ROLES')")
     @GetMapping("/create")
     public String showCreateForm(Model model) {
         model.addAttribute("roleDTO", new RoleDTO());
@@ -72,6 +75,7 @@ public class RoleController {
      * @param model        the model to populate in case of errors.
      * @return a redirect to the roles list or the creation form in case of errors.
      */
+    @PreAuthorize("hasAuthority('ADD_ROLES')")
     @PostMapping("/create")
     public String createRole(@ModelAttribute RoleDTO roleDTO, @RequestParam Long permissionId, Model model) {
         try {
@@ -94,6 +98,7 @@ public class RoleController {
      * @param model the model to populate with the role data.
      * @return the view name for the role edit form.
      */
+    @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable Long id, Model model) {
         try {
@@ -114,6 +119,7 @@ public class RoleController {
      * @param model   the model to populate in case of errors.
      * @return a redirect to the roles list or the edit form in case of errors.
      */
+    @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @PostMapping("/{id}/edit")
     public String updateRole(@PathVariable Long id, @ModelAttribute RoleDTO roleDTO, Model model) {
         try {
@@ -133,6 +139,7 @@ public class RoleController {
      * @param id the ID of the role to delete.
      * @return a redirect to the roles list.
      */
+    @PreAuthorize("hasAuthority('DELETE_ROLES')")
     @PostMapping("/{id}/delete")
     public String deleteRole(@PathVariable Long id) {
         try {
@@ -151,6 +158,7 @@ public class RoleController {
      * @param model the model to populate with the role and available permissions.
      * @return the view name for managing permissions.
      */
+    @PreAuthorize("hasAuthority('MANAGE_ROLE_PERMISSIONS')")
     @GetMapping("/{id}/permissions")
     public String managePermissions(@PathVariable Long id, Model model) {
         RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(id));
@@ -173,6 +181,7 @@ public class RoleController {
      * @param model        the model to populate in case of errors.
      * @return a redirect to the manage permissions view.
      */
+    @PreAuthorize("hasAuthority('MANAGE_ROLE_PERMISSIONS')")
     @PostMapping("/{id}/permissions/assign")
     public String assignPermission(@PathVariable Long id, @RequestParam Long permissionId, Model model) {
         try {
@@ -192,6 +201,7 @@ public class RoleController {
      * @param model        the model to populate in case of errors.
      * @return a redirect to the manage permissions view.
      */
+    @PreAuthorize("hasAuthority('MANAGE_ROLE_PERMISSIONS')")
     @PostMapping("/{id}/permissions/remove")
     public String removePermission(@PathVariable Long id, @RequestParam Long permissionId, Model model) {
         try {

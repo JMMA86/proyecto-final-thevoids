@@ -1,6 +1,7 @@
 package org.thevoids.oncologic.security;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -28,8 +29,14 @@ public class CustomUserDetail implements UserDetails {
 
     @Override
     public Collection<GrantedAuthority> getAuthorities() {
-        return user.getAssignedRoles().stream()
-                .map(assignedRole -> new SimpleGrantedAuthority(assignedRole.getRole().getRoleName()))
+        List<GrantedAuthority> roles =  user.getAssignedRoles().stream()
+                .map(assignedRole -> new SimpleGrantedAuthority( "ROLE_" + assignedRole.getRole().getRoleName()))
                 .collect(Collectors.toList());
+        List<GrantedAuthority> permissions = user.getAssignedRoles().stream()
+            .flatMap(assignedRole -> assignedRole.getRole().getRolePermissions().stream())
+            .map(rolePermission -> new SimpleGrantedAuthority(rolePermission.getPermission().getPermissionName()))
+            .collect(Collectors.toList());
+        roles.addAll(permissions);
+        return roles;
     }
 }

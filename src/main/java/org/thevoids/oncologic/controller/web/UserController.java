@@ -3,6 +3,7 @@ package org.thevoids.oncologic.controller.web;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +41,7 @@ public class UserController {
     @Autowired
     private RoleMapper roleMapper;
 
+    @PreAuthorize("hasAuthority('VIEW_USERS')")
     @GetMapping
     public String listUsers(Model model) {
         List<UserWithRolesDTO> userDTOs = userService.getAllUsers().stream()
@@ -49,6 +51,7 @@ public class UserController {
         return "users/list";
     }
 
+    @PreAuthorize("hasAuthority('ADD_USERS')")
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
         model.addAttribute("userDTO", new UserDTO());
@@ -56,6 +59,7 @@ public class UserController {
         return "users/register";
     }
 
+    @PreAuthorize("hasAuthority('ADD_USERS')")
     @PostMapping("/register")
     public String registerUser(@ModelAttribute UserDTO userDTO, @RequestParam Long roleId, Model model) {
         try {
@@ -70,6 +74,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasAuthority('MANAGE_USER_ROLES')")
     @GetMapping("/{id}/roles")
     public String manageRoles(@PathVariable Long id, Model model) {
         UserWithRolesDTO userWithRolesDTO = userMapper.toUserWithRolesDTO(userService.getUserById(id));
@@ -82,6 +87,7 @@ public class UserController {
         return "users/manage_roles";
     }
 
+    @PreAuthorize("hasAuthority('MANAGE_USER_ROLES')")
     @PostMapping("/{id}/roles/assign")
     public String assignRole(@PathVariable Long id, @RequestParam Long roleId, Model model) {
         try {
@@ -93,6 +99,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasAuthority('MANAGE_USER_ROLES')")
     @PostMapping("/{id}/roles/remove")
     public String removeRole(@PathVariable Long id, @RequestParam Long roleId, Model model) {
         try {

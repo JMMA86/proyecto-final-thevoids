@@ -3,6 +3,7 @@ package org.thevoids.oncologic.service.impl;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.repository.RoleRepository;
 import org.thevoids.oncologic.service.RoleService;
@@ -50,7 +51,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional
     public Role getRole(Long roleId) {
-        return roleRepository.findById(roleId).orElseThrow(() -> new IllegalArgumentException("Role with id " + roleId + " does not exist"));
+        return roleRepository.findById(roleId).orElseThrow(() -> new IllegalArgumentException("Role not found"));
     }
 }
