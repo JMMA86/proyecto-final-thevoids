@@ -11,6 +11,8 @@ import org.mockito.Mockito;
 import org.thevoids.oncologic.entity.AssignedRole;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.entity.Permission;
+import org.thevoids.oncologic.entity.RolePermission;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -48,7 +50,16 @@ public class CustomUserDetailUnitTest {
     public void testGetAuthorities() {
         // Arrange
         Role role = new Role();
-        role.setRoleName("ROLE_ADMIN");
+        role.setRoleName("ADMIN");
+        role.setRolePermissions(Collections.emptyList()); // Initialize rolePermissions to an empty list
+
+        Permission permission = new Permission();
+        permission.setPermissionName("VIEW_USERS");
+
+        RolePermission rolePermission = new RolePermission();
+        rolePermission.setPermission(permission);
+
+        role.setRolePermissions(Collections.singletonList(rolePermission)); // Add a permission to the role
 
         AssignedRole assignedRole = new AssignedRole();
         assignedRole.setRole(role);
@@ -62,15 +73,24 @@ public class CustomUserDetailUnitTest {
         List<? extends GrantedAuthority> authorities = (List<? extends GrantedAuthority>) customUserDetail.getAuthorities();
 
         // Assert
-        assertEquals(1, authorities.size());
-        assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        assertEquals(2, authorities.size());
+        assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN"))); // Role with "ROLE_" prefix
+        assertTrue(authorities.contains(new SimpleGrantedAuthority("VIEW_USERS"))); // Permission without prefix
     }
 
     @Test
     public void testGetAuthoritiesWithMock() {
         // Arrange
         Role role = Mockito.mock(Role.class);
-        Mockito.when(role.getRoleName()).thenReturn("ROLE_USER");
+        Mockito.when(role.getRoleName()).thenReturn("USER");
+
+        Permission permission = Mockito.mock(Permission.class);
+        Mockito.when(permission.getPermissionName()).thenReturn("VIEW_USERS");
+
+        RolePermission rolePermission = Mockito.mock(RolePermission.class);
+        Mockito.when(rolePermission.getPermission()).thenReturn(permission);
+
+        Mockito.when(role.getRolePermissions()).thenReturn(Collections.singletonList(rolePermission));
 
         AssignedRole assignedRole = Mockito.mock(AssignedRole.class);
         Mockito.when(assignedRole.getRole()).thenReturn(role);
@@ -84,7 +104,8 @@ public class CustomUserDetailUnitTest {
         List<? extends GrantedAuthority> authorities = (List<? extends GrantedAuthority>) customUserDetail.getAuthorities();
 
         // Assert
-        assertEquals(1, authorities.size());
-        assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_USER")));
+        assertEquals(2, authorities.size());
+        assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_USER"))); // Role with "ROLE_" prefix
+        assertTrue(authorities.contains(new SimpleGrantedAuthority("VIEW_USERS"))); // Permission without prefix
     }
 }

@@ -29,8 +29,8 @@ public class CustomUserDetail implements UserDetails {
 
     @Override
     public Collection<GrantedAuthority> getAuthorities() {
-        List<GrantedAuthority> roles =  user.getAssignedRoles().stream()
-                .map(assignedRole -> new SimpleGrantedAuthority( "ROLE_" + assignedRole.getRole().getRoleName()))
+        List<GrantedAuthority> roles = user.getAssignedRoles().stream()
+                .map(assignedRole -> new SimpleGrantedAuthority("ROLE_" + assignedRole.getRole().getRoleName())) // Add "ROLE_" prefix
                 .collect(Collectors.toList());
         List<GrantedAuthority> permissions = user.getAssignedRoles().stream()
             .flatMap(assignedRole -> assignedRole.getRole().getRolePermissions().stream())

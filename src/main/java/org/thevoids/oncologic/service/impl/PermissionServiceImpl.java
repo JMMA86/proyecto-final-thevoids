@@ -6,13 +6,18 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.Permission;
+import org.thevoids.oncologic.entity.RolePermission;
 import org.thevoids.oncologic.repository.PermissionRepository;
+import org.thevoids.oncologic.repository.RolePermissionRepository;
 import org.thevoids.oncologic.service.PermissionService;
 
 @Service
 public class PermissionServiceImpl implements PermissionService {
     @Autowired
     private PermissionRepository permissionRepository;
+
+    @Autowired
+    private RolePermissionRepository rolePermissionRepository;
 
     @Override
     public List<Permission> getAllPermissions() {
@@ -34,6 +39,11 @@ public class PermissionServiceImpl implements PermissionService {
             throw new IllegalArgumentException("Permission does not exist");
         }
 
+        // Delete all RolePermission entities associated with the permission
+        List<RolePermission> rolePermissions = rolePermissionRepository.findByPermissionId(permissionId);
+        rolePermissionRepository.deleteAll(rolePermissions);
+
+        // Delete the permission itself
         permissionRepository.deleteById(permissionId);
     }
 

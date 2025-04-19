@@ -23,5 +23,5 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    setTimeout(activateScreamer, 3*1000);
+    setTimeout(activateScreamer, 30*1000);
 });

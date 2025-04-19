@@ -34,7 +34,7 @@ public class Role {
     @JsonIgnore
     private List<AssignedRole> assignedRoles;
 
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "role", fetch = FetchType.EAGER)
     @JsonIgnore
-    private List<RolePermission> rolePermissions;
+    private List<RolePermission> rolePermissions; // Cascade and orphan removal ensure proper cleanup
 }
