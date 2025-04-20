@@ -28,7 +28,7 @@ This is the final project for the Computation 2 course (2025), developed by the 
 
 - **Java 17** or higher.  
 - **Maven 3.8** or higher.  
-- **MySQL** or any database compatible with Spring Data JPA.  
+- **PostgresSQL** or any database compatible with Spring Data JPA.  
 - **IntelliJ IDEA** (optional but recommended).  
 
 ## Installation
