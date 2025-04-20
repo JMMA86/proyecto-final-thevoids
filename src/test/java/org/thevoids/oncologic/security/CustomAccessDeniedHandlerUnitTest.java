@@ -1,13 +1,11 @@
 package org.thevoids.oncologic.security;
 
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.security.access.AccessDeniedException;
 
 import jakarta.servlet.ServletException;

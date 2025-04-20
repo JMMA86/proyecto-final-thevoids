@@ -1,7 +1,5 @@
 package org.thevoids.oncologic.entity;
 
-import org.hibernate.annotations.Cascade;
-
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

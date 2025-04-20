@@ -78,7 +78,7 @@ class JwtServiceUnitTest {
             .claim("userId", 123)   // Datos personalizados
             .setIssuedAt(new Date()) // Fecha de emisión
             .setExpiration(new Date(System.currentTimeMillis() - (60 * 60 * 1000))) // Fecha de expiración (pasada)
-            .signWith(SignatureAlgorithm.HS256, secretKey) // Algoritmo de firma
+            .signWith(new javax.crypto.spec.SecretKeySpec(secretKey.getBytes(), SignatureAlgorithm.HS256.getJcaName()), SignatureAlgorithm.HS256) // Algoritmo de firma
             .compact();
 
         // Act
