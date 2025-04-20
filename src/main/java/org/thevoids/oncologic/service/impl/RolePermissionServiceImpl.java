@@ -40,17 +40,13 @@ public class RolePermissionServiceImpl implements RolePermissionService {
             throw new IllegalArgumentException("Role already has this permission");
         }
 
-        // Ensure the Permission and Role are managed entities
-        var role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new IllegalArgumentException("Role does not exist"));
-        var permission = permissionRepository.findById(permissionId)
-                .orElseThrow(() -> new IllegalArgumentException("Permission does not exist"));
+        var role = roleRepository.findById(roleId).orElse(null);
+        var permission = permissionRepository.findById(permissionId).orElse(null);
 
         var newPermission = new RolePermission();
         newPermission.setRole(role);
         newPermission.setPermission(permission);
 
-        // Save the RolePermission
         rolePermissionRepository.save(newPermission);
     }
 
@@ -65,18 +61,12 @@ public class RolePermissionServiceImpl implements RolePermissionService {
         }
 
         if (!rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)) {
-            throw new IllegalArgumentException("This permission is not assigned to the role");
+            throw new IllegalArgumentException("This role does not have this permission");
         }
 
-        // Ensure the Permission entity is managed
-        var permission = permissionRepository.findById(permissionId)
-                .orElseThrow(() -> new IllegalArgumentException("Permission does not exist"));
+        var rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId).orElse(null);
 
-        var rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId)
-                .orElseThrow(() -> new IllegalArgumentException("This permission is not assigned to the role"));
-
-        rolePermission.setPermission(permission); // Ensure the permission is attached to the session
-        rolePermissionRepository.delete(rolePermission);
+        rolePermissionRepository.deleteById(rolePermission.getId());
     }
 
     @Override
