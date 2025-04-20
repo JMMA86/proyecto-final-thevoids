@@ -8,10 +8,11 @@
 <body>
 <div layout:fragment="content">
     <h1 class="text-center text-2xl font-bold mb-6">Edit Permission</h1>
-    <form th:action="@{/web/permissions/{id}/edit(id=${permission.permissionId})}" method="post" th:object="${permission}" 
+    <form th:action="@{/web/permissions/{id}/edit(id=${permissionDTO.permissionId})}" method="post" th:object="${permissionDTO}" 
           class="max-w-md mx-auto bg-white p-8 rounded shadow-md">
         <div class="mb-4">
             <label for="permissionName" class="block text-gray-700 font-bold mb-2">Permission Name:</label>
+            <input type="hidden" id="permissionID" name="permissionId" th:field="*{permissionId}"/>
             <input type="text" id="permissionName" name="permissionName" th:field="*{permissionName}" required 
                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
