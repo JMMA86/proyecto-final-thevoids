@@ -1,74 +1,99 @@
-# Proyecto Final - The Voids
+# Final Project - The Voids
 
-Este es el proyecto final del curso de Computación 2 (2025), desarrollado por el equipo **The Voids**. El proyecto
-consiste en una aplicación basada en **Spring Boot** que gestiona especialidades, usuarios y citas médicas.
+This is the final project for the Computation 2 course (2025), developed by the **The Voids** team. The project consists of an application based on **Spring Boot** that manages medical specialties, users, and appointments.
 
-## Tecnologías Utilizadas
+## Members
 
-- **Java**: Lenguaje principal del backend.
-- **Spring Boot**: Framework para el desarrollo del backend.
-- **Maven**: Herramienta de gestión de dependencias y construcción.
-- **SQL**: Base de datos relacional para el almacenamiento de datos.
-- **JavaScript**: Para funcionalidades del frontend (si aplica).
+- Cristian Eduardo Botina (A00395008)  
+- Juan Manuel Marín (A00382037)  
+- Óscar Andrés Gómez (A00394142)  
 
-## Características
+## Technologies Used
 
-- Gestión de especialidades médicas.
-- Gestión de usuarios y sus especialidades.
-- Gestión de citas médicas.
-- Validación de datos y manejo de excepciones.
-- Cobertura de pruebas con **JaCoCo**.
+- **Java**: Main backend language.  
+- **Spring Boot**: Framework for backend development.  
+- **Maven**: Dependency management and build tool.  
+- **SQL**: Relational database for data storage.  
+- **JavaScript**: For frontend features (if applicable).  
 
-## Requisitos Previos
+## Features
 
-- **Java 17** o superior.
-- **Maven 3.8** o superior.
-- **MySQL** o cualquier base de datos compatible con Spring Data JPA.
-- **IntelliJ IDEA** (opcional, pero recomendado).
+- Management of medical specialties.  
+- Management of users and their specialties.  
+- Management of medical appointments.  
+- Data validation and exception handling.  
+- Test coverage with **JaCoCo**.  
 
-## Instalación
+## Prerequisites
 
-1. Clona el repositorio:
+- **Java 17** or higher.  
+- **Maven 3.8** or higher.  
+- **MySQL** or any database compatible with Spring Data JPA.  
+- **IntelliJ IDEA** (optional but recommended).  
+
+## Installation
+
+1. Clone the repository:
 
     ```bash
     git clone https://github.com/Computacion-2-2025/proyecto-final-thevoids.git
     cd proyecto-final-thevoids
     ```
 
-2. Abre el proyecto en tu IDE favorito (recomendado IntelliJ IDEA).
+2. Open the project in your favorite IDE (IntelliJ IDEA recommended).
 
-## URLs permitidas hasta el momento
+## Useful Links
 
-### Recursos Públicos
+- [Test Plan](./doc/test_plan.md)  
+- [Data Model Analysis](./doc/model_analysis.md)  
+- [Data Insertion Script](./src/main/resources/data.sql)  
 
-- `/css/**` - Archivos de estilos.
-- `/js/**` - Archivos JavaScript.
-- `/img/**` - Archivos de imágenes.
+## Execution Instructions
 
-### Recursos Protegidos
+To run the project, simply use the command:
 
-- `/web/users/**` - Requiere el permiso `VIEW_USERS`.
-- `/web/roles/**` - Requiere el permiso `VIEW_ROLES`.
-- `/web/permissions/**` - Requiere el permiso `VIEW_PERMISSIONS`.
-- `/web/admin/**` - Requiere el rol `ADMIN`.
+```bash
+.\mvnw spring-boot:run
+```
 
-### Autenticación
+To run the tests, use the command:
 
-- `/web/auth/login` - Página de inicio de sesión (pública).
-- `/web/auth/logout` - URL para cerrar sesión (pública).
-- `/web/home` - Redirección tras inicio de sesión exitoso.
+```bash
+.\mvnw test
+```
 
-## Ejecución de pruebas
+## URLs allowed so far
 
-Para ejecutar las pruebas unitarias y de integración, utiliza el siguiente comando:
+### Public Resources
+
+- `/css/**` - Stylesheet files.  
+- `/js/**` - JavaScript files.  
+- `/img/**` - Image files.  
+
+### Protected Resources
+
+- `/web/users/**` - Requires `VIEW_USERS` permission.  
+- `/web/roles/**` - Requires `VIEW_ROLES` permission.  
+- `/web/permissions/**` - Requires `VIEW_PERMISSIONS` permission.  
+- `/web/admin/**` - Requires `ADMIN` role.  
+
+### Authentication
+
+- `/web/auth/login` - Login page (public).  
+- `/web/auth/logout` - Logout URL (public).  
+- `/web/home` - Redirect after successful login.  
+
+## Test Execution
+
+To run unit and integration tests, use the following command:
 
 ```bash
 mvn clean test
 ```
 
-Esto generará un informe de cobertura de código utilizando **JaCoCo**. Puedes encontrar el informe en
+This will generate a code coverage report using **JaCoCo**. You can find the report at  
 `target/site/jacoco/index.html`.
 
-### Último coverage conseguido
+### Latest coverage achieved
 
 ![Coverage Report](/doc/coverage/coverage.png)
