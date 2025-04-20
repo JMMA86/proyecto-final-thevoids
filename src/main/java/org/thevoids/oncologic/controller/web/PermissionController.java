@@ -75,8 +75,7 @@ public class PermissionController {
             permissionService.updatePermission(permission);
             return "redirect:/web/permissions";
         } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            return "permissions/edit";
+            return "redirect:/web/permissions?error=Permission not found";
         }
     }
 
