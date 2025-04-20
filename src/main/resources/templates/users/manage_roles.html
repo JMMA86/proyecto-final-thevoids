@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{base}">
+<head>
+    <title>Manage Roles</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="text-center text-2xl font-bold mb-6">Manage Roles for <span th:text="${user.fullName}"></span></h1>
+    <form th:action="@{/web/users/{id}/roles/assign(id=${user.userId})}" method="post" class="mb-6">
+        <label for="role" class="block text-gray-700 font-bold mb-2">Assign Role:</label>
+        <select id="role" name="roleId" required
+                class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="" disabled selected>Select a role</option>
+            <option th:each="role : ${roles}" th:value="${role.roleId}" th:text="${role.roleName}"></option>
+        </select>
+        <button type="submit"
+                class="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">
+            Assign Role
+        </button>
+    </form>
+    <h2 class="text-xl font-bold mb-4">Current Roles</h2>
+    <ul>
+        <li th:each="role : ${user.roles}" class="mb-2">
+            <span th:text="${role.roleName}"></span>
+            <form th:action="@{/web/users/{id}/roles/remove(id=${user.userId})}" method="post" class="inline">
+                <input type="hidden" name="roleId" th:value="${role.roleId}" />
+                <button type="submit"
+                        class="text-red-500 hover:underline ml-2">Remove</button>
+            </form>
+        </li>
+    </ul>
+    <a th:href="@{/web/users}" class="mt-4 inline-block bg-gray-500 text-white font-bold py-2 px-4 rounded hover:bg-gray-600">
+        Back to User List
+    </a>
+</div>
+</body>
+</html>

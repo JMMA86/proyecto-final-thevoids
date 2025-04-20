@@ -1,18 +1,25 @@
 package org.thevoids.oncologic.service.impl;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.UserService;
 
-import java.util.List;
-
 @Service
 public class UserServiceImpl implements UserService {
+    @Autowired
     private final UserRepository userRepository;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -21,16 +28,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createUser(User user) {
-        if (userRepository.existsById(user.getUserId())) {
-            throw new IllegalArgumentException("User with id " + user.getUserId() + " already exists");
+    public User createUser(User user) {
+        if (getUserByIdentification(user.getIdentification()) != null) {
+            throw new IllegalArgumentException("User with identification " + user.getIdentification() + " already exists");
         }
 
-        if (user.getRole() == null) {
-            throw new IllegalArgumentException("User must have at least one role");
-        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         this.userRepository.save(user);
+
+        return user;
     }
 
     @Override
@@ -54,5 +61,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserById(Long id) {
         return userRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public User getUserByIdentification(String identification) {
+        return userRepository.findByIdentification(identification).orElse(null);
     }
 }

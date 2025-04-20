@@ -1,19 +1,23 @@
 package org.thevoids.oncologic.service;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.thevoids.oncologic.entity.Permission;
-import org.thevoids.oncologic.repository.PermissionRepository;
-import org.thevoids.oncologic.service.impl.PermissionServiceImpl;
-
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.thevoids.oncologic.entity.Permission;
+import org.thevoids.oncologic.repository.PermissionRepository;
+import org.thevoids.oncologic.service.impl.PermissionServiceImpl;
 
 class PermissionServiceUnitTest {
 
@@ -26,6 +30,22 @@ class PermissionServiceUnitTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void getAllPermissions_WhenCalled_ReturnsListOfPermissions() {
+        // Arrange
+        Permission permission1 = new Permission();
+        permission1.setPermissionId(1L);
+        Permission permission2 = new Permission();
+        permission2.setPermissionId(2L);
+        when(permissionRepository.findAll()).thenReturn(List.of(permission1, permission2));
+
+        // Act
+        List<Permission> result = permissionService.getAllPermissions();
+
+        // Assert
+        assertEquals(2, result.size());
     }
 
     @Test
@@ -51,6 +71,28 @@ class PermissionServiceUnitTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> permissionService.createPermission(permission));
+    }
+
+    @Test
+    void createPermission_WhenPermissionWithSameIdExists_ThrowsException() {
+        // Arrange
+        Permission existingPermission = new Permission();
+        existingPermission.setPermissionId(1L);
+        existingPermission.setPermissionName("READ");
+
+        Permission newPermission = new Permission();
+        newPermission.setPermissionId(1L);
+        newPermission.setPermissionName("WRITE");
+
+        when(permissionRepository.existsById(newPermission.getPermissionId())).thenReturn(true);
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            permissionService.createPermission(newPermission);
+        });
+
+        assertEquals("Permission already exists", exception.getMessage());
+        verify(permissionRepository, never()).save(any(Permission.class));
     }
 
     @Test

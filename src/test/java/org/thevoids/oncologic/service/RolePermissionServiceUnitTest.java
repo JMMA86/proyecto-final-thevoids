@@ -1,9 +1,21 @@
 package org.thevoids.oncologic.service;
 
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.thevoids.oncologic.entity.Permission;
 import org.thevoids.oncologic.entity.Role;
@@ -12,14 +24,6 @@ import org.thevoids.oncologic.repository.PermissionRepository;
 import org.thevoids.oncologic.repository.RolePermissionRepository;
 import org.thevoids.oncologic.repository.RoleRepository;
 import org.thevoids.oncologic.service.impl.RolePermissionServiceImpl;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Optional;
 
 class RolePermissionServiceUnitTest {
 
@@ -340,5 +344,28 @@ class RolePermissionServiceUnitTest {
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> rolePermissionService.getPermissionsFromRole(roleId));
     }
-    
+
+    @Test
+    void getAllPermissions_WhenCalled_ReturnsAllPermissions() {
+        // Arrange
+        Permission permission1 = new Permission();
+        permission1.setPermissionId(1L);
+        permission1.setPermissionName("READ");
+
+        Permission permission2 = new Permission();
+        permission2.setPermissionId(2L);
+        permission2.setPermissionName("WRITE");
+
+        when(permissionRepository.findAll()).thenReturn(List.of(permission1, permission2));
+
+        // Act
+        List<Permission> permissions = rolePermissionService.getAllPermissions();
+
+        // Assert
+        assertNotNull(permissions);
+        assertEquals(2, permissions.size());
+        assertEquals("READ", permissions.get(0).getPermissionName());
+        assertEquals("WRITE", permissions.get(1).getPermissionName());
+        verify(permissionRepository, times(1)).findAll();
+    }
 }

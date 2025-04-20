@@ -1,21 +1,24 @@
 package org.thevoids.oncologic.service;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.thevoids.oncologic.entity.Role;
-import org.thevoids.oncologic.entity.RolePermission;
-import org.thevoids.oncologic.repository.RoleRepository;
-import org.thevoids.oncologic.service.impl.RoleServiceImpl;
-
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.thevoids.oncologic.entity.Role;
+import org.thevoids.oncologic.entity.RolePermission;
+import org.thevoids.oncologic.repository.RoleRepository;
+import org.thevoids.oncologic.service.impl.RoleServiceImpl;
 
 class RoleServiceUnitTest {
 
@@ -70,6 +73,28 @@ class RoleServiceUnitTest {
     }
 
     @Test
+    void createRole_WhenRoleWithSameIdExists_ThrowsException() {
+        // Arrange
+        Role existingRole = new Role();
+        existingRole.setRoleId(1L); // Existing ID
+        existingRole.setRoleName("Admin");
+
+        Role newRole = new Role();
+        newRole.setRoleId(1L); // Same ID as existing role
+        newRole.setRoleName("User");
+
+        when(roleRepository.existsById(newRole.getRoleId())).thenReturn(true);
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            roleService.createRole(newRole);
+        });
+
+        assertEquals("Role with id 1 already exists", exception.getMessage());
+        verify(roleRepository, never()).save(any(Role.class));
+    }
+
+    @Test
     void deleteRole_WhenCalled_DeletesRole() {
         // Arrange
         Role role = new Role();
@@ -92,17 +117,6 @@ class RoleServiceUnitTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> roleService.deleteRole(role));
-    }
-
-    @Test
-    void createRole_WhenRoleHasNoPermissions_ThrowsException() {
-        // Arrange
-        Role role = new Role();
-        role.setRoleId(1L);
-        role.setRolePermissions(null); // or new ArrayList<>()
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> roleService.createRole(role));
     }
 
     @Test

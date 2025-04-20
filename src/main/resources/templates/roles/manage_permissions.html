@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{base}">
+<head>
+    <title>Manage Permissions</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="text-center text-2xl font-bold mb-6">Manage Permissions for <span th:text="${role.roleName}"></span></h1>
+    <form th:action="@{/web/roles/{id}/permissions/assign(id=${role.roleId})}" method="post" class="mb-6">
+        <label for="permission" class="block text-gray-700 font-bold mb-2">Assign Permission:</label>
+        <select id="permission" name="permissionId" required
+                class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="" disabled selected>Select a permission</option>
+            <option th:each="permission : ${permissions}" th:value="${permission.permissionId}" th:text="${permission.permissionName}"></option>
+        </select>
+        <button type="submit"
+                class="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">
+            Assign Permission
+        </button>
+    </form>
+    <h2 class="text-xl font-bold mb-4">Current Permissions</h2>
+    <ul>
+        <li th:each="permission : ${role.permissions}" class="mb-2">
+            <span th:text="${permission.permissionName}"></span>
+            <form th:action="@{/web/roles/{id}/permissions/remove(id=${role.roleId})}" method="post" class="inline">
+                <input type="hidden" name="permissionId" th:value="${permission.permissionId}" />
+                <button type="submit"
+                        class="text-red-500 hover:underline ml-2">Remove</button>
+            </form>
+        </li>
+    </ul>
+    <a th:href="@{/web/roles}" class="mt-4 inline-block bg-gray-500 text-white font-bold py-2 px-4 rounded hover:bg-gray-600">
+        Back to Role List
+    </a>
+</div>
+</body>
+</html>

@@ -14,4 +14,6 @@ public interface RolePermissionService {
     void updatePermissionForRole(Long lastPermissionId, Long newPermissionId, Long roleId);
 
     List<Permission> getPermissionsFromRole(Long roleId);
+
+    List<Permission> getAllPermissions();
 }

@@ -115,4 +115,9 @@ public class RolePermissionServiceImpl implements RolePermissionService {
 
         return rolePermissionRepository.getPermissionsFromRole(roleId);
     }
+
+    @Override
+    public List<Permission> getAllPermissions() {
+        return permissionRepository.findAll();
+    }
 }

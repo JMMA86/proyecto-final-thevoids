@@ -1,11 +1,12 @@
 package org.thevoids.oncologic.service.impl;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.repository.RoleRepository;
 import org.thevoids.oncologic.service.RoleService;
-
-import java.util.List;
 
 @Service
 public class RoleServiceImpl implements RoleService {
@@ -21,16 +22,14 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public void createRole(Role role) {
-        if (roleRepository.existsById(role.getRoleId())) {
+    public Role createRole(Role role) {
+        if (role.getRoleId() != null && roleRepository.existsById(role.getRoleId())) {
             throw new IllegalArgumentException("Role with id " + role.getRoleId() + " already exists");
         }
 
-        if (role.getRolePermissions() == null) {
-            throw new IllegalArgumentException("Role must have at least one permission");
-        }
-
         roleRepository.save(role);
+
+        return role;
     }
 
     @Override
@@ -52,7 +51,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional
     public Role getRole(Long roleId) {
-        return roleRepository.findById(roleId).orElseThrow(() -> new IllegalArgumentException("Role with id " + roleId + " does not exist"));
+        return roleRepository.findById(roleId).orElseThrow(() -> new IllegalArgumentException("Role not found"));
     }
 }

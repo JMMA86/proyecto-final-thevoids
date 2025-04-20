@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oncologic</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+</head>
+<body class="bg-gray-100 text-gray-900 flex flex-col min-h-screen">
+    <div id="screamer"></div>
+    <header class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">Oncologic</h1>
+            <nav>
+                <ul class="flex space-x-4">
+                    <li sec:authorize="isAuthenticated()"><a th:href="@{/}" class="hover:underline">Home</a></li>
+                    <li sec:authorize="isAnonymous()"><a th:href="@{/web/auth/login}" class="hover:underline">Login</a></li>
+                    <li sec:authorize="isAnonymous()"><a th:href="@{/web/auth/signup}" class="hover:underline">Signup</a></li>
+                    <li sec:authorize="hasAuthority('VIEW_USERS')"><a th:href="@{/web/users}" class="hover:underline">Users</a></li>
+                    <li sec:authorize="hasAuthority('VIEW_ROLES')"><a th:href="@{/web/roles}" class="hover:underline">Roles</a></li>
+                    <li sec:authorize="hasAuthority('VIEW_PERMISSIONS')"><a th:href="@{/web/permissions}" class="hover:underline">Permissions</a></li>
+                    <li sec:authorize="isAuthenticated()"><a th:href="@{/web/profile}" class="hover:underline">My Profile</a></li>
+                    <li sec:authorize="isAuthenticated()">
+                        <form th:action="@{/web/auth/logout}" method="post" class="inline">
+                            <button type="submit" class="hover:underline">Logout</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main class="container mx-auto p-4 flex-grow">
+        <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            <span th:text="${error}"></span>
+        </div>
+        <div th:if="${param.error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            <span th:text="${param.error}"></span>
+        </div>
+        <div layout:fragment="content"></div>
+
+    </main>
+    <footer class="bg-gray-800 text-white p-4 mt-8">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 The Voids. All rights reserved.</p>
+        </div>
+    </footer>
+    <script th:src="@{/js/freddy.js}"></script>
+</body>
+</html>
