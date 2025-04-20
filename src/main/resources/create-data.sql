@@ -52,6 +52,16 @@ INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (2, 1);  -- VIEW_U
 INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (2, 3);  -- EDIT_USERS
 INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (2, 2);  -- ADD_USERS
 
+-- Assign view and register user permissions to the DOCTOR role
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (3, 1);  -- VIEW_USERS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (3, 2);  -- ADD_USERS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (3, 3);  -- EDIT_USERS
+
+-- Assign view and register user permissions to the LAB-TECHNICIAN role
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (4, 1);  -- VIEW_USERS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (4, 2);  -- ADD_USERS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (4, 3);  -- EDIT_USERS
+
 -- Insert sample data into Users
 INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, password, status)
 VALUES ('Admin', '123456789', '1980-05-15', 'Male', '123 Main St', '555-1234', 'john.doe@example.com', '$2a$12$bvKiQLOf1zhcFThcgVVNT.4MHfP6VZE23vVMhkHoZepYCN3z03X2G', 'active');

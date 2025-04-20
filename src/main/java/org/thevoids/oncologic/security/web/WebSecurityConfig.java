@@ -21,25 +21,27 @@ public class WebSecurityConfig {
             .securityMatcher("/web/**")
             .userDetailsService(userDetailsService)
             .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/css/**", "/js/**", "/img/**").permitAll()
-                            .requestMatchers("/web/users/**").hasAuthority("VIEW_USERS")
-                            .requestMatchers("/web/roles/**").hasAuthority("VIEW_ROLES")
-                            .requestMatchers("/web/permissions/**").hasAuthority("VIEW_PERMISSIONS")
-                            .requestMatchers("/web/admin/**").hasRole("ADMIN")
-                            .anyRequest().authenticated()
+                    .requestMatchers("/css/**", "/js/**", "/img/**").permitAll()
+                    .requestMatchers("/web/users/**").hasAuthority("VIEW_USERS")
+                    .requestMatchers("/web/roles/**").hasAuthority("VIEW_ROLES")
+                    .requestMatchers("/web/permissions/**").hasAuthority("VIEW_PERMISSIONS")
+                    .requestMatchers("/web/admin/**").hasRole("ADMIN")
+                    .requestMatchers("/web/auth/**").permitAll()
+                    .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                            .loginPage("/web/auth/login")
-                            .defaultSuccessUrl("/web/home", true) // Redirect to a page the user has access to
-                            .permitAll()
+                    .loginPage("/web/auth/login")
+                    .defaultSuccessUrl("/web/home", true) // Redirect to a page the user has access to
+                    .failureUrl("/web/auth/login?error=Bad%20Credentials") // Add error parameter on login failure
+                    .permitAll()
             )
             .logout(logout -> logout
-                            .logoutUrl("/web/auth/logout")
-                            .logoutSuccessUrl("/web/auth/login?logout")
-                            .permitAll()
+                    .logoutUrl("/web/auth/logout")
+                    .logoutSuccessUrl("/web/auth/login?logout")
+                    .permitAll()
             )
             .exceptionHandling(handling -> handling
-                    .accessDeniedHandler(new CustomAccessDeniedHandler())) // Ensure the handler is correctly configured
+                .accessDeniedHandler(new CustomAccessDeniedHandler())) // Ensure the handler is correctly configured
             .csrf(csrf -> csrf.disable());
 
         return http.build();

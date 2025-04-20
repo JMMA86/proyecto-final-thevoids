@@ -161,16 +161,21 @@ public class RoleController {
     @PreAuthorize("hasAuthority('MANAGE_ROLE_PERMISSIONS')")
     @GetMapping("/{id}/permissions")
     public String managePermissions(@PathVariable Long id, Model model) {
-        RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(id));
-        List<PermissionDTO> permissions = rolePermissionService.getAllPermissions()
-            .stream()
-            .filter(p -> !roleWithPermissionsDTO.getPermissions().stream()
-                        .anyMatch(rp -> rp.getPermissionId().equals(p.getPermissionId())))
-            .map(permissionMapper::toPermissionDTO)
-            .toList();
-        model.addAttribute("role", roleWithPermissionsDTO);
-        model.addAttribute("permissions", permissions);
-        return "roles/manage_permissions";
+        try {
+            RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(id));
+            List<PermissionDTO> permissions = rolePermissionService.getAllPermissions()
+                .stream()
+                .filter(p -> !roleWithPermissionsDTO.getPermissions().stream()
+                            .anyMatch(rp -> rp.getPermissionId().equals(p.getPermissionId())))
+                .map(permissionMapper::toPermissionDTO)
+                .toList();
+            model.addAttribute("role", roleWithPermissionsDTO);
+            model.addAttribute("permissions", permissions);
+            return "roles/manage_permissions";
+        } catch (Exception e) {
+            // User gets deleted due to non-existing permission
+            return "redirect:/web/roles";
+        }
     }
 
     /**

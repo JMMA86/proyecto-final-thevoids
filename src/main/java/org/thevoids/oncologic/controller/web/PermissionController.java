@@ -57,8 +57,8 @@ public class PermissionController {
     public String showEditForm(@PathVariable Long id, Model model) {
         Optional<Permission> permission = permissionService.getPermission(id);
         if (permission.isPresent()) {
-            PermissionDTO permissionDTO = new PermissionDTO(permission.get().getPermissionId(), permission.get().getPermissionName());
-            model.addAttribute("permission", permissionDTO);
+            PermissionDTO permissionDTO = permissionMapper.toPermissionDTO(permission.get());
+            model.addAttribute("permissionDTO", permissionDTO); // Ensure the DTO is added to the model
             return "permissions/edit";
         } else {
             model.addAttribute("error", "Permission not found");
@@ -70,14 +70,12 @@ public class PermissionController {
     @PostMapping("/{id}/edit")
     public String updatePermission(@PathVariable Long id, @ModelAttribute PermissionDTO permissionDTO, Model model) {
         try {
-            Permission permission = new Permission();
-            permission.setPermissionId(id);
+            Permission permission = permissionService.getPermission(id).orElse(null);
             permission.setPermissionName(permissionDTO.getPermissionName());
             permissionService.updatePermission(permission);
             return "redirect:/web/permissions";
         } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            return "permissions/edit";
+            return "redirect:/web/permissions?error=Permission not found";
         }
     }
 

@@ -319,6 +319,7 @@ class UserControllerUnitTest {
         verify(roleService, times(1)).getAllRoles();
 
         // Validate that only unassigned roles are included
+        @SuppressWarnings({ "unchecked", "null" })
         List<RoleDTO> filteredRoles = (List<RoleDTO>) result.andReturn().getModelAndView().getModel().get("roles");
         assertEquals(1, filteredRoles.size());
         assertEquals(3L, filteredRoles.get(0).getRoleId()); // Only "Manager" role should remain

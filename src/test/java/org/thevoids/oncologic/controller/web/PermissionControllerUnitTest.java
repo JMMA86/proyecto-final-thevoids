@@ -5,22 +5,33 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.Model;
 import org.thevoids.oncologic.dto.PermissionDTO;
 import org.thevoids.oncologic.entity.Permission;
 import org.thevoids.oncologic.mapper.PermissionMapper;
 import org.thevoids.oncologic.service.PermissionService;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 
 public class PermissionControllerUnitTest {
 
@@ -36,6 +47,8 @@ public class PermissionControllerUnitTest {
     @InjectMocks
     private PermissionController permissionController;
 
+    private MockMvc mockMvc;
+
     private Permission permission1;
     private Permission permission2;
     private List<Permission> permissions;
@@ -43,6 +56,7 @@ public class PermissionControllerUnitTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        mockMvc = MockMvcBuilders.standaloneSetup(permissionController).build();
 
         // Initialize permissions with unique IDs
         permission1 = new Permission();
@@ -139,20 +153,26 @@ public class PermissionControllerUnitTest {
     }
 
     @Test
-    void testShowEditForm_Success() {
+    void testShowEditForm_Success() throws Exception {
         // Arrange
-        when(permissionService.getPermission(1L)).thenReturn(Optional.of(permission1));
+        Long permissionId = 1L;
+        Permission permission = new Permission();
+        permission.setPermissionId(permissionId);
+        permission.setPermissionName("VIEW_USERS");
 
-        // Act
-        String viewName = permissionController.showEditForm(1L, model);
+        PermissionDTO permissionDTO = new PermissionDTO();
+        permissionDTO.setPermissionId(permissionId);
+        permissionDTO.setPermissionName("VIEW_USERS");
 
-        // Assert
-        assertEquals("permissions/edit", viewName);
-        ArgumentCaptor<PermissionDTO> captor = ArgumentCaptor.forClass(PermissionDTO.class);
-        verify(model).addAttribute(eq("permission"), captor.capture());
-        PermissionDTO capturedPermission = captor.getValue();
-        assertEquals(permission1.getPermissionId(), capturedPermission.getPermissionId());
-        assertEquals(permission1.getPermissionName(), capturedPermission.getPermissionName());
+        when(permissionService.getPermission(permissionId)).thenReturn(Optional.of(permission));
+        when(permissionMapper.toPermissionDTO(permission)).thenReturn(permissionDTO);
+
+        // Act & Assert
+        mockMvc.perform(get("/web/permissions/{id}/edit", permissionId))
+                .andExpect(status().isOk())
+                .andExpect(view().name("permissions/edit"))
+                .andExpect(model().attributeExists("permissionDTO"))
+                .andExpect(model().attribute("permissionDTO", permissionDTO));
     }
 
     @Test
@@ -169,34 +189,47 @@ public class PermissionControllerUnitTest {
     }
 
     @Test
-    void testUpdatePermission_Success() {
+    void updatePermission_WhenPermissionExists_UpdatesSuccessfully() throws Exception {
         // Arrange
-        PermissionDTO updatedPermissionDTO = new PermissionDTO(1L, "UPDATED_READ");
+        Long permissionId = 1L;
+        Permission permission = new Permission();
+        permission.setPermissionId(permissionId);
+        permission.setPermissionName("VIEW_USERS");
 
-        // Act
-        String viewName = permissionController.updatePermission(1L, updatedPermissionDTO, model);
+        PermissionDTO permissionDTO = new PermissionDTO();
+        permissionDTO.setPermissionId(permissionId);
+        permissionDTO.setPermissionName("EDIT_USERS");
 
-        // Assert
-        assertEquals("redirect:/web/permissions", viewName);
-        ArgumentCaptor<Permission> captor = ArgumentCaptor.forClass(Permission.class);
-        verify(permissionService).updatePermission(captor.capture());
-        Permission capturedPermission = captor.getValue();
-        assertEquals(updatedPermissionDTO.getPermissionId(), capturedPermission.getPermissionId());
-        assertEquals(updatedPermissionDTO.getPermissionName(), capturedPermission.getPermissionName());
+        when(permissionService.getPermission(permissionId)).thenReturn(Optional.of(permission));
+        when(permissionMapper.toPermissionDTO(permission)).thenReturn(permissionDTO);
+
+        // Act & Assert
+        mockMvc.perform(post("/web/permissions/{id}/edit", permissionId)
+                        .flashAttr("permissionDTO", permissionDTO))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/web/permissions"));
+
+        verify(permissionService, times(1)).updatePermission(permission);
+        assertEquals("EDIT_USERS", permission.getPermissionName());
     }
 
     @Test
-    void testUpdatePermission_Failure() {
+    void updatePermission_WhenPermissionDoesNotExist_ReturnsError() throws Exception {
         // Arrange
-        PermissionDTO updatedPermissionDTO = new PermissionDTO(1L, "UPDATED_READ");
-        doThrow(new RuntimeException("Error updating permission")).when(permissionService).updatePermission(any(Permission.class));
+        Long permissionId = 1L;
+        PermissionDTO permissionDTO = new PermissionDTO();
+        permissionDTO.setPermissionId(permissionId);
+        permissionDTO.setPermissionName("EDIT_USERS");
 
-        // Act
-        String viewName = permissionController.updatePermission(1L, updatedPermissionDTO, model);
+        when(permissionService.getPermission(permissionId)).thenReturn(Optional.empty());
 
-        // Assert
-        assertEquals("permissions/edit", viewName);
-        verify(model).addAttribute("error", "Error updating permission");
+        // Act & Assert
+        mockMvc.perform(post("/web/permissions/{id}/edit", permissionId)
+                        .flashAttr("permissionDTO", permissionDTO))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/web/permissions?error=Permission not found"));
+
+        verify(permissionService, never()).updatePermission(any(Permission.class));
     }
 
     @Test
