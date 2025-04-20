@@ -88,7 +88,7 @@ To run the tests, use the command:
 To run unit and integration tests, use the following command:
 
 ```bash
-mvn clean test
+.\mvnw clean test
 ```
 
 This will generate a code coverage report using **JaCoCo**. You can find the report at  
