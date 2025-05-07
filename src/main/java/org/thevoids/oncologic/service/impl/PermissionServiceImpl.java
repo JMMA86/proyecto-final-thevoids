@@ -20,30 +20,39 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    public void createPermission(Permission permission) {
+    public Permission createPermission(Permission permission) {
         if (permission.getPermissionId() != null && permissionRepository.existsById(permission.getPermissionId())) {
             throw new IllegalArgumentException("Permission already exists");
         }
 
         permissionRepository.save(permission);
+
+        return permission;
     }
 
     @Override
-    public void deletePermission(Long permissionId) {
+    public Permission deletePermission(Long permissionId) {
         if (!permissionRepository.existsById(permissionId)) {
             throw new IllegalArgumentException("Permission does not exist");
         }
 
+        Permission permission = permissionRepository.findById(permissionId)
+                .orElseThrow(() -> new IllegalArgumentException("Permission not found"));
+
         permissionRepository.deleteById(permissionId);
+
+        return permission;
     }
 
     @Override
-    public void updatePermission(Permission permission) {
+    public Permission updatePermission(Permission permission) {
         if (!permissionRepository.existsById(permission.getPermissionId())) {
             throw new IllegalArgumentException("Permission does not exist");
         }
 
         permissionRepository.save(permission);
+
+        return permission;
     }
 
     @Override

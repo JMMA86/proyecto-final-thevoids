@@ -8,11 +8,11 @@ import org.thevoids.oncologic.entity.Permission;
 public interface PermissionService {
     List<Permission> getAllPermissions();
 
-    void createPermission(Permission permission);
+    Permission createPermission(Permission permission);
 
-    void deletePermission(Long permissionId);
+    Permission deletePermission(Long permissionId);
 
-    void updatePermission(Permission permission);
+    Permission updatePermission(Permission permission);
 
     Optional<Permission> getPermission(Long permissionId);
 }
