@@ -1,6 +1,5 @@
 package org.thevoids.oncologic.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -11,8 +10,7 @@ import org.thevoids.oncologic.service.UserService;
 
 @Service
 public class CustomUserDetailsServiceImpl implements UserDetailsService {
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     public CustomUserDetailsServiceImpl(UserService userService) {
         this.userService = userService;
