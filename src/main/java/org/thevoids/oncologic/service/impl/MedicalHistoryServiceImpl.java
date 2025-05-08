@@ -1,55 +1,68 @@
 package org.thevoids.oncologic.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.thevoids.oncologic.dto.MedicalHistoryDTO;
 import org.thevoids.oncologic.entity.MedicalHistory;
+import org.thevoids.oncologic.mapper.MedicalHistoryMapper;
 import org.thevoids.oncologic.repository.MedicalHistoryRepository;
 import org.thevoids.oncologic.service.MedicalHistoryService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     private final MedicalHistoryRepository medicalHistoryRepository;
+    private final MedicalHistoryMapper medicalHistoryMapper;
 
-    public MedicalHistoryServiceImpl(MedicalHistoryRepository medicalHistoryRepository) {
+    public MedicalHistoryServiceImpl(MedicalHistoryRepository medicalHistoryRepository, MedicalHistoryMapper medicalHistoryMapper) {
         this.medicalHistoryRepository = medicalHistoryRepository;
+        this.medicalHistoryMapper = medicalHistoryMapper;
     }
 
     @Override
-    public List<MedicalHistory> getAllMedicalHistories() {
-        return medicalHistoryRepository.findAll();
+    public List<MedicalHistoryDTO> getAllMedicalHistories() {
+        List<MedicalHistory> medicalHistories = medicalHistoryRepository.findAll();
+        return medicalHistories.stream()
+                .map(medicalHistoryMapper::toMedicalHistoryDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public MedicalHistory getMedicalHistoryById(Long id) {
-        return medicalHistoryRepository.findById(id)
+    public MedicalHistoryDTO getMedicalHistoryById(Long id) {
+        MedicalHistory medicalHistory = medicalHistoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("MedicalHistory with id " + id + " does not exist"));
+        return medicalHistoryMapper.toMedicalHistoryDTO(medicalHistory);
     }
 
     @Override
-    public MedicalHistory createMedicalHistory(MedicalHistory medicalHistory) {
-        if (medicalHistory == null) {
+    public MedicalHistoryDTO createMedicalHistory(MedicalHistoryDTO medicalHistoryDTO) {
+        if (medicalHistoryDTO == null) {
             throw new IllegalArgumentException("MedicalHistory cannot be null");
         }
 
-        return medicalHistoryRepository.save(medicalHistory);
+        MedicalHistory medicalHistory = medicalHistoryMapper.toMedicalHistory(medicalHistoryDTO);
+        MedicalHistory savedMedicalHistory = medicalHistoryRepository.save(medicalHistory);
+        return medicalHistoryMapper.toMedicalHistoryDTO(savedMedicalHistory);
     }
 
     @Override
-    public MedicalHistory updateMedicalHistory(MedicalHistory medicalHistory) {
-        if (medicalHistory == null) {
+    public MedicalHistoryDTO updateMedicalHistory(MedicalHistoryDTO medicalHistoryDTO) {
+        if (medicalHistoryDTO == null) {
             throw new IllegalArgumentException("MedicalHistory cannot be null");
         }
 
-        if (medicalHistory.getHistoryId() == null) {
+        if (medicalHistoryDTO.getHistoryId() == null) {
             throw new IllegalArgumentException("MedicalHistory ID cannot be null");
         }
 
-        if (!medicalHistoryRepository.existsById(medicalHistory.getHistoryId())) {
-            throw new IllegalArgumentException("MedicalHistory with id " + medicalHistory.getHistoryId() + " does not exist");
+        if (!medicalHistoryRepository.existsById(medicalHistoryDTO.getHistoryId())) {
+            throw new IllegalArgumentException("MedicalHistory with id " + medicalHistoryDTO.getHistoryId() + " does not exist");
         }
 
-        return medicalHistoryRepository.save(medicalHistory);
+        MedicalHistory medicalHistory = medicalHistoryMapper.toMedicalHistory(medicalHistoryDTO);
+        MedicalHistory updatedMedicalHistory = medicalHistoryRepository.save(medicalHistory);
+        return medicalHistoryMapper.toMedicalHistoryDTO(updatedMedicalHistory);
     }
 
     @Override

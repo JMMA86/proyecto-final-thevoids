@@ -5,12 +5,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.thevoids.oncologic.dto.MedicalHistoryDTO;
 import org.thevoids.oncologic.entity.MedicalHistory;
+import org.thevoids.oncologic.mapper.MedicalHistoryMapper;
 import org.thevoids.oncologic.repository.MedicalHistoryRepository;
 import org.thevoids.oncologic.service.impl.MedicalHistoryServiceImpl;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,35 +26,57 @@ public class MedicalHistoryServiceUnitTest {
     @Mock
     private MedicalHistoryRepository medicalHistoryRepository;
 
+    @Mock
+    private MedicalHistoryMapper medicalHistoryMapper;
+
     @InjectMocks
     private MedicalHistoryServiceImpl medicalHistoryService;
 
     @Test
     void getAllMedicalHistoriesReturnsAllHistories() {
-        List<MedicalHistory> expectedHistories = List.of(
-                createMedicalHistory(1L),
-                createMedicalHistory(2L)
+        // Create entity list
+        List<MedicalHistory> entityList = List.of(
+                createMedicalHistoryEntity(1L),
+                createMedicalHistoryEntity(2L)
         );
 
-        when(medicalHistoryRepository.findAll()).thenReturn(expectedHistories);
+        // Create DTO list
+        List<MedicalHistoryDTO> dtoList = List.of(
+                createMedicalHistoryDTO(1L),
+                createMedicalHistoryDTO(2L)
+        );
 
-        List<MedicalHistory> result = medicalHistoryService.getAllMedicalHistories();
+        // Mock repository and mapper
+        when(medicalHistoryRepository.findAll()).thenReturn(entityList);
+        when(medicalHistoryMapper.toMedicalHistoryDTO(entityList.get(0))).thenReturn(dtoList.get(0));
+        when(medicalHistoryMapper.toMedicalHistoryDTO(entityList.get(1))).thenReturn(dtoList.get(1));
 
+        // Call service method
+        List<MedicalHistoryDTO> result = medicalHistoryService.getAllMedicalHistories();
+
+        // Verify results
         assertEquals(2, result.size());
-        assertEquals(expectedHistories, result);
+        assertEquals(dtoList.get(0).getHistoryId(), result.get(0).getHistoryId());
+        assertEquals(dtoList.get(1).getHistoryId(), result.get(1).getHistoryId());
+        verify(medicalHistoryRepository).findAll();
+        verify(medicalHistoryMapper, times(2)).toMedicalHistoryDTO(any(MedicalHistory.class));
     }
 
     @Test
     void getMedicalHistoryByIdReturnsHistoryWhenExists() {
         Long id = 1L;
-        MedicalHistory expectedHistory = createMedicalHistory(id);
+        MedicalHistory entity = createMedicalHistoryEntity(id);
+        MedicalHistoryDTO dto = createMedicalHistoryDTO(id);
 
-        when(medicalHistoryRepository.findById(id)).thenReturn(Optional.of(expectedHistory));
+        when(medicalHistoryRepository.findById(id)).thenReturn(Optional.of(entity));
+        when(medicalHistoryMapper.toMedicalHistoryDTO(entity)).thenReturn(dto);
 
-        MedicalHistory result = medicalHistoryService.getMedicalHistoryById(id);
+        MedicalHistoryDTO result = medicalHistoryService.getMedicalHistoryById(id);
 
         assertNotNull(result);
         assertEquals(id, result.getHistoryId());
+        verify(medicalHistoryRepository).findById(id);
+        verify(medicalHistoryMapper).toMedicalHistoryDTO(entity);
     }
 
     @Test
@@ -63,20 +89,28 @@ public class MedicalHistoryServiceUnitTest {
                 medicalHistoryService.getMedicalHistoryById(id));
 
         assertEquals("MedicalHistory with id 1 does not exist", exception.getMessage());
+        verify(medicalHistoryRepository).findById(id);
+        verify(medicalHistoryMapper, never()).toMedicalHistoryDTO(any());
     }
 
     @Test
     void createMedicalHistorySuccessfullyCreatesMedicalHistory() {
-        MedicalHistory medicalHistory = createMedicalHistory(null);
-        MedicalHistory savedMedicalHistory = createMedicalHistory(1L);
+        MedicalHistoryDTO inputDto = createMedicalHistoryDTO(null);
+        MedicalHistory entity = createMedicalHistoryEntity(null);
+        MedicalHistory savedEntity = createMedicalHistoryEntity(1L);
+        MedicalHistoryDTO outputDto = createMedicalHistoryDTO(1L);
 
-        when(medicalHistoryRepository.save(medicalHistory)).thenReturn(savedMedicalHistory);
+        when(medicalHistoryMapper.toMedicalHistory(inputDto)).thenReturn(entity);
+        when(medicalHistoryRepository.save(entity)).thenReturn(savedEntity);
+        when(medicalHistoryMapper.toMedicalHistoryDTO(savedEntity)).thenReturn(outputDto);
 
-        MedicalHistory result = medicalHistoryService.createMedicalHistory(medicalHistory);
+        MedicalHistoryDTO result = medicalHistoryService.createMedicalHistory(inputDto);
 
         assertNotNull(result);
-        assertEquals(savedMedicalHistory, result);
-        verify(medicalHistoryRepository).save(medicalHistory);
+        assertEquals(1L, result.getHistoryId());
+        verify(medicalHistoryMapper).toMedicalHistory(inputDto);
+        verify(medicalHistoryRepository).save(entity);
+        verify(medicalHistoryMapper).toMedicalHistoryDTO(savedEntity);
     }
 
     @Test
@@ -85,22 +119,31 @@ public class MedicalHistoryServiceUnitTest {
                 medicalHistoryService.createMedicalHistory(null));
 
         assertEquals("MedicalHistory cannot be null", exception.getMessage());
+        verify(medicalHistoryMapper, never()).toMedicalHistory(any());
         verify(medicalHistoryRepository, never()).save(any());
     }
 
     @Test
     void updateMedicalHistorySuccessfullyUpdatesMedicalHistory() {
         Long id = 1L;
-        MedicalHistory medicalHistory = createMedicalHistory(id);
+        MedicalHistoryDTO inputDto = createMedicalHistoryDTO(id);
+        MedicalHistory entity = createMedicalHistoryEntity(id);
+        MedicalHistory updatedEntity = createMedicalHistoryEntity(id);
+        MedicalHistoryDTO outputDto = createMedicalHistoryDTO(id);
 
         when(medicalHistoryRepository.existsById(id)).thenReturn(true);
-        when(medicalHistoryRepository.save(medicalHistory)).thenReturn(medicalHistory);
+        when(medicalHistoryMapper.toMedicalHistory(inputDto)).thenReturn(entity);
+        when(medicalHistoryRepository.save(entity)).thenReturn(updatedEntity);
+        when(medicalHistoryMapper.toMedicalHistoryDTO(updatedEntity)).thenReturn(outputDto);
 
-        MedicalHistory result = medicalHistoryService.updateMedicalHistory(medicalHistory);
+        MedicalHistoryDTO result = medicalHistoryService.updateMedicalHistory(inputDto);
 
         assertNotNull(result);
-        assertEquals(medicalHistory, result);
-        verify(medicalHistoryRepository).save(medicalHistory);
+        assertEquals(id, result.getHistoryId());
+        verify(medicalHistoryRepository).existsById(id);
+        verify(medicalHistoryMapper).toMedicalHistory(inputDto);
+        verify(medicalHistoryRepository).save(entity);
+        verify(medicalHistoryMapper).toMedicalHistoryDTO(updatedEntity);
     }
 
     @Test
@@ -109,31 +152,37 @@ public class MedicalHistoryServiceUnitTest {
                 medicalHistoryService.updateMedicalHistory(null));
 
         assertEquals("MedicalHistory cannot be null", exception.getMessage());
+        verify(medicalHistoryRepository, never()).existsById(any());
+        verify(medicalHistoryMapper, never()).toMedicalHistory(any());
         verify(medicalHistoryRepository, never()).save(any());
     }
 
     @Test
     void updateMedicalHistoryThrowsExceptionWhenIdIsNull() {
-        MedicalHistory medicalHistory = createMedicalHistory(null);
+        MedicalHistoryDTO dto = createMedicalHistoryDTO(null);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                medicalHistoryService.updateMedicalHistory(medicalHistory));
+                medicalHistoryService.updateMedicalHistory(dto));
 
         assertEquals("MedicalHistory ID cannot be null", exception.getMessage());
+        verify(medicalHistoryRepository, never()).existsById(any());
+        verify(medicalHistoryMapper, never()).toMedicalHistory(any());
         verify(medicalHistoryRepository, never()).save(any());
     }
 
     @Test
     void updateMedicalHistoryThrowsExceptionWhenMedicalHistoryDoesNotExist() {
         Long id = 1L;
-        MedicalHistory medicalHistory = createMedicalHistory(id);
+        MedicalHistoryDTO dto = createMedicalHistoryDTO(id);
 
         when(medicalHistoryRepository.existsById(id)).thenReturn(false);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                medicalHistoryService.updateMedicalHistory(medicalHistory));
+                medicalHistoryService.updateMedicalHistory(dto));
 
         assertEquals("MedicalHistory with id 1 does not exist", exception.getMessage());
+        verify(medicalHistoryRepository).existsById(id);
+        verify(medicalHistoryMapper, never()).toMedicalHistory(any());
         verify(medicalHistoryRepository, never()).save(any());
     }
 
@@ -145,6 +194,7 @@ public class MedicalHistoryServiceUnitTest {
 
         medicalHistoryService.deleteMedicalHistory(id);
 
+        verify(medicalHistoryRepository).existsById(id);
         verify(medicalHistoryRepository).deleteById(id);
     }
 
@@ -158,12 +208,24 @@ public class MedicalHistoryServiceUnitTest {
                 medicalHistoryService.deleteMedicalHistory(id));
 
         assertEquals("MedicalHistory with id 1 does not exist", exception.getMessage());
+        verify(medicalHistoryRepository).existsById(id);
         verify(medicalHistoryRepository, never()).deleteById(any());
     }
 
-    private MedicalHistory createMedicalHistory(Long id) {
+    private MedicalHistory createMedicalHistoryEntity(Long id) {
         MedicalHistory medicalHistory = new MedicalHistory();
         medicalHistory.setHistoryId(id);
         return medicalHistory;
+    }
+
+    private MedicalHistoryDTO createMedicalHistoryDTO(Long id) {
+        MedicalHistoryDTO dto = new MedicalHistoryDTO();
+        dto.setHistoryId(id);
+        dto.setPatientId(1L);
+        dto.setDiagnosis("Test Diagnosis");
+        dto.setTreatment("Test Treatment");
+        dto.setMedications("Test Medications");
+        dto.setRecordDate(new Timestamp(System.currentTimeMillis()));
+        return dto;
     }
 }
