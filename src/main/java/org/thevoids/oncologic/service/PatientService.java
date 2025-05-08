@@ -1,17 +1,17 @@
 package org.thevoids.oncologic.service;
 
-import org.thevoids.oncologic.entity.Patient;
+import org.thevoids.oncologic.dto.PatientDTO;
 
 import java.util.List;
 
 public interface PatientService {
-    Patient getPatientById(Long id);
+    PatientDTO getPatientById(Long id);
 
-    Patient createPatient(Patient patient);
+    PatientDTO createPatient(PatientDTO patientDTO);
 
-    Patient updatePatient(Patient patient);
+    PatientDTO updatePatient(PatientDTO patientDTO);
 
     void deletePatient(Long id);
 
-    List<Patient> getAllPatients();
+    List<PatientDTO> getAllPatients();
 }
