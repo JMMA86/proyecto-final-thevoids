@@ -56,7 +56,10 @@ class RestAuthControllerUnitTest {
 
         // Assert
         result.andExpect(status().isOk())
-              .andExpect(jsonPath("$.accessToken").value("mocked-jwt-token"));
+              .andExpect(jsonPath("$.exito").value(true))
+              .andExpect(jsonPath("$.mensaje").value("Inicio de sesión exitoso"))
+              .andExpect(jsonPath("$.datos.token").value("mocked-jwt-token"))
+              .andExpect(jsonPath("$.datos.username").value("testuser"));
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(customUserDetailsServiceImpl, times(1)).loadUserByUsername("testuser");
         verify(jwtService, times(1)).generateToken(userDetails);
@@ -75,7 +78,9 @@ class RestAuthControllerUnitTest {
 
         // Assert
         result.andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.error").value("Invalid credentials"));
+              .andExpect(jsonPath("$.exito").value(false))
+              .andExpect(jsonPath("$.mensaje").value("Autenticación fallida: Invalid credentials"))
+              .andExpect(jsonPath("$.datos").isEmpty());
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(customUserDetailsServiceImpl, never()).loadUserByUsername(anyString());
         verify(jwtService, never()).generateToken(any(UserDetails.class));

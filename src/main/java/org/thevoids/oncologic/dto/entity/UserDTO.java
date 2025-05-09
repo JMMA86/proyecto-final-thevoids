@@ -1,4 +1,4 @@
-package org.thevoids.oncologic.dto;
+package org.thevoids.oncologic.dto.entity;
 
 import java.util.Date;
 
@@ -22,4 +22,4 @@ public class UserDTO {
 
     public UserDTO() {
     }
-}
+} 

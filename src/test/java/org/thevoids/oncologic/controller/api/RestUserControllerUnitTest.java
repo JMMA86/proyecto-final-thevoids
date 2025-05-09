@@ -19,25 +19,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.thevoids.oncologic.dto.UserDTO;
+import org.thevoids.oncologic.dto.entity.UserDTO;
 import org.thevoids.oncologic.entity.AssignedRole;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.mapper.UserMapper;
-import org.thevoids.oncologic.service.AssignedRoles;
-import org.thevoids.oncologic.service.RoleService;
 import org.thevoids.oncologic.service.UserService;
 
 class RestUserControllerUnitTest {
 
     @Mock
     private UserService userService;
-
-    @Mock
-    private AssignedRoles assignedRolesService;
-
-    @Mock
-    private RoleService roleService;
 
     @Mock
     private UserMapper userMapper;
@@ -82,50 +74,58 @@ class RestUserControllerUnitTest {
 
         // Assert
         result.andExpect(status().isOk())
-              .andExpect(jsonPath("$[0].userId").value(1L))
-              .andExpect(jsonPath("$[0].fullName").value("John Doe"));
+              .andExpect(jsonPath("$.exito").value(true))
+              .andExpect(jsonPath("$.mensaje").value("Usuarios recuperados con éxito"))
+              .andExpect(jsonPath("$.datos").exists());
         verify(userService, times(1)).getAllUsers();
     }
-
+    
     @Test
-    void registerUser_SuccessfulRegistration_ReturnsUser() throws Exception {
+    void createUser_SuccessfulCreation_ReturnsUser() throws Exception {
         // Arrange
         User user = new User();
         user.setUserId(1L);
         user.setFullName("John Doe");
 
-        UserDTO UserDTO = new UserDTO();
-        UserDTO.setUserId(1L);
-        UserDTO.setFullName("John Doe");
-
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUserId(1L);
+        userDTO.setFullName("John Doe");
+        
+        when(userMapper.toUser(any(UserDTO.class))).thenReturn(user);
         when(userService.createUser(any(User.class))).thenReturn(user);
-        when(userMapper.toUserDTO(user)).thenReturn(UserDTO);
+        when(userMapper.toUserDTO(user)).thenReturn(userDTO);
 
         // Act
-        var result = mockMvc.perform(post("/api/v1/users/register")
+        var result = mockMvc.perform(post("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"fullName\":\"John Doe\"}"));
 
         // Assert
-        result.andExpect(status().isOk())
-              .andExpect(jsonPath("$.userId").value(1L))
-              .andExpect(jsonPath("$.fullName").value("John Doe"));
+        result.andExpect(status().isCreated())
+              .andExpect(jsonPath("$.exito").value(true))
+              .andExpect(jsonPath("$.mensaje").value("Usuario creado con éxito"))
+              .andExpect(jsonPath("$.datos.userId").value(1))
+              .andExpect(jsonPath("$.datos.fullName").value("John Doe"));
         verify(userService, times(1)).createUser(any(User.class));
     }
-
+    
     @Test
-    void registerUser_FailedRegistration_ReturnsError() throws Exception {
+    void createUser_FailedCreation_ReturnsError() throws Exception {
         // Arrange
-        doThrow(new IllegalArgumentException("Invalid data")).when(userService).createUser(any(User.class));
+        User user = new User();
+        when(userMapper.toUser(any(UserDTO.class))).thenReturn(user);
+        doThrow(new IllegalArgumentException("Error al crear el usuario")).when(userService).createUser(any(User.class));
     
         // Act
-        var result = mockMvc.perform(post("/api/v1/users/register")
+        var result = mockMvc.perform(post("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"fullName\":\"John Doe\"}"));
     
         // Assert
         result.andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.message").value("Invalid data"));
+              .andExpect(jsonPath("$.exito").value(false))
+              .andExpect(jsonPath("$.mensaje").value("Error al crear el usuario: Error al crear el usuario"))
+              .andExpect(jsonPath("$.datos").isEmpty());
         verify(userService, times(1)).createUser(any(User.class));
     }
 }

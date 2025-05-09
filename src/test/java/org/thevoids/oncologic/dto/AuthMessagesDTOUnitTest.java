@@ -3,6 +3,8 @@ package org.thevoids.oncologic.dto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
+import org.thevoids.oncologic.dto.entity.AuthRequest;
+import org.thevoids.oncologic.dto.custom.AuthResponseDTO;
 
 public class AuthMessagesDTOUnitTest {
 
@@ -39,24 +41,22 @@ public class AuthMessagesDTOUnitTest {
     void testAuthResponseConstructorAndGetters() {
         // Arrange
         String accessToken = "sampleAccessToken";
-
         // Act
-        AuthResponse authResponse = new AuthResponse(accessToken);
+        AuthResponseDTO authResponseDTO = new AuthResponseDTO(accessToken, "testUser");
 
         // Assert
-        assertNotNull(authResponse);
-        assertEquals(accessToken, authResponse.getAccessToken());
+        assertNotNull(authResponseDTO);
+        assertEquals(accessToken, authResponseDTO.getToken());
     }
 
     @Test
     void testAuthResponseSetters() {
         // Arrange
-        AuthResponse authResponse = new AuthResponse();
+        AuthResponseDTO authResponseDTO = new AuthResponseDTO();
 
         // Act
-        authResponse.setAccessToken("newAccessToken");
-
+        authResponseDTO.setToken("newAccessToken");
         // Assert
-        assertEquals("newAccessToken", authResponse.getAccessToken());
+        assertEquals("newAccessToken", authResponseDTO.getToken());
     }
 }

@@ -1,4 +1,4 @@
-package org.thevoids.oncologic.dto;
+package org.thevoids.oncologic.dto.entity;
 
 import java.util.List;
 
@@ -26,4 +26,4 @@ public class UserWithRolesDTO {
     public boolean hasRole(long roleId) {
         return roles.stream().anyMatch(role -> role.getRoleId() == roleId);
     }
-}
+} 
