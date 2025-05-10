@@ -36,6 +36,7 @@ public class JwtSecurityConfig {
                     .requestMatchers("/api/v1/users/**").hasAuthority("VIEW_USERS")
                     .requestMatchers("/api/v1/roles/**").hasAuthority("VIEW_ROLES")
                     .requestMatchers("/api/v1/permissions/**").hasAuthority("VIEW_PERMISSIONS")
+                    .requestMatchers("/api/v1/schedule/**").hasAuthority("VIEW_SCHEDULES")
                     .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
             )
@@ -44,7 +45,7 @@ public class JwtSecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-    
+
         return http.build();
     }
 

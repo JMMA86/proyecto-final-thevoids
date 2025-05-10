@@ -1,18 +1,18 @@
 package org.thevoids.oncologic.service;
 
-import org.thevoids.oncologic.entity.MedicalHistory;
+import org.thevoids.oncologic.dto.MedicalHistoryDTO;
 
 import java.util.List;
 
 public interface MedicalHistoryService {
 
-    List<MedicalHistory> getAllMedicalHistories();
+    List<MedicalHistoryDTO> getAllMedicalHistories();
 
-    MedicalHistory getMedicalHistoryById(Long id);
+    MedicalHistoryDTO getMedicalHistoryById(Long id);
 
-    MedicalHistory createMedicalHistory(MedicalHistory medicalHistory);
+    MedicalHistoryDTO createMedicalHistory(MedicalHistoryDTO medicalHistoryDTO);
 
-    MedicalHistory updateMedicalHistory(MedicalHistory medicalHistory);
+    MedicalHistoryDTO updateMedicalHistory(MedicalHistoryDTO medicalHistoryDTO);
 
     void deleteMedicalHistory(Long id);
 }

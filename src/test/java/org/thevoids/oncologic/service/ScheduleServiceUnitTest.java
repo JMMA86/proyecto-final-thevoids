@@ -5,7 +5,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.thevoids.oncologic.dto.ScheduleDTO;
 import org.thevoids.oncologic.entity.Schedule;
+import org.thevoids.oncologic.mapper.ScheduleMapper;
 import org.thevoids.oncologic.repository.ScheduleRepository;
 import org.thevoids.oncologic.service.impl.ScheduleServiceImpl;
 
@@ -22,35 +24,52 @@ public class ScheduleServiceUnitTest {
     @Mock
     private ScheduleRepository scheduleRepository;
 
+    @Mock
+    private ScheduleMapper scheduleMapper;
+
     @InjectMocks
     private ScheduleServiceImpl scheduleService;
 
     @Test
     void getAllSchedulesReturnsAllSchedules() {
-        List<Schedule> expectedSchedules = List.of(
+        List<Schedule> schedules = List.of(
                 createSchedule(1L),
                 createSchedule(2L)
         );
 
-        when(scheduleRepository.findAll()).thenReturn(expectedSchedules);
+        List<ScheduleDTO> expectedScheduleDTOs = List.of(
+                createScheduleDTO(1L),
+                createScheduleDTO(2L)
+        );
 
-        List<Schedule> result = scheduleService.getAllSchedules();
+        when(scheduleRepository.findAll()).thenReturn(schedules);
+        when(scheduleMapper.toScheduleDTO(schedules.get(0))).thenReturn(expectedScheduleDTOs.get(0));
+        when(scheduleMapper.toScheduleDTO(schedules.get(1))).thenReturn(expectedScheduleDTOs.get(1));
+
+        List<ScheduleDTO> result = scheduleService.getAllSchedules();
 
         assertEquals(2, result.size());
-        assertEquals(expectedSchedules, result);
+        assertEquals(expectedScheduleDTOs, result);
+        verify(scheduleRepository).findAll();
+        verify(scheduleMapper).toScheduleDTO(schedules.get(0));
+        verify(scheduleMapper).toScheduleDTO(schedules.get(1));
     }
 
     @Test
     void getScheduleByIdReturnsScheduleWhenExists() {
         Long id = 1L;
-        Schedule expectedSchedule = createSchedule(id);
+        Schedule schedule = createSchedule(id);
 
-        when(scheduleRepository.findById(id)).thenReturn(Optional.of(expectedSchedule));
+        ScheduleDTO expectedScheduleDTO = createScheduleDTO(id);
 
-        Schedule result = scheduleService.getScheduleById(id);
+        when(scheduleRepository.findById(id)).thenReturn(Optional.of(schedule));
+        when(scheduleMapper.toScheduleDTO(schedule)).thenReturn(expectedScheduleDTO);
+
+        ScheduleDTO result = scheduleService.getScheduleById(id);
 
         assertNotNull(result);
         assertEquals(id, result.getScheduleId());
+        verify(scheduleMapper).toScheduleDTO(schedule);
     }
 
     @Test
@@ -67,16 +86,24 @@ public class ScheduleServiceUnitTest {
 
     @Test
     void createScheduleSuccessfullyCreatesSchedule() {
+        ScheduleDTO scheduleDTO = createScheduleDTO(null);
+
         Schedule schedule = createSchedule(null);
         Schedule savedSchedule = createSchedule(1L);
 
-        when(scheduleRepository.save(schedule)).thenReturn(savedSchedule);
+        ScheduleDTO savedScheduleDTO = createScheduleDTO(1L);
 
-        Schedule result = scheduleService.createSchedule(schedule);
+        when(scheduleMapper.toSchedule(scheduleDTO)).thenReturn(schedule);
+        when(scheduleRepository.save(schedule)).thenReturn(savedSchedule);
+        when(scheduleMapper.toScheduleDTO(savedSchedule)).thenReturn(savedScheduleDTO);
+
+        ScheduleDTO result = scheduleService.createSchedule(scheduleDTO);
 
         assertNotNull(result);
-        assertEquals(savedSchedule, result);
+        assertEquals(1L, result.getScheduleId());
+        verify(scheduleMapper).toSchedule(scheduleDTO);
         verify(scheduleRepository).save(schedule);
+        verify(scheduleMapper).toScheduleDTO(savedSchedule);
     }
 
     @Test
@@ -91,16 +118,25 @@ public class ScheduleServiceUnitTest {
     @Test
     void updateScheduleSuccessfullyUpdatesSchedule() {
         Long id = 1L;
+        ScheduleDTO scheduleDTO = createScheduleDTO(id);
+
         Schedule schedule = createSchedule(id);
+        Schedule updatedSchedule = createSchedule(id);
+
+        ScheduleDTO updatedScheduleDTO = createScheduleDTO(id);
 
         when(scheduleRepository.existsById(id)).thenReturn(true);
-        when(scheduleRepository.save(schedule)).thenReturn(schedule);
+        when(scheduleMapper.toSchedule(scheduleDTO)).thenReturn(schedule);
+        when(scheduleRepository.save(schedule)).thenReturn(updatedSchedule);
+        when(scheduleMapper.toScheduleDTO(updatedSchedule)).thenReturn(updatedScheduleDTO);
 
-        Schedule result = scheduleService.updateSchedule(schedule);
+        ScheduleDTO result = scheduleService.updateSchedule(scheduleDTO);
 
         assertNotNull(result);
-        assertEquals(schedule, result);
+        assertEquals(id, result.getScheduleId());
+        verify(scheduleMapper).toSchedule(scheduleDTO);
         verify(scheduleRepository).save(schedule);
+        verify(scheduleMapper).toScheduleDTO(updatedSchedule);
     }
 
     @Test
@@ -114,27 +150,29 @@ public class ScheduleServiceUnitTest {
 
     @Test
     void updateScheduleThrowsExceptionWhenIdIsNull() {
-        Schedule schedule = createSchedule(null);
+        ScheduleDTO scheduleDTO = createScheduleDTO(null);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(schedule));
+                scheduleService.updateSchedule(scheduleDTO));
 
         assertEquals("Schedule ID cannot be null", exception.getMessage());
         verify(scheduleRepository, never()).save(any());
+        verify(scheduleMapper, never()).toSchedule(any(ScheduleDTO.class));
     }
 
     @Test
     void updateScheduleThrowsExceptionWhenScheduleDoesNotExist() {
         Long id = 1L;
-        Schedule schedule = createSchedule(id);
+        ScheduleDTO scheduleDTO = createScheduleDTO(id);
 
         when(scheduleRepository.existsById(id)).thenReturn(false);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(schedule));
+                scheduleService.updateSchedule(scheduleDTO));
 
         assertEquals("Schedule with id 1 does not exist", exception.getMessage());
         verify(scheduleRepository, never()).save(any());
+        verify(scheduleMapper, never()).toSchedule(any(ScheduleDTO.class));
     }
 
     @Test
@@ -165,5 +203,11 @@ public class ScheduleServiceUnitTest {
         Schedule schedule = new Schedule();
         schedule.setScheduleId(id);
         return schedule;
+    }
+
+    private ScheduleDTO createScheduleDTO(Long id) {
+        ScheduleDTO scheduleDTO = new ScheduleDTO();
+        scheduleDTO.setScheduleId(id);
+        return scheduleDTO;
     }
 }

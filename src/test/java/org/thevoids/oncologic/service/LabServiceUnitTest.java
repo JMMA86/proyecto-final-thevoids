@@ -5,9 +5,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.thevoids.oncologic.dto.LabDTO;
 import org.thevoids.oncologic.entity.Lab;
 import org.thevoids.oncologic.entity.Patient;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.mapper.LabMapper;
 import org.thevoids.oncologic.repository.LabRepository;
 import org.thevoids.oncologic.repository.PatientRepository;
 import org.thevoids.oncologic.repository.UserRepository;
@@ -33,21 +35,29 @@ public class LabServiceUnitTest {
     @Mock
     private PatientRepository patientRepository;
 
+    @Mock
+    private LabMapper labMapper;
+
     @InjectMocks
     private LabServiceImpl labService;
 
     @Test
     void getLabByIdReturnsLabWhenExists() {
         Long id = 1L;
-        Lab expectedLab = new Lab();
-        expectedLab.setLabId(id);
+        Lab lab = new Lab();
+        lab.setLabId(id);
 
-        when(labRepository.findById(id)).thenReturn(Optional.of(expectedLab));
+        LabDTO expectedLabDTO = new LabDTO();
+        expectedLabDTO.setLabId(id);
 
-        Lab result = labService.getLabById(id);
+        when(labRepository.findById(id)).thenReturn(Optional.of(lab));
+        when(labMapper.toLabDTO(lab)).thenReturn(expectedLabDTO);
+
+        LabDTO result = labService.getLabById(id);
 
         assertNotNull(result);
         assertEquals(id, result.getLabId());
+        verify(labMapper).toLabDTO(lab);
     }
 
     @Test
@@ -65,17 +75,30 @@ public class LabServiceUnitTest {
     @Test
     void updateLabSuccessfullyUpdatesLab() {
         Long id = 1L;
+        LabDTO labDTO = new LabDTO();
+        labDTO.setLabId(id);
+
         Lab lab = new Lab();
         lab.setLabId(id);
 
-        when(labRepository.existsById(id)).thenReturn(true);
-        when(labRepository.save(lab)).thenReturn(lab);
+        Lab savedLab = new Lab();
+        savedLab.setLabId(id);
 
-        Lab result = labService.updateLab(lab);
+        LabDTO savedLabDTO = new LabDTO();
+        savedLabDTO.setLabId(id);
+
+        when(labRepository.existsById(id)).thenReturn(true);
+        when(labMapper.toLab(labDTO)).thenReturn(lab);
+        when(labRepository.save(lab)).thenReturn(savedLab);
+        when(labMapper.toLabDTO(savedLab)).thenReturn(savedLabDTO);
+
+        LabDTO result = labService.updateLab(labDTO);
 
         assertNotNull(result);
-        assertEquals(lab, result);
+        assertEquals(id, result.getLabId());
+        verify(labMapper).toLab(labDTO);
         verify(labRepository).save(lab);
+        verify(labMapper).toLabDTO(savedLab);
     }
 
     @Test
@@ -89,28 +112,30 @@ public class LabServiceUnitTest {
 
     @Test
     void updateLabThrowsExceptionWhenLabIdIsNull() {
-        Lab lab = new Lab();
+        LabDTO labDTO = new LabDTO();
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                labService.updateLab(lab));
+                labService.updateLab(labDTO));
 
         assertEquals("Lab ID cannot be null", exception.getMessage());
         verify(labRepository, never()).save(any(Lab.class));
+        verify(labMapper, never()).toLab(any(LabDTO.class));
     }
 
     @Test
     void updateLabThrowsExceptionWhenLabDoesNotExist() {
         Long id = 1L;
-        Lab lab = new Lab();
-        lab.setLabId(id);
+        LabDTO labDTO = new LabDTO();
+        labDTO.setLabId(id);
 
         when(labRepository.existsById(id)).thenReturn(false);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                labService.updateLab(lab));
+                labService.updateLab(labDTO));
 
         assertEquals("Lab with id 1 does not exist", exception.getMessage());
         verify(labRepository, never()).save(any(Lab.class));
+        verify(labMapper, never()).toLab(any(LabDTO.class));
     }
 
     @Test
@@ -139,17 +164,34 @@ public class LabServiceUnitTest {
 
     @Test
     void getAllLabsReturnsAllLabs() {
-        List<Lab> expectedLabs = List.of(
+        List<Lab> labs = List.of(
                 createLab(1L, new Date()),
                 createLab(2L, new Date())
         );
 
-        when(labRepository.findAll()).thenReturn(expectedLabs);
+        List<LabDTO> expectedLabDTOs = List.of(
+                createLabDTO(1L, new Date()),
+                createLabDTO(2L, new Date())
+        );
 
-        List<Lab> result = labService.getAllLabs();
+        when(labRepository.findAll()).thenReturn(labs);
+        when(labMapper.toLabDTO(labs.get(0))).thenReturn(expectedLabDTOs.get(0));
+        when(labMapper.toLabDTO(labs.get(1))).thenReturn(expectedLabDTOs.get(1));
+
+        List<LabDTO> result = labService.getAllLabs();
 
         assertEquals(2, result.size());
-        assertEquals(expectedLabs, result);
+        assertEquals(expectedLabDTOs, result);
+        verify(labRepository).findAll();
+        verify(labMapper).toLabDTO(labs.get(0));
+        verify(labMapper).toLabDTO(labs.get(1));
+    }
+
+    private LabDTO createLabDTO(Long id, Date requestDate) {
+        LabDTO labDTO = new LabDTO();
+        labDTO.setLabId(id);
+        labDTO.setRequestDate(requestDate);
+        return labDTO;
     }
 
     @Test
@@ -164,14 +206,38 @@ public class LabServiceUnitTest {
         User user = new User();
         user.setUserId(userId);
 
+        Lab lab = new Lab();
+        lab.setPatient(patient);
+        lab.setLabTechnician(user);
+        lab.setRequestDate(requestDate);
+
+        Lab savedLab = new Lab();
+        savedLab.setLabId(1L);
+        savedLab.setPatient(patient);
+        savedLab.setLabTechnician(user);
+        savedLab.setRequestDate(requestDate);
+
+        LabDTO savedLabDTO = new LabDTO();
+        savedLabDTO.setLabId(1L);
+        savedLabDTO.setPatientId(patientId);
+        savedLabDTO.setLabTechnicianId(userId);
+        savedLabDTO.setRequestDate(requestDate);
+
         when(patientRepository.findById(patientId)).thenReturn(Optional.of(patient));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(labRepository.save(any(Lab.class))).thenReturn(savedLab);
+        when(labMapper.toLabDTO(savedLab)).thenReturn(savedLabDTO);
 
-        Lab savedLab = labService.assignLab(patientId, userId, requestDate);
+        LabDTO result = labService.assignLab(patientId, userId, requestDate);
 
-        assertEquals(patient, savedLab.getPatient());
-        assertEquals(user, savedLab.getLabTechnician());
-        assertEquals(requestDate, savedLab.getRequestDate());
+        assertNotNull(result);
+        assertEquals(patientId, result.getPatientId());
+        assertEquals(userId, result.getLabTechnicianId());
+        assertEquals(requestDate, result.getRequestDate());
+        verify(patientRepository).findById(patientId);
+        verify(userRepository).findById(userId);
+        verify(labRepository).save(any(Lab.class));
+        verify(labMapper).toLabDTO(savedLab);
     }
 
     @Test
