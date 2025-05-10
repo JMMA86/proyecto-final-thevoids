@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,6 +21,7 @@ import org.thevoids.oncologic.entity.AssignedRole;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
 import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.UserService;
@@ -123,7 +125,7 @@ class RestUserControllerUnitTest {
     }
     
     @Test
-    void createUser_FailedCreation_ReturnsError() {
+    void createUser_UserAlreadyExists_ReturnsError() {
         // Arrange
         UserDTO userDTO = new UserDTO();
         userDTO.setFullName("John Doe");
@@ -137,6 +139,24 @@ class RestUserControllerUnitTest {
     
         // Assert
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        verify(userService, times(1)).createUser(any(User.class));
+    }
+
+    @Test
+    void createUser_InternalServerError_ReturnsError() {
+        // Arrange
+        UserDTO userDTO = new UserDTO();
+        userDTO.setFullName("John Doe");
+        
+        when(userMapper.toUser(any(UserDTO.class))).thenReturn(new User());
+        when(userService.createUser(any(User.class)))
+            .thenThrow(new RuntimeException("Error interno del servidor"));
+
+        // Act
+        ResponseEntity<UserDTO> response = restUserController.createUser(userDTO);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(userService, times(1)).createUser(any(User.class));
     }
 
@@ -178,6 +198,21 @@ class RestUserControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(userService, times(1)).getUserById(userId);
+    }
+
+    @Test
+    void getUserById_InternalServerError_ReturnsError() {
+        // Arrange
+        Long userId = 1L;
+        when(userService.getUserById(userId))
+            .thenThrow(new RuntimeException("Error interno del servidor"));
+
+        // Act
+        ResponseEntity<UserWithRolesDTO> response = restUserController.getUserById(userId);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(userService, times(1)).getUserById(userId);
     }
 
@@ -239,6 +274,27 @@ class RestUserControllerUnitTest {
     }
 
     @Test
+    void updateUser_InternalServerError_ReturnsError() {
+        // Arrange
+        Long userId = 1L;
+        UserDTO userDTO = new UserDTO();
+        userDTO.setFullName("John Updated");
+        
+        User existingUser = new User();
+        existingUser.setUserId(userId);
+        
+        when(userService.getUserById(userId)).thenReturn(existingUser);
+        doThrow(new RuntimeException("Error interno del servidor"))
+            .when(userService).updateUser(any(User.class));
+
+        // Act
+        ResponseEntity<UserDTO> response = restUserController.updateUser(userId, userDTO);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
     void deleteUser_UserExists_ReturnsSuccess() {
         // Arrange
         Long userId = 1L;
@@ -269,6 +325,36 @@ class RestUserControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(userService, times(1)).getUserById(userId);
+    }
+
+    @Test
+    void deleteUser_InvalidOperationException_ReturnsError() {
+        // Arrange
+        Long userId = 1L;
+        when(userService.getUserById(userId))
+            .thenThrow(new InvalidOperationException("Usuario no puede ser eliminado"));
+
+        // Act
+        ResponseEntity<Void> response = restUserController.deleteUser(userId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(userService, times(1)).getUserById(userId);
+    }
+
+    @Test
+    void deleteUser_InternalServerError_ReturnsError() {
+        // Arrange
+        Long userId = 1L;
+        when(userService.getUserById(userId))
+            .thenThrow(new RuntimeException("Error interno del servidor"));
+
+        // Act
+        ResponseEntity<Void> response = restUserController.deleteUser(userId);  
+        
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(userService, times(1)).getUserById(userId);
     }
 
@@ -316,6 +402,78 @@ class RestUserControllerUnitTest {
     }
 
     @Test
+    void assignRoleToUser_InvalidOperationException_ReturnsError() {
+        // Arrange
+        Long userId = 1L;
+        Long roleId = 1L;
+        when(userService.getUserById(userId))
+            .thenThrow(new InvalidOperationException("Usuario no puede ser asignado a este rol"));
+
+        // Act
+        ResponseEntity<UserWithRolesDTO> response = restUserController.assignRoleToUser(userId, roleId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void assignRoleToUser_RoleNotFound_ReturnsNotFound() {
+        // Arrange
+        Long userId = 1L;
+        Long roleId = 1L;
+        User user = new User();
+        user.setUserId(userId);
+        
+        when(userService.getUserById(userId)).thenReturn(user);
+        doThrow(new ResourceNotFoundException("Rol", "id", roleId))
+            .when(assignedRolesService).assignRoleToUser(roleId, userId);
+
+        // Act
+        ResponseEntity<UserWithRolesDTO> response = restUserController.assignRoleToUser(userId, roleId);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void assignRoleToUser_InternalServerError_ReturnsError() {
+        // Arrange
+        Long userId = 1L;
+        Long roleId = 1L;
+        User user = new User();
+        user.setUserId(userId);
+        
+        when(userService.getUserById(userId)).thenReturn(user);
+        doThrow(new RuntimeException("Error interno del servidor"))
+            .when(assignedRolesService).assignRoleToUser(roleId, userId);
+
+        // Act
+        ResponseEntity<UserWithRolesDTO> response = restUserController.assignRoleToUser(userId, roleId);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    void removeRoleFromUser_RoleNotFound_ReturnsNotFound() {
+        // Arrange
+        Long userId = 1L;
+        Long roleId = 1L;
+        User user = new User();
+        user.setUserId(userId);
+        
+        when(userService.getUserById(userId)).thenReturn(user);
+        doThrow(new ResourceNotFoundException("Rol", "id", roleId))
+            .when(assignedRolesService).removeRoleFromUser(roleId, userId);
+
+        // Act
+        ResponseEntity<UserWithRolesDTO> response = restUserController.removeRoleFromUser(userId, roleId);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
     void removeRoleFromUser_Success() {
         // Arrange
         Long userId = 1L;
@@ -345,7 +503,7 @@ class RestUserControllerUnitTest {
     }
 
     @Test
-    void removeRoleFromUser_Failure() {
+    void removeRoleFromUser_NotFound_ReturnsError() {
         // Arrange
         Long userId = 1L;
         Long roleId = 1L;
@@ -356,5 +514,39 @@ class RestUserControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void removeRoleFromUser_InvalidOperationException_ReturnsError() {
+        // Arrange
+        Long userId = 1L;
+        Long roleId = 1L;
+        when(userService.getUserById(userId))
+            .thenThrow(new InvalidOperationException("Usuario no puede ser eliminado"));
+
+        // Act
+        ResponseEntity<UserWithRolesDTO> response = restUserController.removeRoleFromUser(userId, roleId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void removeRoleFromUser_InternalServerError_ReturnsError() {
+        // Arrange
+        Long userId = 1L;
+        Long roleId = 1L;
+        User user = new User();
+        user.setUserId(userId);
+        
+        when(userService.getUserById(userId)).thenReturn(user);
+        doThrow(new RuntimeException("Error interno del servidor"))
+            .when(assignedRolesService).removeRoleFromUser(roleId, userId);
+
+        // Act
+        ResponseEntity<UserWithRolesDTO> response = restUserController.removeRoleFromUser(userId, roleId);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }

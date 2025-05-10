@@ -86,4 +86,25 @@ class RestAuthControllerUnitTest {
         verify(customUserDetailsServiceImpl, never()).loadUserByUsername(anyString());
         verify(jwtService, never()).generateToken(any(UserDetails.class));
     }
+
+    @Test
+    void login_ExceptionThrown_ReturnsInternalServerError() {
+        // Arrange
+        AuthRequest request = new AuthRequest();
+        request.setUsername("testuser");
+        request.setPassword("password");
+    
+        doThrow(new RuntimeException("Test exception")).when(authenticationManager)
+                .authenticate(any(UsernamePasswordAuthenticationToken.class));
+
+        // Act
+        ResponseEntity<AuthResponseDTO> response = restAuthController.login(request);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(customUserDetailsServiceImpl, never()).loadUserByUsername(anyString());
+        verify(jwtService, never()).generateToken(any(UserDetails.class));
+    }
+    
 }

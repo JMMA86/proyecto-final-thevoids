@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
@@ -142,6 +144,19 @@ class RestRoleControllerUnitTest {
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
+
+    @Test   
+    void testGetRoleById_InternalServerError_ReturnsError() {
+        // Arrange
+        when(roleService.getRole(1L))
+            .thenThrow(new RuntimeException("Error interno del servidor"));
+
+        // Act
+        ResponseEntity<RoleWithPermissionsDTO> response = restRoleController.getRoleById(1L);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
     
     @Test
     void testCreateRole_Success() {
@@ -174,6 +189,20 @@ class RestRoleControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
+
+    @Test   
+    void testCreateRole_InternalServerError_ReturnsError() {
+        // Arrange
+        RoleDTO roleDTO = new RoleDTO(null, "Admin");
+        when(roleService.createRole(any(Role.class)))
+            .thenThrow(new RuntimeException("Error interno del servidor"));
+
+        // Act
+        ResponseEntity<RoleDTO> response = restRoleController.createRole(roleDTO);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -210,6 +239,21 @@ class RestRoleControllerUnitTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
+    @Test   
+    void testUpdateRole_InternalServerError_ReturnsError() {
+        // Arrange
+        RoleDTO roleDTO = new RoleDTO(1L, "Updated Admin");
+        when(roleService.getRole(1L)).thenReturn(adminRole);
+        doThrow(new RuntimeException("Error interno del servidor"))
+            .when(roleService).updateRole(any(Role.class));
+
+        // Act
+        ResponseEntity<RoleDTO> response = restRoleController.updateRole(1L, roleDTO);
+
+        // Assert   
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
     @Test
     void testDeleteRole_Success() {
         // Arrange
@@ -232,6 +276,32 @@ class RestRoleControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testDeleteRole_NotFound() {
+        // Arrange
+        when(roleService.getRole(1L)).thenThrow(new ResourceNotFoundException("Rol", "id", 1L));
+
+        // Act
+        ResponseEntity<Void> response = restRoleController.deleteRole(1L);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void testDeleteRole_InternalServerError_ReturnsError() {
+        // Arrange
+        when(roleService.getRole(1L)).thenReturn(adminRole);
+        doThrow(new RuntimeException("Error interno del servidor"))
+            .when(roleService).deleteRole(any(Role.class));
+
+        // Act
+        ResponseEntity<Void> response = restRoleController.deleteRole(1L);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -259,11 +329,13 @@ class RestRoleControllerUnitTest {
     }
 
     @Test
-    void testAssignPermissionToRole_Failure() {
+    void assignPermissionToRole_PermissionNotFound_ReturnsNotFound() {
         // Arrange
         Long roleId = 1L;
         Long permissionId = 1L;
-        when(roleService.getRole(roleId)).thenThrow(new ResourceNotFoundException("Rol", "id", roleId));
+        when(roleService.getRole(roleId)).thenReturn(adminRole);
+        doThrow(new ResourceNotFoundException("Permiso", "id", permissionId))
+            .when(rolePermissionService).assignPermissionToRole(permissionId, roleId);
 
         // Act
         ResponseEntity<RoleWithPermissionsDTO> response = 
@@ -271,6 +343,40 @@ class RestRoleControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void assignPermissionToRole_InvalidOperationException_ReturnsError() {
+        // Arrange
+        Long roleId = 1L;
+        Long permissionId = 1L;
+        when(roleService.getRole(roleId)).thenReturn(adminRole);
+        doThrow(new InvalidOperationException("No se puede asignar un permiso a un rol en uso"))
+            .when(rolePermissionService).assignPermissionToRole(permissionId, roleId);
+
+        // Act
+        ResponseEntity<RoleWithPermissionsDTO> response = 
+            restRoleController.assignPermissionToRole(roleId, permissionId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void assignPermissionToRole_InternalServerError_ReturnsError() {
+        // Arrange
+        Long roleId = 1L;
+        Long permissionId = 1L;
+        when(roleService.getRole(roleId)).thenReturn(adminRole);
+        doThrow(new RuntimeException("Error interno del servidor"))
+            .when(rolePermissionService).assignPermissionToRole(permissionId, roleId);
+
+        // Act
+        ResponseEntity<RoleWithPermissionsDTO> response = 
+            restRoleController.assignPermissionToRole(roleId, permissionId);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -308,4 +414,56 @@ class RestRoleControllerUnitTest {
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
+
+    @Test
+    void removePermissionFromRole_PermissionNotFound_ReturnsNotFound() {
+        // Arrange
+        Long roleId = 1L;
+        Long permissionId = 1L;
+        when(roleService.getRole(roleId)).thenReturn(adminRole);
+        doThrow(new ResourceNotFoundException("Permiso", "id", permissionId))
+            .when(rolePermissionService).removePermissionFromRole(permissionId, roleId);
+
+        // Act
+        ResponseEntity<RoleWithPermissionsDTO> response = 
+            restRoleController.removePermissionFromRole(roleId, permissionId);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void removePermissionFromRole_InvalidOperationException_ReturnsError() {
+        // Arrange
+        Long roleId = 1L;
+        Long permissionId = 1L;
+        when(roleService.getRole(roleId)).thenReturn(adminRole);
+        doThrow(new InvalidOperationException("No se puede eliminar un permiso de un rol en uso"))
+            .when(rolePermissionService).removePermissionFromRole(permissionId, roleId);
+
+        // Act
+        ResponseEntity<RoleWithPermissionsDTO> response = 
+            restRoleController.removePermissionFromRole(roleId, permissionId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void removePermissionFromRole_InternalServerError_ReturnsError() {
+        // Arrange
+        Long roleId = 1L;
+        Long permissionId = 1L;
+        when(roleService.getRole(roleId)).thenReturn(adminRole);
+        doThrow(new RuntimeException("Error interno del servidor"))
+            .when(rolePermissionService).removePermissionFromRole(permissionId, roleId);
+
+        // Act
+        ResponseEntity<RoleWithPermissionsDTO> response = 
+            restRoleController.removePermissionFromRole(roleId, permissionId);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+    
 }

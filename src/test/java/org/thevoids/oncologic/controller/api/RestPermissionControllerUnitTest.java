@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.thevoids.oncologic.dto.entity.PermissionDTO;
 import org.thevoids.oncologic.entity.Permission;
 import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.mapper.PermissionMapper;
 import org.thevoids.oncologic.service.PermissionService;
@@ -134,6 +135,20 @@ class RestPermissionControllerUnitTest {
     }
 
     @Test
+    void getPermissionById_InternalServerError_ReturnsError() {
+        // Arrange
+        Long permissionId = 1L;
+        when(permissionService.getPermission(permissionId)).thenThrow(new RuntimeException("Error interno del servidor"));
+
+        // Act
+        ResponseEntity<PermissionDTO> response = restPermissionController.getPermissionById(permissionId);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        verify(permissionService, times(1)).getPermission(permissionId);
+    }
+
+    @Test
     void createPermission_SuccessfulCreation_ReturnsPermission() {
         // Arrange
         Permission permission = new Permission();
@@ -182,6 +197,24 @@ class RestPermissionControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        verify(permissionService, times(1)).createPermission(any(Permission.class));
+    }
+
+    @Test
+    void createPermission_InternalServerError_ReturnsError() {
+        // Arrange
+        PermissionDTO permissionDTO = new PermissionDTO();
+        permissionDTO.setPermissionName("TEST_PERMISSION");
+        
+        when(permissionMapper.toPermission(any(PermissionDTO.class))).thenReturn(new Permission());
+        when(permissionService.createPermission(any(Permission.class)))
+            .thenThrow(new RuntimeException("Error interno del servidor"));
+
+        // Act
+        ResponseEntity<PermissionDTO> response = restPermissionController.createPermission(permissionDTO);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(permissionService, times(1)).createPermission(any(Permission.class));
     }
 
@@ -240,6 +273,28 @@ class RestPermissionControllerUnitTest {
         verify(permissionService, times(1)).getPermission(permissionId);
         verify(permissionService, times(0)).updatePermission(any(Permission.class));
     }
+
+    @Test
+    void updatePermission_InternalServerError_ReturnsError() {
+        // Arrange
+        Long permissionId = 1L;
+        PermissionDTO permissionDTO = new PermissionDTO();
+        permissionDTO.setPermissionName("TEST_PERMISSION");
+        
+        Permission existingPermission = new Permission();
+        existingPermission.setPermissionId(permissionId);
+        
+        when(permissionService.getPermission(permissionId)).thenReturn(Optional.of(existingPermission));
+        when(permissionService.updatePermission(any(Permission.class)))
+            .thenThrow(new RuntimeException("Error interno del servidor"));
+
+        // Act
+        ResponseEntity<PermissionDTO> response = restPermissionController.updatePermission(permissionId, permissionDTO);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        verify(permissionService, times(1)).updatePermission(any(Permission.class));
+    }
     
     @Test
     void deletePermission_SuccessfulDeletion_ReturnsSuccess() {
@@ -266,6 +321,38 @@ class RestPermissionControllerUnitTest {
                 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(permissionService, times(1)).deletePermission(permissionId);
+    }
+
+    @Test
+    void deletePermission_InternalServerError_ReturnsError() {
+        // Arrange
+        Long permissionId = 1L;
+        
+        when(permissionService.deletePermission(permissionId))
+            .thenThrow(new RuntimeException("Error interno del servidor"));
+
+        // Act
+        ResponseEntity<Void> response = restPermissionController.deletePermission(permissionId);
+        
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        verify(permissionService, times(1)).deletePermission(permissionId);
+    }
+
+    @Test
+    void deletePermission_PermissionNotFound_ReturnsError() {
+        // Arrange
+        Long permissionId = 1L;
+        
+        when(permissionService.deletePermission(permissionId))
+            .thenThrow(new ResourceNotFoundException("Permiso", "id", permissionId));
+
+        // Act
+        ResponseEntity<Void> response = restPermissionController.deletePermission(permissionId);
+        
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verify(permissionService, times(1)).deletePermission(permissionId);
     }
 }
