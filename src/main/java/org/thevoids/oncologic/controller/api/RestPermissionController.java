@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thevoids.oncologic.dto.custom.ApiResponse;
 import org.thevoids.oncologic.dto.entity.PermissionDTO;
 import org.thevoids.oncologic.entity.Permission;
+import org.thevoids.oncologic.exception.InvalidOperationException;
+import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.PermissionMapper;
 import org.thevoids.oncologic.service.PermissionService;
 
@@ -38,16 +40,15 @@ public class RestPermissionController {
      */
     @PreAuthorize("hasAuthority('VIEW_PERMISSIONS')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PermissionDTO>>> getAllPermissions() {
+    public ResponseEntity<List<PermissionDTO>> getAllPermissions() {
         try {
             List<Permission> permissions = permissionService.getAllPermissions();
             List<PermissionDTO> permissionDTOs = permissions.stream()
                     .map(permissionMapper::toPermissionDTO)
                     .collect(Collectors.toList());
-            return ResponseEntity.ok(ApiResponse.exito("Permisos recuperados con éxito", permissionDTOs));
+            return ResponseEntity.ok(permissionDTOs);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Error al recuperar los permisos: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -59,16 +60,17 @@ public class RestPermissionController {
      */
     @PreAuthorize("hasAuthority('VIEW_PERMISSIONS')")
     @GetMapping("/{permissionId}")
-    public ResponseEntity<ApiResponse<PermissionDTO>> getPermissionById(@PathVariable Long permissionId) {
+    public ResponseEntity<PermissionDTO> getPermissionById(@PathVariable Long permissionId) {
         try {
             PermissionDTO permissionDTO = permissionMapper.toPermissionDTO(
                 permissionService.getPermission(permissionId)
-                    .orElseThrow(() -> new Exception("Permiso no encontrado"))
+                    .orElseThrow(() -> new ResourceNotFoundException("Permiso", "id", permissionId))
             );
-            return ResponseEntity.ok(ApiResponse.exito("Permiso recuperado con éxito", permissionDTO));
+            return ResponseEntity.ok(permissionDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Error al recuperar el permiso: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -80,16 +82,16 @@ public class RestPermissionController {
      */
     @PreAuthorize("hasAuthority('ADD_PERMISSIONS')")
     @PostMapping
-    public ResponseEntity<ApiResponse<PermissionDTO>> createPermission(@RequestBody PermissionDTO permissionDTO) {
+    public ResponseEntity<PermissionDTO> createPermission(@RequestBody PermissionDTO permissionDTO) {
         try {
             Permission permission = permissionMapper.toPermission(permissionDTO);
             Permission createdPermission = permissionService.createPermission(permission);
             PermissionDTO createdPermissionDTO = permissionMapper.toPermissionDTO(createdPermission);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Permiso creado con éxito", createdPermissionDTO));
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdPermissionDTO);
+        } catch (ResourceAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al crear el permiso: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -102,17 +104,18 @@ public class RestPermissionController {
      */
     @PreAuthorize("hasAuthority('EDIT_PERMISSIONS')")
     @PutMapping("/{permissionId}")
-    public ResponseEntity<ApiResponse<PermissionDTO>> updatePermission(@PathVariable Long permissionId, @RequestBody PermissionDTO permissionDTO) {
+    public ResponseEntity<PermissionDTO> updatePermission(@PathVariable Long permissionId, @RequestBody PermissionDTO permissionDTO) {
         try {
             Permission existingPermission = permissionService.getPermission(permissionId)
-                .orElseThrow(() -> new Exception("Permiso no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Permiso", "id", permissionId));
             existingPermission.setPermissionName(permissionDTO.getPermissionName());
             Permission updatedPermission = permissionService.updatePermission(existingPermission);
             PermissionDTO updatedPermissionDTO = permissionMapper.toPermissionDTO(updatedPermission);
-            return ResponseEntity.ok(ApiResponse.exito("Permiso actualizado con éxito", updatedPermissionDTO));
+            return ResponseEntity.ok(updatedPermissionDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al actualizar el permiso: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -124,13 +127,16 @@ public class RestPermissionController {
      */
     @PreAuthorize("hasAuthority('DELETE_PERMISSIONS')")
     @DeleteMapping("/{permissionId}")
-    public ResponseEntity<ApiResponse<Void>> deletePermission(@PathVariable Long permissionId) {
+    public ResponseEntity<Void> deletePermission(@PathVariable Long permissionId) {
         try {
             permissionService.deletePermission(permissionId);
-            return ResponseEntity.ok(ApiResponse.exito("Permiso eliminado con éxito", null));
+            return ResponseEntity.ok().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al eliminar el permiso: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

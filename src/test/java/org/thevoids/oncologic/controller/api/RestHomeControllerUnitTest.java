@@ -8,7 +8,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.thevoids.oncologic.dto.custom.ApiResponse;
 import org.thevoids.oncologic.dto.custom.UserProfileDTO;
 
 import java.util.Arrays;
@@ -34,14 +33,10 @@ class RestHomeControllerUnitTest {
     @Test
     void getUserProfile_NoAuthentication_ReturnsError() {
         // Act
-        ResponseEntity<ApiResponse<UserProfileDTO>> response = restHomeController.getUserProfile(null);
+        ResponseEntity<UserProfileDTO> response = restHomeController.getUserProfile(null);
 
         // Assert
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        ApiResponse<UserProfileDTO> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals(false, errorResponse.isExito());
-        assertEquals("Se requiere autenticación", errorResponse.getMensaje());
     }
 
     @Test
@@ -52,16 +47,12 @@ class RestHomeControllerUnitTest {
         when(authentication.getAuthorities()).thenReturn(Arrays.asList());
 
         // Act
-        ResponseEntity<ApiResponse<UserProfileDTO>> response = restHomeController.getUserProfile(authentication);
+        ResponseEntity<UserProfileDTO> response = restHomeController.getUserProfile(authentication);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<UserProfileDTO> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertTrue(responseBody.isExito());
-        assertEquals("Perfil recuperado con éxito", responseBody.getMensaje());
-
-        UserProfileDTO profile = responseBody.getDatos();
+        UserProfileDTO profile = response.getBody();
+        assertNotNull(profile);
         assertEquals(username, profile.getUsername());
         assertTrue(profile.getRoles().isEmpty());
         assertTrue(profile.getPermissions().isEmpty());

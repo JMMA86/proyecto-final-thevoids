@@ -20,6 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.impl.UserServiceImpl;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
 
 class UserServiceUnitTest {
 
@@ -86,11 +88,11 @@ class UserServiceUnitTest {
         newUser.setIdentification("123456");
 
         // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class, () -> {
             userService.createUser(newUser);
         });
 
-        assertEquals("User with identification 123456 already exists", exception.getMessage());
+        assertEquals("Usuario ya existe con identificación : '123456'", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -116,11 +118,11 @@ class UserServiceUnitTest {
         when(userRepository.existsById(user.getUserId())).thenReturn(false);
 
         // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             userService.deleteUser(user);
         });
 
-        assertEquals("User with id 1 does not exist", exception.getMessage());
+        assertEquals("Usuario no encontrado con id : '1'", exception.getMessage());
     }
 
     @Test
@@ -146,12 +148,12 @@ class UserServiceUnitTest {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Act
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             userService.getUserById(userId);
         });
 
         // Assert
-        assertEquals("User with id " + userId + " does not exist", exception.getMessage());
+        assertEquals("Usuario no encontrado con id : '1'", exception.getMessage());
     }
 
     @Test
@@ -176,10 +178,10 @@ class UserServiceUnitTest {
         when(userRepository.existsById(user.getUserId())).thenReturn(false);
 
         // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             userService.updateUser(user);
         });
 
-        assertEquals("User with id 1 does not exist", exception.getMessage());
+        assertEquals("Usuario no encontrado con id : '1'", exception.getMessage());
     }
 }

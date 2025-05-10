@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.Permission;
+import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.repository.PermissionRepository;
 import org.thevoids.oncologic.service.PermissionService;
 
@@ -22,7 +24,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public Permission createPermission(Permission permission) {
         if (permission.getPermissionId() != null && permissionRepository.existsById(permission.getPermissionId())) {
-            throw new IllegalArgumentException("Permission already exists");
+            throw new ResourceAlreadyExistsException("Permiso", "id", permission.getPermissionId());
         }
 
         permissionRepository.save(permission);
@@ -33,11 +35,11 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public Permission deletePermission(Long permissionId) {
         if (!permissionRepository.existsById(permissionId)) {
-            throw new IllegalArgumentException("Permission does not exist");
+            throw new ResourceNotFoundException("Permiso", "id", permissionId);
         }
 
         Permission permission = permissionRepository.findById(permissionId)
-                .orElseThrow(() -> new IllegalArgumentException("Permission not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Permiso", "id", permissionId));
 
         permissionRepository.delete(permission);
 
@@ -47,7 +49,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public Permission updatePermission(Permission permission) {
         if (!permissionRepository.existsById(permission.getPermissionId())) {
-            throw new IllegalArgumentException("Permission does not exist");
+            throw new ResourceNotFoundException("Permiso", "id", permission.getPermissionId());
         }
 
         permissionRepository.save(permission);
@@ -58,7 +60,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public Optional<Permission> getPermission(Long permissionId) {
         if (!permissionRepository.existsById(permissionId)) {
-            throw new IllegalArgumentException("Permission does not exist");
+            throw new ResourceNotFoundException("Permiso", "id", permissionId);
         }
 
         return permissionRepository.findById(permissionId);

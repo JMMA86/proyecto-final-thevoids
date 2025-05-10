@@ -12,10 +12,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/labs")
-public class LabController {
+public class RestLabController {
     private final LabService labService;
 
-    public LabController(LabService labService) {
+    public RestLabController(LabService labService) {
         this.labService = labService;
     }
 

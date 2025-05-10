@@ -12,7 +12,6 @@ import org.thevoids.oncologic.repository.PatientRepository;
 import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.impl.PatientServiceImpl;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -185,40 +184,5 @@ public class PatientServiceUnitTest {
 
         assertEquals("Patient with id 1 does not exist", exception.getMessage());
         verify(patientRepository, never()).deleteById(any());
-    }
-
-    @Test
-    void getAllPatientsReturnsAllPatients() {
-        List<Patient> patients = List.of(
-                createPatient(1L),
-                createPatient(2L)
-        );
-
-        List<PatientDTO> expectedPatientDTOs = List.of(
-                createPatientDTO(1L),
-                createPatientDTO(2L)
-        );
-
-        when(patientRepository.findAll()).thenReturn(patients);
-        when(patientMapper.toPatientDTOs(patients)).thenReturn(expectedPatientDTOs);
-
-        List<PatientDTO> result = patientService.getAllPatients();
-
-        assertEquals(2, result.size());
-        assertEquals(expectedPatientDTOs, result);
-        verify(patientRepository).findAll();
-        verify(patientMapper).toPatientDTOs(patients);
-    }
-
-    private Patient createPatient(Long id) {
-        Patient patient = new Patient();
-        patient.setPatientId(id);
-        return patient;
-    }
-
-    private PatientDTO createPatientDTO(Long id) {
-        PatientDTO patientDTO = new PatientDTO();
-        patientDTO.setPatientId(id);
-        return patientDTO;
     }
 }

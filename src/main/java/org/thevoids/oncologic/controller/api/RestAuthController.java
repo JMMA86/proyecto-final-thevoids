@@ -1,8 +1,10 @@
 package org.thevoids.oncologic.controller.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.thevoids.oncologic.dto.entity.AuthRequest;
-import org.thevoids.oncologic.dto.custom.ApiResponse;
 import org.thevoids.oncologic.dto.custom.AuthResponseDTO;
 import org.thevoids.oncologic.service.impl.CustomUserDetailsServiceImpl;
 import org.thevoids.oncologic.utils.JwtService;
@@ -33,7 +34,7 @@ public class RestAuthController {
      * @return JWT token if authentication is successful
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponseDTO>> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthRequest request) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -45,12 +46,11 @@ public class RestAuthController {
             UserDetails userDetails = customUserDetailsServiceImpl.loadUserByUsername(request.getUsername());
             String token = jwtService.generateToken(userDetails);
             
-            AuthResponseDTO authResponse = new AuthResponseDTO(token, request.getUsername());
-            
-            return ResponseEntity.ok(ApiResponse.exito("Inicio de sesión exitoso", authResponse));
+            return ResponseEntity.ok(new AuthResponseDTO(token, request.getUsername()));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(400).body(ApiResponse.error("Autenticación fallida: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

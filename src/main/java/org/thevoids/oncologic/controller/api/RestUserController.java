@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thevoids.oncologic.dto.custom.ApiResponse;
 import org.thevoids.oncologic.dto.entity.UserDTO;
 import org.thevoids.oncologic.dto.entity.UserWithRolesDTO;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.exception.InvalidOperationException;
+import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.UserService;
 import org.thevoids.oncologic.service.AssignedRoles;
@@ -43,16 +45,15 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('VIEW_USERS')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserDTO>>> getAllUsers() {
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
         try {
             List<User> users = userService.getAllUsers();
             List<UserDTO> userDTOs = users.stream()
                     .map(userMapper::toUserDTO)
                     .collect(Collectors.toList());
-            return ResponseEntity.ok(ApiResponse.exito("Usuarios recuperados con éxito", userDTOs));
+            return ResponseEntity.ok(userDTOs);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Error al recuperar los usuarios: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -64,14 +65,15 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('VIEW_USERS')")
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserWithRolesDTO>> getUserById(@PathVariable Long userId) {
+    public ResponseEntity<UserWithRolesDTO> getUserById(@PathVariable Long userId) {
         try {
             User user = userService.getUserById(userId);
             UserWithRolesDTO userDTO = userMapper.toUserWithRolesDTO(user);
-            return ResponseEntity.ok(ApiResponse.exito("Usuario recuperado con éxito", userDTO));
+            return ResponseEntity.ok(userDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Error al recuperar el usuario: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -83,16 +85,16 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('ADD_USERS')")
     @PostMapping
-    public ResponseEntity<ApiResponse<UserDTO>> createUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
         try {
             User user = userMapper.toUser(userDTO);
             User createdUser = userService.createUser(user);
             UserDTO createdUserDTO = userMapper.toUserDTO(createdUser);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Usuario creado con éxito", createdUserDTO));
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdUserDTO);
+        } catch (ResourceAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al crear el usuario: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -105,13 +107,9 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @PutMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserDTO>> updateUser(@PathVariable Long userId, @RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long userId, @RequestBody UserDTO userDTO) {
         try {
             User existingUser = userService.getUserById(userId);
-            if (existingUser == null) {
-                throw new Exception("Usuario no encontrado");
-            }
-            
             existingUser.setFullName(userDTO.getFullName());
             existingUser.setIdentification(userDTO.getIdentification());
             existingUser.setBirthDate(userDTO.getBirthDate());
@@ -122,10 +120,11 @@ public class RestUserController {
             userService.updateUser(existingUser);
             User updatedUser = userService.getUserById(userId);
             UserDTO updatedUserDTO = userMapper.toUserDTO(updatedUser);
-            return ResponseEntity.ok(ApiResponse.exito("Usuario actualizado con éxito", updatedUserDTO));
+            return ResponseEntity.ok(updatedUserDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al actualizar el usuario: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -137,14 +136,17 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('DELETE_USERS')")
     @DeleteMapping("/{userId}")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long userId) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
         try {
             User user = userService.getUserById(userId);
             userService.deleteUser(user);
-            return ResponseEntity.ok(ApiResponse.exito("Usuario eliminado con éxito", null));
+            return ResponseEntity.ok().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al eliminar el usuario: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
@@ -157,14 +159,17 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @PostMapping("/{userId}/roles/{roleId}")
-    public ResponseEntity<ApiResponse<UserWithRolesDTO>> assignRoleToUser(@PathVariable Long userId, @PathVariable Long roleId) {
+    public ResponseEntity<UserWithRolesDTO> assignRoleToUser(@PathVariable Long userId, @PathVariable Long roleId) {
         try {
             assignedRolesService.assignRoleToUser(roleId, userId);
             UserWithRolesDTO userWithRolesDTO = userMapper.toUserWithRolesDTO(userService.getUserById(userId));
-            return ResponseEntity.ok(ApiResponse.exito("Rol asignado al usuario con éxito", userWithRolesDTO));
+            return ResponseEntity.ok(userWithRolesDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al añadir rol al usuario: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -177,14 +182,17 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @DeleteMapping("/{userId}/roles/{roleId}")
-    public ResponseEntity<ApiResponse<UserWithRolesDTO>> removeRoleFromUser(@PathVariable Long userId, @PathVariable Long roleId) {
+    public ResponseEntity<UserWithRolesDTO> removeRoleFromUser(@PathVariable Long userId, @PathVariable Long roleId) {
         try {
             assignedRolesService.removeRoleFromUser(roleId, userId);
             UserWithRolesDTO userWithRolesDTO = userMapper.toUserWithRolesDTO(userService.getUserById(userId));
-            return ResponseEntity.ok(ApiResponse.exito("Rol eliminado del usuario con éxito", userWithRolesDTO));
+            return ResponseEntity.ok(userWithRolesDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al eliminar rol del usuario: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

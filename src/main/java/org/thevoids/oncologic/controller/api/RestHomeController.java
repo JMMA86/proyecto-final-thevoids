@@ -3,13 +3,13 @@ package org.thevoids.oncologic.controller.api;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thevoids.oncologic.dto.custom.ApiResponse;
 import org.thevoids.oncologic.dto.custom.UserProfileDTO;
 
 @RestController
@@ -23,9 +23,9 @@ public class RestHomeController {
      * @return a response with the user's profile information.
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<UserProfileDTO>> getUserProfile(Authentication authentication) {
+    public ResponseEntity<UserProfileDTO> getUserProfile(Authentication authentication) {
         if (authentication == null) {
-            return ResponseEntity.status(401).body(ApiResponse.error("Se requiere autenticación"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         // Extract roles (prefixed with ROLE_)
@@ -46,6 +46,6 @@ public class RestHomeController {
                 permissions
         );
 
-        return ResponseEntity.ok(ApiResponse.exito("Perfil recuperado con éxito", profile));
+        return ResponseEntity.ok(profile);
     }
 }

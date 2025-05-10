@@ -24,6 +24,8 @@ import org.thevoids.oncologic.repository.PermissionRepository;
 import org.thevoids.oncologic.repository.RolePermissionRepository;
 import org.thevoids.oncologic.repository.RoleRepository;
 import org.thevoids.oncologic.service.impl.RolePermissionServiceImpl;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
 
 class RolePermissionServiceUnitTest {
 
@@ -87,7 +89,7 @@ class RolePermissionServiceUnitTest {
         when(roleRepository.existsById(roleId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.roleHasPermission(roleId, permissionId));
+        assertThrows(ResourceNotFoundException.class, () -> rolePermissionService.roleHasPermission(roleId, permissionId));
     }
 
     @Test
@@ -100,7 +102,7 @@ class RolePermissionServiceUnitTest {
         when(permissionRepository.existsById(permissionId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.roleHasPermission(roleId, permissionId));
+        assertThrows(ResourceNotFoundException.class, () -> rolePermissionService.roleHasPermission(roleId, permissionId));
     }
 
     @Test
@@ -140,7 +142,7 @@ class RolePermissionServiceUnitTest {
         when(roleRepository.existsById(roleId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.assignPermissionToRole(permissionId, roleId));
+        assertThrows(ResourceNotFoundException.class, () -> rolePermissionService.assignPermissionToRole(permissionId, roleId));
     }
 
     @Test
@@ -153,7 +155,7 @@ class RolePermissionServiceUnitTest {
         when(permissionRepository.existsById(permissionId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.assignPermissionToRole(permissionId, roleId));
+        assertThrows(ResourceNotFoundException.class, () -> rolePermissionService.assignPermissionToRole(permissionId, roleId));
     }
 
     @Test
@@ -167,7 +169,7 @@ class RolePermissionServiceUnitTest {
         when(rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)).thenReturn(true);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.assignPermissionToRole(permissionId, roleId));
+        assertThrows(InvalidOperationException.class, () -> rolePermissionService.assignPermissionToRole(permissionId, roleId));
     }
 
     @Test
@@ -212,7 +214,7 @@ class RolePermissionServiceUnitTest {
         when(roleRepository.existsById(roleId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.updatePermissionForRole(lastPermissionId, newPermissionId, roleId));
+        assertThrows(ResourceNotFoundException.class, () -> rolePermissionService.updatePermissionForRole(lastPermissionId, newPermissionId, roleId));
     }
 
     @Test
@@ -226,7 +228,7 @@ class RolePermissionServiceUnitTest {
         when(permissionRepository.existsById(lastPermissionId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.updatePermissionForRole(lastPermissionId, newPermissionId, roleId));
+        assertThrows(ResourceNotFoundException.class, () -> rolePermissionService.updatePermissionForRole(lastPermissionId, newPermissionId, roleId));
     }
 
     @Test
@@ -241,7 +243,7 @@ class RolePermissionServiceUnitTest {
         when(permissionRepository.existsById(newPermissionId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.updatePermissionForRole(lastPermissionId, newPermissionId, roleId));
+        assertThrows(ResourceNotFoundException.class, () -> rolePermissionService.updatePermissionForRole(lastPermissionId, newPermissionId, roleId));
     }
 
     @Test
@@ -257,7 +259,7 @@ class RolePermissionServiceUnitTest {
         when(rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, lastPermissionId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.updatePermissionForRole(lastPermissionId, newPermissionId, roleId));
+        assertThrows(InvalidOperationException.class, () -> rolePermissionService.updatePermissionForRole(lastPermissionId, newPermissionId, roleId));
     }
 
     @Test
@@ -290,7 +292,7 @@ class RolePermissionServiceUnitTest {
         when(permissionRepository.existsById(permissionId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.removePermissionFromRole(permissionId, roleId));
+        assertThrows(ResourceNotFoundException.class, () -> rolePermissionService.removePermissionFromRole(permissionId, roleId));
     }
 
     @Test
@@ -303,7 +305,7 @@ class RolePermissionServiceUnitTest {
         when(roleRepository.existsById(roleId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.removePermissionFromRole(permissionId, roleId));
+        assertThrows(ResourceNotFoundException.class, () -> rolePermissionService.removePermissionFromRole(permissionId, roleId));
     }
 
     @Test
@@ -317,7 +319,7 @@ class RolePermissionServiceUnitTest {
         when(rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.removePermissionFromRole(permissionId, roleId));
+        assertThrows(InvalidOperationException.class, () -> rolePermissionService.removePermissionFromRole(permissionId, roleId));
     }
 
     @Test
@@ -342,7 +344,7 @@ class RolePermissionServiceUnitTest {
         when(roleRepository.existsById(roleId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> rolePermissionService.getPermissionsFromRole(roleId));
+        assertThrows(ResourceNotFoundException.class, () -> rolePermissionService.getPermissionsFromRole(roleId));
     }
 
     @Test

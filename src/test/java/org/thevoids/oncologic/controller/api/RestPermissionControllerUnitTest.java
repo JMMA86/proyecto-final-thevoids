@@ -7,9 +7,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.thevoids.oncologic.dto.custom.ApiResponse;
 import org.thevoids.oncologic.dto.entity.PermissionDTO;
 import org.thevoids.oncologic.entity.Permission;
+import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.mapper.PermissionMapper;
 import org.thevoids.oncologic.service.PermissionService;
 
@@ -19,7 +20,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -65,16 +65,12 @@ class RestPermissionControllerUnitTest {
         when(permissionMapper.toPermissionDTO(permission2)).thenReturn(permissionDTO2);
 
         // Act
-        ResponseEntity<ApiResponse<List<PermissionDTO>>> response = restPermissionController.getAllPermissions();
+        ResponseEntity<List<PermissionDTO>> response = restPermissionController.getAllPermissions();
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<List<PermissionDTO>> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertTrue(responseBody.isExito());
-        assertEquals("Permisos recuperados con éxito", responseBody.getMensaje());
-        
-        List<PermissionDTO> permissionDTOs = responseBody.getDatos();
+        List<PermissionDTO> permissionDTOs = response.getBody();
+        assertNotNull(permissionDTOs);
         assertEquals(2, permissionDTOs.size());
         assertEquals("VIEW_USERS", permissionDTOs.get(0).getPermissionName());
         assertEquals("EDIT_USERS", permissionDTOs.get(1).getPermissionName());
@@ -88,15 +84,10 @@ class RestPermissionControllerUnitTest {
         when(permissionService.getAllPermissions()).thenThrow(new RuntimeException("Error al recuperar permisos"));
 
         // Act
-        ResponseEntity<ApiResponse<List<PermissionDTO>>> response = restPermissionController.getAllPermissions();
+        ResponseEntity<List<PermissionDTO>> response = restPermissionController.getAllPermissions();
 
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        ApiResponse<List<PermissionDTO>> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals(false, errorResponse.isExito());
-        assertEquals("Error al recuperar los permisos: Error al recuperar permisos", errorResponse.getMensaje());
-        
         verify(permissionService, times(1)).getAllPermissions();
     }
 
@@ -116,16 +107,12 @@ class RestPermissionControllerUnitTest {
         when(permissionMapper.toPermissionDTO(permission)).thenReturn(permissionDTO);
 
         // Act
-        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.getPermissionById(permissionId);
+        ResponseEntity<PermissionDTO> response = restPermissionController.getPermissionById(permissionId);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<PermissionDTO> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertTrue(responseBody.isExito());
-        assertEquals("Permiso recuperado con éxito", responseBody.getMensaje());
-        
-        PermissionDTO retrievedPermission = responseBody.getDatos();
+        PermissionDTO retrievedPermission = response.getBody();
+        assertNotNull(retrievedPermission);
         assertEquals(permissionId, retrievedPermission.getPermissionId());
         assertEquals("VIEW_USERS", retrievedPermission.getPermissionName());
         
@@ -139,15 +126,10 @@ class RestPermissionControllerUnitTest {
         when(permissionService.getPermission(permissionId)).thenReturn(Optional.empty());
 
         // Act
-        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.getPermissionById(permissionId);
+        ResponseEntity<PermissionDTO> response = restPermissionController.getPermissionById(permissionId);
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        ApiResponse<PermissionDTO> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals(false, errorResponse.isExito());
-        assertEquals("Error al recuperar el permiso: Permiso no encontrado", errorResponse.getMensaje());
-        
         verify(permissionService, times(1)).getPermission(permissionId);
     }
 
@@ -173,16 +155,12 @@ class RestPermissionControllerUnitTest {
         when(permissionMapper.toPermissionDTO(createdPermission)).thenReturn(createdPermissionDTO);
 
         // Act
-        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.createPermission(permissionDTO);
+        ResponseEntity<PermissionDTO> response = restPermissionController.createPermission(permissionDTO);
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        ApiResponse<PermissionDTO> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertTrue(responseBody.isExito());
-        assertEquals("Permiso creado con éxito", responseBody.getMensaje());
-        
-        PermissionDTO createdPermissionResult = responseBody.getDatos();
+        PermissionDTO createdPermissionResult = response.getBody();
+        assertNotNull(createdPermissionResult);
         assertEquals(1L, createdPermissionResult.getPermissionId());
         assertEquals("VIEW_USERS", createdPermissionResult.getPermissionName());
         
@@ -197,18 +175,13 @@ class RestPermissionControllerUnitTest {
 
         when(permissionMapper.toPermission(any(PermissionDTO.class))).thenReturn(new Permission());
         when(permissionService.createPermission(any(Permission.class)))
-            .thenThrow(new RuntimeException("Nombre de permiso duplicado"));
+            .thenThrow(new ResourceAlreadyExistsException("Permiso", "nombre", "VIEW_USERS"));
 
         // Act
-        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.createPermission(permissionDTO);
+        ResponseEntity<PermissionDTO> response = restPermissionController.createPermission(permissionDTO);
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        ApiResponse<PermissionDTO> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals(false, errorResponse.isExito());
-        assertEquals("Error al crear el permiso: Nombre de permiso duplicado", errorResponse.getMensaje());
-        
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         verify(permissionService, times(1)).createPermission(any(Permission.class));
     }
 
@@ -237,16 +210,12 @@ class RestPermissionControllerUnitTest {
         when(permissionMapper.toPermissionDTO(updatedPermission)).thenReturn(updatedPermissionDTO);
         
         // Act
-        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.updatePermission(permissionId, permissionDTO);
+        ResponseEntity<PermissionDTO> response = restPermissionController.updatePermission(permissionId, permissionDTO);
                 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<PermissionDTO> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertTrue(responseBody.isExito());
-        assertEquals("Permiso actualizado con éxito", responseBody.getMensaje());
-        
-        PermissionDTO updatedPermissionResult = responseBody.getDatos();
+        PermissionDTO updatedPermissionResult = response.getBody();
+        assertNotNull(updatedPermissionResult);
         assertEquals(permissionId, updatedPermissionResult.getPermissionId());
         assertEquals("VIEW_USERS_UPDATED", updatedPermissionResult.getPermissionName());
               
@@ -264,15 +233,10 @@ class RestPermissionControllerUnitTest {
         when(permissionService.getPermission(permissionId)).thenReturn(Optional.empty());
         
         // Act
-        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.updatePermission(permissionId, permissionDTO);
+        ResponseEntity<PermissionDTO> response = restPermissionController.updatePermission(permissionId, permissionDTO);
                 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        ApiResponse<PermissionDTO> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals(false, errorResponse.isExito());
-        assertEquals("Error al actualizar el permiso: Permiso no encontrado", errorResponse.getMensaje());
-              
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verify(permissionService, times(1)).getPermission(permissionId);
         verify(permissionService, times(0)).updatePermission(any(Permission.class));
     }
@@ -283,15 +247,10 @@ class RestPermissionControllerUnitTest {
         Long permissionId = 1L;
         
         // Act
-        ResponseEntity<ApiResponse<Void>> response = restPermissionController.deletePermission(permissionId);
+        ResponseEntity<Void> response = restPermissionController.deletePermission(permissionId);
                 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<Void> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertTrue(responseBody.isExito());
-        assertEquals("Permiso eliminado con éxito", responseBody.getMensaje());
-              
         verify(permissionService, times(1)).deletePermission(permissionId);
     }
     
@@ -300,18 +259,13 @@ class RestPermissionControllerUnitTest {
         // Arrange
         Long permissionId = 1L;
         when(permissionService.deletePermission(permissionId))
-            .thenThrow(new RuntimeException("No se puede eliminar un permiso en uso"));
+            .thenThrow(new InvalidOperationException("No se puede eliminar un permiso en uso"));
         
         // Act
-        ResponseEntity<ApiResponse<Void>> response = restPermissionController.deletePermission(permissionId);
+        ResponseEntity<Void> response = restPermissionController.deletePermission(permissionId);
                 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        ApiResponse<Void> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals(false, errorResponse.isExito());
-        assertEquals("Error al eliminar el permiso: No se puede eliminar un permiso en uso", errorResponse.getMensaje());
-              
         verify(permissionService, times(1)).deletePermission(permissionId);
     }
 }

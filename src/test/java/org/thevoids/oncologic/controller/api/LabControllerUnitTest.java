@@ -27,7 +27,7 @@ import org.thevoids.oncologic.service.LabService;
 class LabControllerUnitTest {
 
     @InjectMocks
-    private LabController labController;
+    private RestLabController labController;
 
     @Mock
     private LabService labService;

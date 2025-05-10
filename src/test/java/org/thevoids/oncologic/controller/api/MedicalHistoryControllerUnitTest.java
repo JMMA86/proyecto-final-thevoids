@@ -27,7 +27,7 @@ import org.thevoids.oncologic.service.MedicalHistoryService;
 class MedicalHistoryControllerUnitTest {
 
     @InjectMocks
-    private MedicalHistoryController medicalHistoryController;
+    private RestMedicalHistoryController medicalHistoryController;
 
     @Mock
     private MedicalHistoryService medicalHistoryService;

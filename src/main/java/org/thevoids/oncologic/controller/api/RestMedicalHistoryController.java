@@ -3,36 +3,36 @@ package org.thevoids.oncologic.controller.api;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.thevoids.oncologic.dto.PatientDTO;
-import org.thevoids.oncologic.service.PatientService;
+import org.thevoids.oncologic.dto.MedicalHistoryDTO;
+import org.thevoids.oncologic.service.MedicalHistoryService;
 
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/patients")
-public class PatientController {
-    private final PatientService patientService;
+@RequestMapping("/api/v1/medical-histories")
+public class RestMedicalHistoryController {
+    private final MedicalHistoryService medicalHistoryService;
 
-    public PatientController(PatientService patientService) {
-        this.patientService = patientService;
+    public RestMedicalHistoryController(MedicalHistoryService medicalHistoryService) {
+        this.medicalHistoryService = medicalHistoryService;
     }
 
     @GetMapping
-    public ResponseEntity<List<PatientDTO>> getAllPatients() {
+    public ResponseEntity<List<MedicalHistoryDTO>> getAllMedicalHistories() {
         try {
-            List<PatientDTO> patients = patientService.getAllPatients();
-            return ResponseEntity.ok(patients);
+            List<MedicalHistoryDTO> medicalHistories = medicalHistoryService.getAllMedicalHistories();
+            return ResponseEntity.ok(medicalHistories);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getPatientById(@PathVariable Long id) {
+    public ResponseEntity<?> getMedicalHistoryById(@PathVariable Long id) {
         try {
-            PatientDTO patient = patientService.getPatientById(id);
-            return ResponseEntity.ok(patient);
+            MedicalHistoryDTO medicalHistory = medicalHistoryService.getMedicalHistoryById(id);
+            return ResponseEntity.ok(medicalHistory);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
@@ -43,10 +43,10 @@ public class PatientController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createPatient(@RequestBody PatientDTO patientDTO) {
+    public ResponseEntity<?> createMedicalHistory(@RequestBody MedicalHistoryDTO medicalHistoryDTO) {
         try {
-            PatientDTO createdPatient = patientService.createPatient(patientDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdPatient);
+            MedicalHistoryDTO createdMedicalHistory = medicalHistoryService.createMedicalHistory(medicalHistoryDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdMedicalHistory);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
@@ -57,11 +57,11 @@ public class PatientController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updatePatient(@PathVariable Long id, @RequestBody PatientDTO patientDTO) {
+    public ResponseEntity<?> updateMedicalHistory(@PathVariable Long id, @RequestBody MedicalHistoryDTO medicalHistoryDTO) {
         try {
-            patientDTO.setPatientId(id);
-            PatientDTO updatedPatient = patientService.updatePatient(patientDTO);
-            return ResponseEntity.ok(updatedPatient);
+            medicalHistoryDTO.setHistoryId(id);
+            MedicalHistoryDTO updatedMedicalHistory = medicalHistoryService.updateMedicalHistory(medicalHistoryDTO);
+            return ResponseEntity.ok(updatedMedicalHistory);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
@@ -72,9 +72,9 @@ public class PatientController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePatient(@PathVariable Long id) {
+    public ResponseEntity<?> deleteMedicalHistory(@PathVariable Long id) {
         try {
-            patientService.deletePatient(id);
+            medicalHistoryService.deleteMedicalHistory(id);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

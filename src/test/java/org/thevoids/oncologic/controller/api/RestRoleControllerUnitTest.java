@@ -6,7 +6,6 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
@@ -16,11 +15,13 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.thevoids.oncologic.dto.custom.ApiResponse;
 import org.thevoids.oncologic.dto.entity.RoleDTO;
 import org.thevoids.oncologic.dto.entity.RoleWithPermissionsDTO;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.Permission;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.mapper.RoleMapper;
 import org.thevoids.oncologic.repository.PermissionRepository;
 import org.thevoids.oncologic.repository.RolePermissionRepository;
@@ -89,16 +90,12 @@ class RestRoleControllerUnitTest {
         when(roleMapper.toRoleDTO(userRole)).thenReturn(expectedRoles.get(1));
 
         // Act
-        ResponseEntity<ApiResponse<List<RoleDTO>>> response = restRoleController.getAllRoles();
+        ResponseEntity<List<RoleDTO>> response = restRoleController.getAllRoles();
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<List<RoleDTO>> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals("Roles recuperados con éxito", responseBody.getMensaje());
-        assertTrue(responseBody.isExito());
-        
-        List<RoleDTO> roles = responseBody.getDatos();
+        List<RoleDTO> roles = response.getBody();
+        assertNotNull(roles);
         assertEquals(2, roles.size());
         assertEquals("Admin", roles.get(0).getRoleName());
         assertEquals("User", roles.get(1).getRoleName());
@@ -110,14 +107,10 @@ class RestRoleControllerUnitTest {
         when(roleService.getAllRoles()).thenThrow(new RuntimeException("Database error"));
 
         // Act
-        ResponseEntity<ApiResponse<List<RoleDTO>>> response = restRoleController.getAllRoles();
+        ResponseEntity<List<RoleDTO>> response = restRoleController.getAllRoles();
 
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        ApiResponse<List<RoleDTO>> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Error al recuperar los roles: Database error", errorResponse.getMensaje());
-        assertEquals(false, errorResponse.isExito());
     }
     
     @Test
@@ -128,16 +121,12 @@ class RestRoleControllerUnitTest {
         when(roleMapper.toRoleWithPermissionsDTO(adminRole)).thenReturn(expectedRole);
 
         // Act
-        ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> response = restRoleController.getRoleById(1L);
+        ResponseEntity<RoleWithPermissionsDTO> response = restRoleController.getRoleById(1L);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<RoleWithPermissionsDTO> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals("Rol recuperado con éxito", responseBody.getMensaje());
-        assertTrue(responseBody.isExito());
-        
-        RoleWithPermissionsDTO role = responseBody.getDatos();
+        RoleWithPermissionsDTO role = response.getBody();
+        assertNotNull(role);
         assertEquals(1L, role.getRoleId());
         assertEquals("Admin", role.getRoleName());
     }
@@ -145,17 +134,13 @@ class RestRoleControllerUnitTest {
     @Test
     void testGetRoleById_NotFound() {
         // Arrange
-        when(roleService.getRole(1L)).thenThrow(new RuntimeException("Role not found"));
+        when(roleService.getRole(1L)).thenThrow(new ResourceNotFoundException("Rol", "id", 1L));
 
         // Act
-        ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> response = restRoleController.getRoleById(1L);
+        ResponseEntity<RoleWithPermissionsDTO> response = restRoleController.getRoleById(1L);
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        ApiResponse<RoleWithPermissionsDTO> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Error al recuperar el rol: Role not found", errorResponse.getMensaje());
-        assertEquals(false, errorResponse.isExito());
     }
     
     @Test
@@ -168,16 +153,12 @@ class RestRoleControllerUnitTest {
         when(roleMapper.toRoleDTO(adminRole)).thenReturn(expectedRoleDTO);
 
         // Act
-        ResponseEntity<ApiResponse<RoleDTO>> response = restRoleController.createRole(inputRoleDTO);
+        ResponseEntity<RoleDTO> response = restRoleController.createRole(inputRoleDTO);
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        ApiResponse<RoleDTO> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals("Rol creado con éxito", responseBody.getMensaje());
-        assertTrue(responseBody.isExito());
-        
-        RoleDTO createdRole = responseBody.getDatos();
+        RoleDTO createdRole = response.getBody();
+        assertNotNull(createdRole);
         assertEquals(1L, createdRole.getRoleId());
         assertEquals("Admin", createdRole.getRoleName());
     }
@@ -186,17 +167,13 @@ class RestRoleControllerUnitTest {
     void testCreateRole_Failure() {
         // Arrange
         RoleDTO roleDTO = new RoleDTO(null, "Admin");
-        when(roleService.createRole(any(Role.class))).thenThrow(new RuntimeException("Failed to create role"));
+        when(roleService.createRole(any(Role.class))).thenThrow(new ResourceAlreadyExistsException("Rol", "nombre", "Admin"));
 
         // Act
-        ResponseEntity<ApiResponse<RoleDTO>> response = restRoleController.createRole(roleDTO);
+        ResponseEntity<RoleDTO> response = restRoleController.createRole(roleDTO);
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        ApiResponse<RoleDTO> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Error al crear el rol: Failed to create role", errorResponse.getMensaje());
-        assertEquals(false, errorResponse.isExito());
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }
 
     @Test
@@ -210,16 +187,12 @@ class RestRoleControllerUnitTest {
         when(roleMapper.toRoleDTO(adminRole)).thenReturn(expectedRoleDTO);
 
         // Act
-        ResponseEntity<ApiResponse<RoleDTO>> response = restRoleController.updateRole(1L, inputRoleDTO);
+        ResponseEntity<RoleDTO> response = restRoleController.updateRole(1L, inputRoleDTO);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<RoleDTO> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals("Rol actualizado con éxito", responseBody.getMensaje());
-        assertTrue(responseBody.isExito());
-        
-        RoleDTO updatedRole = responseBody.getDatos();
+        RoleDTO updatedRole = response.getBody();
+        assertNotNull(updatedRole);
         assertEquals(1L, updatedRole.getRoleId());
         assertEquals("Updated Admin", updatedRole.getRoleName());
     }
@@ -228,17 +201,13 @@ class RestRoleControllerUnitTest {
     void testUpdateRole_Failure() {
         // Arrange
         RoleDTO roleDTO = new RoleDTO(1L, "Updated Admin");
-        when(roleService.getRole(1L)).thenThrow(new RuntimeException("Failed to update role"));
+        when(roleService.getRole(1L)).thenThrow(new ResourceNotFoundException("Rol", "id", 1L));
 
         // Act
-        ResponseEntity<ApiResponse<RoleDTO>> response = restRoleController.updateRole(1L, roleDTO);
+        ResponseEntity<RoleDTO> response = restRoleController.updateRole(1L, roleDTO);
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        ApiResponse<RoleDTO> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Error al actualizar el rol: Failed to update role", errorResponse.getMensaje());
-        assertEquals(false, errorResponse.isExito());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
@@ -247,30 +216,22 @@ class RestRoleControllerUnitTest {
         when(roleService.getRole(1L)).thenReturn(adminRole);
 
         // Act
-        ResponseEntity<ApiResponse<Void>> response = restRoleController.deleteRole(1L);
+        ResponseEntity<Void> response = restRoleController.deleteRole(1L);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<Void> successResponse = response.getBody();
-        assertNotNull(successResponse);
-        assertEquals("Rol eliminado con éxito", successResponse.getMensaje());
-        assertTrue(successResponse.isExito());
     }
 
     @Test
     void testDeleteRole_Failure() {
         // Arrange
-        when(roleService.getRole(1L)).thenThrow(new RuntimeException("Failed to delete role"));
+        when(roleService.getRole(1L)).thenThrow(new InvalidOperationException("No se puede eliminar un rol en uso"));
 
         // Act
-        ResponseEntity<ApiResponse<Void>> response = restRoleController.deleteRole(1L);
+        ResponseEntity<Void> response = restRoleController.deleteRole(1L);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        ApiResponse<Void> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Error al eliminar el rol: Failed to delete role", errorResponse.getMensaje());
-        assertEquals(false, errorResponse.isExito());
     }
 
     @Test
@@ -286,17 +247,13 @@ class RestRoleControllerUnitTest {
         when(roleMapper.toRoleWithPermissionsDTO(adminRole)).thenReturn(expectedRole);
 
         // Act
-        ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> response = 
+        ResponseEntity<RoleWithPermissionsDTO> response = 
             restRoleController.assignPermissionToRole(roleId, permissionId);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<RoleWithPermissionsDTO> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals("Permiso asignado al rol con éxito", responseBody.getMensaje());
-        assertTrue(responseBody.isExito());
-        
-        RoleWithPermissionsDTO role = responseBody.getDatos();
+        RoleWithPermissionsDTO role = response.getBody();
+        assertNotNull(role);
         assertEquals(1L, role.getRoleId());
         assertEquals("Admin", role.getRoleName());
     }
@@ -306,18 +263,14 @@ class RestRoleControllerUnitTest {
         // Arrange
         Long roleId = 1L;
         Long permissionId = 1L;
-        when(roleService.getRole(roleId)).thenThrow(new RuntimeException("Error al asignar permiso"));
+        when(roleService.getRole(roleId)).thenThrow(new ResourceNotFoundException("Rol", "id", roleId));
 
         // Act
-        ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> response = 
+        ResponseEntity<RoleWithPermissionsDTO> response = 
             restRoleController.assignPermissionToRole(roleId, permissionId);
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        ApiResponse<RoleWithPermissionsDTO> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Error al añadir permiso al rol: Error al asignar permiso", errorResponse.getMensaje());
-        assertEquals(false, errorResponse.isExito());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
@@ -330,17 +283,13 @@ class RestRoleControllerUnitTest {
         when(roleMapper.toRoleWithPermissionsDTO(adminRole)).thenReturn(expectedRole);
 
         // Act
-        ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> response = 
+        ResponseEntity<RoleWithPermissionsDTO> response = 
             restRoleController.removePermissionFromRole(roleId, permissionId);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        ApiResponse<RoleWithPermissionsDTO> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals("Permiso eliminado del rol con éxito", responseBody.getMensaje());
-        assertTrue(responseBody.isExito());
-        
-        RoleWithPermissionsDTO role = responseBody.getDatos();
+        RoleWithPermissionsDTO role = response.getBody();
+        assertNotNull(role);
         assertEquals(1L, role.getRoleId());
         assertEquals("Admin", role.getRoleName());
     }
@@ -350,17 +299,13 @@ class RestRoleControllerUnitTest {
         // Arrange
         Long roleId = 1L;
         Long permissionId = 1L;
-        when(roleService.getRole(roleId)).thenThrow(new RuntimeException("Error al eliminar permiso"));
+        when(roleService.getRole(roleId)).thenThrow(new ResourceNotFoundException("Rol", "id", roleId));
 
         // Act
-        ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> response = 
+        ResponseEntity<RoleWithPermissionsDTO> response = 
             restRoleController.removePermissionFromRole(roleId, permissionId);
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        ApiResponse<RoleWithPermissionsDTO> errorResponse = response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Error al eliminar permiso del rol: Error al eliminar permiso", errorResponse.getMensaje());
-        assertEquals(false, errorResponse.isExito());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 }

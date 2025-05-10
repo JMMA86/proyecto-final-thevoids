@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thevoids.oncologic.dto.custom.ApiResponse;
 import org.thevoids.oncologic.dto.entity.RoleDTO;
 import org.thevoids.oncologic.dto.entity.RoleWithPermissionsDTO;
 import org.thevoids.oncologic.entity.Role;
+import org.thevoids.oncologic.exception.InvalidOperationException;
+import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.RoleMapper;
 import org.thevoids.oncologic.service.RolePermissionService;
 import org.thevoids.oncologic.service.RoleService;
@@ -43,16 +45,15 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('VIEW_ROLES')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<RoleDTO>>> getAllRoles() {
+    public ResponseEntity<List<RoleDTO>> getAllRoles() {
         try {
             List<Role> roles = roleService.getAllRoles();
             List<RoleDTO> roleDTOs = roles.stream()
                     .map(roleMapper::toRoleDTO)
                     .collect(Collectors.toList());
-            return ResponseEntity.ok(ApiResponse.exito("Roles recuperados con éxito", roleDTOs));
+            return ResponseEntity.ok(roleDTOs);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Error al recuperar los roles: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -64,14 +65,15 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('VIEW_ROLES')")
     @GetMapping("/{roleId}")
-    public ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> getRoleById(@PathVariable Long roleId) {
+    public ResponseEntity<RoleWithPermissionsDTO> getRoleById(@PathVariable Long roleId) {
         try {
             Role role = roleService.getRole(roleId);
             RoleWithPermissionsDTO roleDTO = roleMapper.toRoleWithPermissionsDTO(role);
-            return ResponseEntity.ok(ApiResponse.exito("Rol recuperado con éxito", roleDTO));
+            return ResponseEntity.ok(roleDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Error al recuperar el rol: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -83,17 +85,17 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('ADD_ROLES')")
     @PostMapping
-    public ResponseEntity<ApiResponse<RoleDTO>> createRole(@RequestBody RoleDTO roleDTO) {
+    public ResponseEntity<RoleDTO> createRole(@RequestBody RoleDTO roleDTO) {
         try {
             Role role = new Role();
             role.setRoleName(roleDTO.getRoleName());
             Role createdRole = roleService.createRole(role);
             RoleDTO createdRoleDTO = roleMapper.toRoleDTO(createdRole);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Rol creado con éxito", createdRoleDTO));
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdRoleDTO);
+        } catch (ResourceAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al crear el rol: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -106,16 +108,17 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @PutMapping("/{roleId}")
-    public ResponseEntity<ApiResponse<RoleDTO>> updateRole(@PathVariable Long roleId, @RequestBody RoleDTO roleDTO) {
+    public ResponseEntity<RoleDTO> updateRole(@PathVariable Long roleId, @RequestBody RoleDTO roleDTO) {
         try {
             Role existingRole = roleService.getRole(roleId);
             existingRole.setRoleName(roleDTO.getRoleName());
             Role updatedRole = roleService.updateRole(existingRole);
             RoleDTO updatedRoleDTO = roleMapper.toRoleDTO(updatedRole);
-            return ResponseEntity.ok(ApiResponse.exito("Rol actualizado con éxito", updatedRoleDTO));
+            return ResponseEntity.ok(updatedRoleDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al actualizar el rol: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -127,14 +130,17 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('DELETE_ROLES')")
     @DeleteMapping("/{roleId}")
-    public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable Long roleId) {
+    public ResponseEntity<Void> deleteRole(@PathVariable Long roleId) {
         try {
             Role role = roleService.getRole(roleId);
             roleService.deleteRole(role);
-            return ResponseEntity.ok(ApiResponse.exito("Rol eliminado con éxito", null));
+            return ResponseEntity.ok().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al eliminar el rol: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -147,14 +153,17 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @PostMapping("/{roleId}/permissions/{permissionId}")
-    public ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> assignPermissionToRole(@PathVariable Long roleId, @PathVariable Long permissionId) {
+    public ResponseEntity<RoleWithPermissionsDTO> assignPermissionToRole(@PathVariable Long roleId, @PathVariable Long permissionId) {
         try {
             rolePermissionService.assignPermissionToRole(permissionId, roleId);
             RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(roleId));
-            return ResponseEntity.ok(ApiResponse.exito("Permiso asignado al rol con éxito", roleWithPermissionsDTO));
+            return ResponseEntity.ok(roleWithPermissionsDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al añadir permiso al rol: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -167,14 +176,17 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @DeleteMapping("/{roleId}/permissions/{permissionId}")
-    public ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> removePermissionFromRole(@PathVariable Long roleId, @PathVariable Long permissionId) {
+    public ResponseEntity<RoleWithPermissionsDTO> removePermissionFromRole(@PathVariable Long roleId, @PathVariable Long permissionId) {
         try {
             rolePermissionService.removePermissionFromRole(permissionId, roleId);
             RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(roleId));
-            return ResponseEntity.ok(ApiResponse.exito("Permiso eliminado del rol con éxito", roleWithPermissionsDTO));
+            return ResponseEntity.ok(roleWithPermissionsDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Error al eliminar permiso del rol: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

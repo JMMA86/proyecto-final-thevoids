@@ -19,6 +19,8 @@ import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.RolePermission;
 import org.thevoids.oncologic.repository.RoleRepository;
 import org.thevoids.oncologic.service.impl.RoleServiceImpl;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
 
 class RoleServiceUnitTest {
 
@@ -69,7 +71,7 @@ class RoleServiceUnitTest {
         when(roleRepository.existsById(role.getRoleId())).thenReturn(true);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> roleService.createRole(role));
+        assertThrows(ResourceAlreadyExistsException.class, () -> roleService.createRole(role));
     }
 
     @Test
@@ -86,11 +88,11 @@ class RoleServiceUnitTest {
         when(roleRepository.existsById(newRole.getRoleId())).thenReturn(true);
 
         // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class, () -> {
             roleService.createRole(newRole);
         });
 
-        assertEquals("Role with id 1 already exists", exception.getMessage());
+        assertEquals("Rol ya existe con id : '1'", exception.getMessage());
         verify(roleRepository, never()).save(any(Role.class));
     }
 
@@ -116,7 +118,7 @@ class RoleServiceUnitTest {
         when(roleRepository.existsById(role.getRoleId())).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> roleService.deleteRole(role));
+        assertThrows(ResourceNotFoundException.class, () -> roleService.deleteRole(role));
     }
 
     @Test
@@ -142,7 +144,7 @@ class RoleServiceUnitTest {
         when(roleRepository.existsById(role.getRoleId())).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> roleService.updateRole(role));
+        assertThrows(ResourceNotFoundException.class, () -> roleService.updateRole(role));
     }
 
     @Test
@@ -166,6 +168,6 @@ class RoleServiceUnitTest {
         when(roleRepository.findById(roleId)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> roleService.getRole(roleId));
+        assertThrows(ResourceNotFoundException.class, () -> roleService.getRole(roleId));
     }
 }

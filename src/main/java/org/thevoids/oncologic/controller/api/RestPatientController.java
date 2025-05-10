@@ -3,36 +3,36 @@ package org.thevoids.oncologic.controller.api;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.thevoids.oncologic.dto.ScheduleDTO;
-import org.thevoids.oncologic.service.ScheduleService;
+import org.thevoids.oncologic.dto.PatientDTO;
+import org.thevoids.oncologic.service.PatientService;
 
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/schedule")
-public class ScheduleController {
-    private final ScheduleService scheduleService;
+@RequestMapping("/api/v1/patients")
+public class RestPatientController {
+    private final PatientService patientService;
 
-    public ScheduleController(ScheduleService scheduleService) {
-        this.scheduleService = scheduleService;
+    public RestPatientController(PatientService patientService) {
+        this.patientService = patientService;
     }
 
     @GetMapping
-    public ResponseEntity<List<ScheduleDTO>> getAllSchedules() {
+    public ResponseEntity<List<PatientDTO>> getAllPatients() {
         try {
-            List<ScheduleDTO> schedules = scheduleService.getAllSchedules();
-            return ResponseEntity.ok(schedules);
+            List<PatientDTO> patients = patientService.getAllPatients();
+            return ResponseEntity.ok(patients);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getScheduleById(@PathVariable Long id) {
+    public ResponseEntity<?> getPatientById(@PathVariable Long id) {
         try {
-            ScheduleDTO schedule = scheduleService.getScheduleById(id);
-            return ResponseEntity.ok(schedule);
+            PatientDTO patient = patientService.getPatientById(id);
+            return ResponseEntity.ok(patient);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
@@ -43,10 +43,10 @@ public class ScheduleController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
+    public ResponseEntity<?> createPatient(@RequestBody PatientDTO patientDTO) {
         try {
-            ScheduleDTO createdSchedule = scheduleService.createSchedule(scheduleDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdSchedule);
+            PatientDTO createdPatient = patientService.createPatient(patientDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdPatient);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
@@ -57,11 +57,11 @@ public class ScheduleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateSchedule(@PathVariable Long id, @RequestBody ScheduleDTO scheduleDTO) {
+    public ResponseEntity<?> updatePatient(@PathVariable Long id, @RequestBody PatientDTO patientDTO) {
         try {
-            scheduleDTO.setScheduleId(id);
-            ScheduleDTO updatedSchedule = scheduleService.updateSchedule(scheduleDTO);
-            return ResponseEntity.ok(updatedSchedule);
+            patientDTO.setPatientId(id);
+            PatientDTO updatedPatient = patientService.updatePatient(patientDTO);
+            return ResponseEntity.ok(updatedPatient);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
@@ -72,9 +72,9 @@ public class ScheduleController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteSchedule(@PathVariable Long id) {
+    public ResponseEntity<?> deletePatient(@PathVariable Long id) {
         try {
-            scheduleService.deleteSchedule(id);
+            patientService.deletePatient(id);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

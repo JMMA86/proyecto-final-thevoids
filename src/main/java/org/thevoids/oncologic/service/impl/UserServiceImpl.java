@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.UserService;
 
@@ -26,7 +28,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User createUser(User user) {
         if (userRepository.findByIdentification(user.getIdentification()).isPresent()) {
-            throw new IllegalArgumentException("User with identification " + user.getIdentification() + " already exists");
+            throw new ResourceAlreadyExistsException("Usuario", "identificación", user.getIdentification());
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -39,7 +41,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(User user) {
         if (!userRepository.existsById(user.getUserId())) {
-            throw new IllegalArgumentException("User with id " + user.getUserId() + " does not exist");
+            throw new ResourceNotFoundException("Usuario", "id", user.getUserId());
         }
 
         this.userRepository.delete(user);
@@ -48,7 +50,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateUser(User user) {
         if (!userRepository.existsById(user.getUserId())) {
-            throw new IllegalArgumentException("User with id " + user.getUserId() + " does not exist");
+            throw new ResourceNotFoundException("Usuario", "id", user.getUserId());
         }
 
         this.userRepository.save(user);
@@ -56,11 +58,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("User with id " + id + " does not exist"));
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
     }
 
     @Override
     public User getUserByIdentification(String identification) {
-        return userRepository.findByIdentification(identification).orElseThrow(() -> new IllegalArgumentException("User with identification " + identification + " does not exist"));
+        return userRepository.findByIdentification(identification)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "identificación", identification));
     }
 }
