@@ -21,6 +21,7 @@ import org.thevoids.oncologic.dto.entity.UserWithRolesDTO;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.UserService;
+import org.thevoids.oncologic.service.AssignedRoles;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -31,6 +32,9 @@ public class RestUserController {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private AssignedRoles assignedRolesService;
 
     /**
      * Retrieves all users.
@@ -165,13 +169,13 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @PostMapping("/{userId}/roles/{roleId}")
-    public ResponseEntity<ApiResponse<UserWithRolesDTO>> addRoleToUser(
+    public ResponseEntity<ApiResponse<UserWithRolesDTO>> assignRoleToUser(
             @PathVariable Long userId, 
             @PathVariable Long roleId) {
         try {
-            // Esta funcionalidad debe ser implementada en el servicio correspondiente
-            // Por ahora, simulamos un error
-            throw new Exception("Funcionalidad no implementada");
+            assignedRolesService.assignRoleToUser(roleId, userId);
+            UserWithRolesDTO userWithRolesDTO = userMapper.toUserWithRolesDTO(userService.getUserById(userId));
+            return ResponseEntity.ok(ApiResponse.exito("Rol asignado al usuario con éxito", userWithRolesDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error("Error al añadir rol al usuario: " + e.getMessage()));
@@ -191,9 +195,9 @@ public class RestUserController {
             @PathVariable Long userId, 
             @PathVariable Long roleId) {
         try {
-            // Esta funcionalidad debe ser implementada en el servicio correspondiente
-            // Por ahora, simulamos un error
-            throw new Exception("Funcionalidad no implementada");
+            assignedRolesService.removeRoleFromUser(roleId, userId);
+            UserWithRolesDTO userWithRolesDTO = userMapper.toUserWithRolesDTO(userService.getUserById(userId));
+            return ResponseEntity.ok(ApiResponse.exito("Rol eliminado del usuario con éxito", userWithRolesDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error("Error al eliminar rol del usuario: " + e.getMessage()));

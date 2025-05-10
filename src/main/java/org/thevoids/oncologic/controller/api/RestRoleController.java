@@ -20,6 +20,7 @@ import org.thevoids.oncologic.dto.entity.RoleDTO;
 import org.thevoids.oncologic.dto.entity.RoleWithPermissionsDTO;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.mapper.RoleMapper;
+import org.thevoids.oncologic.service.RolePermissionService;
 import org.thevoids.oncologic.service.RoleService;
 
 @RestController
@@ -28,6 +29,9 @@ public class RestRoleController {
 
     @Autowired
     private RoleService roleService;
+
+    @Autowired
+    private RolePermissionService rolePermissionService;
 
     @Autowired
     private RoleMapper roleMapper;
@@ -154,13 +158,13 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @PostMapping("/{roleId}/permissions/{permissionId}")
-    public ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> addPermissionToRole(
+    public ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> assignPermissionToRole(
             @PathVariable Long roleId, 
             @PathVariable Long permissionId) {
         try {
-            // Esta funcionalidad debe ser implementada en el servicio correspondiente
-            // Por ahora, simulamos un error
-            throw new Exception("Funcionalidad no implementada");
+            rolePermissionService.assignPermissionToRole(permissionId, roleId);
+            RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(roleId));
+            return ResponseEntity.ok(ApiResponse.exito("Permiso asignado al rol con éxito", roleWithPermissionsDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error("Error al añadir permiso al rol: " + e.getMessage()));
@@ -180,9 +184,9 @@ public class RestRoleController {
             @PathVariable Long roleId, 
             @PathVariable Long permissionId) {
         try {
-            // Esta funcionalidad debe ser implementada en el servicio correspondiente
-            // Por ahora, simulamos un error
-            throw new Exception("Funcionalidad no implementada");
+            rolePermissionService.removePermissionFromRole(permissionId, roleId);
+            RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(roleId));
+            return ResponseEntity.ok(ApiResponse.exito("Permiso eliminado del rol con éxito", roleWithPermissionsDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error("Error al eliminar permiso del rol: " + e.getMessage()));
