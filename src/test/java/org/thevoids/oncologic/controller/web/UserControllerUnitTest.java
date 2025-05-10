@@ -24,11 +24,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.thevoids.oncologic.dto.AuthRequest;
-import org.thevoids.oncologic.dto.AuthResponse;
-import org.thevoids.oncologic.dto.RoleDTO;
-import org.thevoids.oncologic.dto.UserDTO;
-import org.thevoids.oncologic.dto.UserWithRolesDTO;
+import org.thevoids.oncologic.dto.custom.AuthResponseDTO;
+import org.thevoids.oncologic.dto.entity.AuthRequest;
+import org.thevoids.oncologic.dto.entity.RoleDTO;
+import org.thevoids.oncologic.dto.entity.UserDTO;
+import org.thevoids.oncologic.dto.entity.UserWithRolesDTO;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.mapper.RoleMapper;
@@ -262,12 +262,13 @@ class UserControllerUnitTest {
     void testAuthRequestAndAuthResponse() {
         // Arrange
         AuthRequest authRequest = new AuthRequest("testUser", "password");
-        AuthResponse authResponse = new AuthResponse("sampleAccessToken");
+        AuthResponseDTO authResponse = new AuthResponseDTO("sampleAccessToken", "testUser");
 
         // Act & Assert
         assertEquals("testUser", authRequest.getUsername());
         assertEquals("password", authRequest.getPassword());
-        assertEquals("sampleAccessToken", authResponse.getAccessToken());
+        assertEquals("sampleAccessToken", authResponse.getToken());
+        assertEquals("testUser", authResponse.getUsername());
     }
 
     @Test

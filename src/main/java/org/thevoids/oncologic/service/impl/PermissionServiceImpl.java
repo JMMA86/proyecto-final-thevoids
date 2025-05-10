@@ -39,7 +39,7 @@ public class PermissionServiceImpl implements PermissionService {
         Permission permission = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new IllegalArgumentException("Permission not found"));
 
-        permissionRepository.deleteById(permissionId);
+        permissionRepository.delete(permission);
 
         return permission;
     }

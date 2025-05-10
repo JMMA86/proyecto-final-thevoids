@@ -7,9 +7,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
-import org.thevoids.oncologic.dto.PermissionDTO;
-import org.thevoids.oncologic.dto.RoleDTO;
-import org.thevoids.oncologic.dto.RoleWithPermissionsDTO;
+import org.thevoids.oncologic.dto.entity.PermissionDTO;
+import org.thevoids.oncologic.dto.entity.RoleDTO;
+import org.thevoids.oncologic.dto.entity.RoleWithPermissionsDTO;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.RolePermission;
 

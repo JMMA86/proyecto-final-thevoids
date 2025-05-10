@@ -1,7 +1,6 @@
 package org.thevoids.oncologic.controller.api;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
@@ -10,6 +9,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.thevoids.oncologic.dto.custom.ApiResponse;
+import org.thevoids.oncologic.dto.custom.UserProfileDTO;
 
 @RestController
 @RequestMapping("/api/v1/profile")
@@ -22,9 +23,9 @@ public class RestHomeController {
      * @return a response with the user's profile information.
      */
     @GetMapping
-    public ResponseEntity<?> getUserProfile(Authentication authentication) {
+    public ResponseEntity<ApiResponse<UserProfileDTO>> getUserProfile(Authentication authentication) {
         if (authentication == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "User not authenticated"));
+            return ResponseEntity.status(401).body(ApiResponse.error("Se requiere autenticación"));
         }
 
         // Extract roles (prefixed with ROLE_)
@@ -39,12 +40,12 @@ public class RestHomeController {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        Map<String, Object> profile = Map.of(
-                "username", authentication.getName(),
-                "roles", roles,
-                "permissions", permissions
+        UserProfileDTO profile = new UserProfileDTO(
+                authentication.getName(),
+                roles,
+                permissions
         );
 
-        return ResponseEntity.ok(profile);
+        return ResponseEntity.ok(ApiResponse.exito("Perfil recuperado con éxito", profile));
     }
 }

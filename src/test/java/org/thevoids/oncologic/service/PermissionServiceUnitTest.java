@@ -94,18 +94,21 @@ class PermissionServiceUnitTest {
         assertEquals("Permission already exists", exception.getMessage());
         verify(permissionRepository, never()).save(any(Permission.class));
     }
-
+    
     @Test
     void deletePermission_WhenCalled_DeletesPermission() {
         // Arrange
         Long permissionId = 1L;
+        Permission permission = new Permission();
+        permission.setPermissionId(permissionId);
         when(permissionRepository.existsById(permissionId)).thenReturn(true);
+        when(permissionRepository.findById(permissionId)).thenReturn(Optional.of(permission));
 
         // Act
         permissionService.deletePermission(permissionId);
 
         // Assert
-        verify(permissionRepository, times(1)).deleteById(permissionId);
+        verify(permissionRepository, times(1)).delete(permission);
     }
 
     @Test
