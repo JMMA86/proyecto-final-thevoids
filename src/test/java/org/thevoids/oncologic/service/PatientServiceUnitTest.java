@@ -5,7 +5,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.thevoids.oncologic.dto.PatientDTO;
 import org.thevoids.oncologic.entity.Patient;
+import org.thevoids.oncologic.mapper.PatientMapper;
 import org.thevoids.oncologic.repository.PatientRepository;
 import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.impl.PatientServiceImpl;
@@ -26,21 +28,29 @@ public class PatientServiceUnitTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PatientMapper patientMapper;
+
     @InjectMocks
     private PatientServiceImpl patientService;
 
     @Test
     void getPatientByIdReturnsPatientWhenExists() {
         Long id = 1L;
-        Patient expectedPatient = new Patient();
-        expectedPatient.setPatientId(id);
+        Patient patient = new Patient();
+        patient.setPatientId(id);
 
-        when(patientRepository.findById(id)).thenReturn(Optional.of(expectedPatient));
+        PatientDTO expectedPatientDTO = new PatientDTO();
+        expectedPatientDTO.setPatientId(id);
 
-        Patient result = patientService.getPatientById(id);
+        when(patientRepository.findById(id)).thenReturn(Optional.of(patient));
+        when(patientMapper.toPatientDTO(patient)).thenReturn(expectedPatientDTO);
+
+        PatientDTO result = patientService.getPatientById(id);
 
         assertNotNull(result);
         assertEquals(id, result.getPatientId());
+        verify(patientMapper).toPatientDTO(patient);
     }
 
     @Test
@@ -57,17 +67,25 @@ public class PatientServiceUnitTest {
 
     @Test
     void createPatientSuccessfullyCreatesPatient() {
+        PatientDTO patientDTO = new PatientDTO();
         Patient patient = new Patient();
         Patient savedPatient = new Patient();
         savedPatient.setPatientId(1L);
 
-        when(patientRepository.save(patient)).thenReturn(savedPatient);
+        PatientDTO savedPatientDTO = new PatientDTO();
+        savedPatientDTO.setPatientId(1L);
 
-        Patient result = patientService.createPatient(patient);
+        when(patientMapper.toPatient(patientDTO)).thenReturn(patient);
+        when(patientRepository.save(patient)).thenReturn(savedPatient);
+        when(patientMapper.toPatientDTO(savedPatient)).thenReturn(savedPatientDTO);
+
+        PatientDTO result = patientService.createPatient(patientDTO);
 
         assertNotNull(result);
-        assertEquals(savedPatient, result);
+        assertEquals(savedPatientDTO.getPatientId(), result.getPatientId());
+        verify(patientMapper).toPatient(patientDTO);
         verify(patientRepository).save(patient);
+        verify(patientMapper).toPatientDTO(savedPatient);
     }
 
     @Test
@@ -82,17 +100,30 @@ public class PatientServiceUnitTest {
     @Test
     void updatePatientSuccessfullyUpdatesPatient() {
         Long id = 1L;
+        PatientDTO patientDTO = new PatientDTO();
+        patientDTO.setPatientId(id);
+
         Patient patient = new Patient();
         patient.setPatientId(id);
 
-        when(patientRepository.existsById(id)).thenReturn(true);
-        when(patientRepository.save(patient)).thenReturn(patient);
+        Patient updatedPatient = new Patient();
+        updatedPatient.setPatientId(id);
 
-        Patient result = patientService.updatePatient(patient);
+        PatientDTO updatedPatientDTO = new PatientDTO();
+        updatedPatientDTO.setPatientId(id);
+
+        when(patientRepository.existsById(id)).thenReturn(true);
+        when(patientMapper.toPatient(patientDTO)).thenReturn(patient);
+        when(patientRepository.save(patient)).thenReturn(updatedPatient);
+        when(patientMapper.toPatientDTO(updatedPatient)).thenReturn(updatedPatientDTO);
+
+        PatientDTO result = patientService.updatePatient(patientDTO);
 
         assertNotNull(result);
-        assertEquals(patient, result);
+        assertEquals(updatedPatientDTO.getPatientId(), result.getPatientId());
+        verify(patientMapper).toPatient(patientDTO);
         verify(patientRepository).save(patient);
+        verify(patientMapper).toPatientDTO(updatedPatient);
     }
 
     @Test
@@ -106,28 +137,30 @@ public class PatientServiceUnitTest {
 
     @Test
     void updatePatientThrowsExceptionWhenIdIsNull() {
-        Patient patient = new Patient();
+        PatientDTO patientDTO = new PatientDTO();
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.updatePatient(patient));
+                patientService.updatePatient(patientDTO));
 
         assertEquals("Patient ID cannot be null", exception.getMessage());
         verify(patientRepository, never()).save(any());
+        verify(patientMapper, never()).toPatient(any());
     }
 
     @Test
     void updatePatientThrowsExceptionWhenPatientDoesNotExist() {
         Long id = 1L;
-        Patient patient = new Patient();
-        patient.setPatientId(id);
+        PatientDTO patientDTO = new PatientDTO();
+        patientDTO.setPatientId(id);
 
         when(patientRepository.existsById(id)).thenReturn(false);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.updatePatient(patient));
+                patientService.updatePatient(patientDTO));
 
         assertEquals("Patient with id 1 does not exist", exception.getMessage());
         verify(patientRepository, never()).save(any());
+        verify(patientMapper, never()).toPatient(any());
     }
 
     @Test
@@ -156,22 +189,36 @@ public class PatientServiceUnitTest {
 
     @Test
     void getAllPatientsReturnsAllPatients() {
-        List<Patient> expectedPatients = List.of(
+        List<Patient> patients = List.of(
                 createPatient(1L),
                 createPatient(2L)
         );
 
-        when(patientRepository.findAll()).thenReturn(expectedPatients);
+        List<PatientDTO> expectedPatientDTOs = List.of(
+                createPatientDTO(1L),
+                createPatientDTO(2L)
+        );
 
-        List<Patient> result = patientService.getAllPatients();
+        when(patientRepository.findAll()).thenReturn(patients);
+        when(patientMapper.toPatientDTOs(patients)).thenReturn(expectedPatientDTOs);
+
+        List<PatientDTO> result = patientService.getAllPatients();
 
         assertEquals(2, result.size());
-        assertEquals(expectedPatients, result);
+        assertEquals(expectedPatientDTOs, result);
+        verify(patientRepository).findAll();
+        verify(patientMapper).toPatientDTOs(patients);
     }
 
     private Patient createPatient(Long id) {
         Patient patient = new Patient();
         patient.setPatientId(id);
         return patient;
+    }
+
+    private PatientDTO createPatientDTO(Long id) {
+        PatientDTO patientDTO = new PatientDTO();
+        patientDTO.setPatientId(id);
+        return patientDTO;
     }
 }
