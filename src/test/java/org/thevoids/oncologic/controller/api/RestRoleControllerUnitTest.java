@@ -22,8 +22,12 @@ import org.thevoids.oncologic.dto.entity.RoleWithPermissionsDTO;
 import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.Permission;
 import org.thevoids.oncologic.mapper.RoleMapper;
+import org.thevoids.oncologic.repository.PermissionRepository;
+import org.thevoids.oncologic.repository.RolePermissionRepository;
+import org.thevoids.oncologic.repository.RoleRepository;
 import org.thevoids.oncologic.mapper.PermissionMapper;
 import org.thevoids.oncologic.service.RoleService;
+import org.thevoids.oncologic.service.RolePermissionService;
 
 class RestRoleControllerUnitTest {
 
@@ -38,6 +42,18 @@ class RestRoleControllerUnitTest {
     
     @Mock
     private PermissionMapper permissionMapper;
+
+    @Mock
+    private RolePermissionService rolePermissionService;
+
+    @Mock
+    private PermissionRepository permissionRepository;
+
+    @Mock
+    private RolePermissionRepository rolePermissionRepository;
+
+    @Mock
+    private RoleRepository roleRepository;
 
     private Role adminRole;
     private Role userRole;
@@ -254,6 +270,97 @@ class RestRoleControllerUnitTest {
         ApiResponse<Void> errorResponse = response.getBody();
         assertNotNull(errorResponse);
         assertEquals("Error al eliminar el rol: Failed to delete role", errorResponse.getMensaje());
+        assertEquals(false, errorResponse.isExito());
+    }
+
+    @Test
+    void testAssignPermissionToRole_Success() {
+        // Arrange
+        Long roleId = 1L;
+        Long permissionId = 1L;
+        RoleWithPermissionsDTO expectedRole = new RoleWithPermissionsDTO(1L, "Admin", new ArrayList<>());
+        when(permissionRepository.existsById(permissionId)).thenReturn(true);
+        when(roleRepository.existsById(roleId)).thenReturn(true);
+        when(rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)).thenReturn(false);
+        when(roleService.getRole(roleId)).thenReturn(adminRole);
+        when(roleMapper.toRoleWithPermissionsDTO(adminRole)).thenReturn(expectedRole);
+
+        // Act
+        ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> response = 
+            restRoleController.assignPermissionToRole(roleId, permissionId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<RoleWithPermissionsDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Permiso asignado al rol con éxito", responseBody.getMensaje());
+        assertTrue(responseBody.isExito());
+        
+        RoleWithPermissionsDTO role = responseBody.getDatos();
+        assertEquals(1L, role.getRoleId());
+        assertEquals("Admin", role.getRoleName());
+    }
+
+    @Test
+    void testAssignPermissionToRole_Failure() {
+        // Arrange
+        Long roleId = 1L;
+        Long permissionId = 1L;
+        when(roleService.getRole(roleId)).thenThrow(new RuntimeException("Error al asignar permiso"));
+
+        // Act
+        ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> response = 
+            restRoleController.assignPermissionToRole(roleId, permissionId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiResponse<RoleWithPermissionsDTO> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Error al añadir permiso al rol: Error al asignar permiso", errorResponse.getMensaje());
+        assertEquals(false, errorResponse.isExito());
+    }
+
+    @Test
+    void testRemovePermissionFromRole_Success() {
+        // Arrange
+        Long roleId = 1L;
+        Long permissionId = 1L;
+        RoleWithPermissionsDTO expectedRole = new RoleWithPermissionsDTO(1L, "Admin", new ArrayList<>());
+        when(roleService.getRole(roleId)).thenReturn(adminRole);
+        when(roleMapper.toRoleWithPermissionsDTO(adminRole)).thenReturn(expectedRole);
+
+        // Act
+        ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> response = 
+            restRoleController.removePermissionFromRole(roleId, permissionId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<RoleWithPermissionsDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Permiso eliminado del rol con éxito", responseBody.getMensaje());
+        assertTrue(responseBody.isExito());
+        
+        RoleWithPermissionsDTO role = responseBody.getDatos();
+        assertEquals(1L, role.getRoleId());
+        assertEquals("Admin", role.getRoleName());
+    }
+
+    @Test
+    void testRemovePermissionFromRole_Failure() {
+        // Arrange
+        Long roleId = 1L;
+        Long permissionId = 1L;
+        when(roleService.getRole(roleId)).thenThrow(new RuntimeException("Error al eliminar permiso"));
+
+        // Act
+        ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> response = 
+            restRoleController.removePermissionFromRole(roleId, permissionId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiResponse<RoleWithPermissionsDTO> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Error al eliminar permiso del rol: Error al eliminar permiso", errorResponse.getMensaje());
         assertEquals(false, errorResponse.isExito());
     }
 }

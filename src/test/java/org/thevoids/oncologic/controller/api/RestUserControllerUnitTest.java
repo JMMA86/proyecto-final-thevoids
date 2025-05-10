@@ -7,21 +7,15 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.thevoids.oncologic.dto.custom.ApiResponse;
 import org.thevoids.oncologic.dto.entity.UserDTO;
 import org.thevoids.oncologic.dto.entity.UserWithRolesDTO;
 import org.thevoids.oncologic.entity.AssignedRole;
@@ -29,6 +23,11 @@ import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.UserService;
+import org.thevoids.oncologic.service.AssignedRoles;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RestUserControllerUnitTest {
 
@@ -38,19 +37,19 @@ class RestUserControllerUnitTest {
     @Mock
     private UserMapper userMapper;
 
+    @Mock
+    private AssignedRoles assignedRolesService;
+
     @InjectMocks
     private RestUserController restUserController;
-
-    private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(restUserController).build();
     }
 
     @Test
-    void getAllUsers_ReturnsUserList() throws Exception {
+    void getAllUsers_ReturnsUserList() {
         // Arrange
         User user = new User();
         user.setUserId(1L);
@@ -73,33 +72,40 @@ class RestUserControllerUnitTest {
         when(userMapper.toUserDTO(user)).thenReturn(userDTO);
 
         // Act
-        var result = mockMvc.perform(get("/api/v1/users")
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<List<UserDTO>>> response = restUserController.getAllUsers();
 
         // Assert
-        result.andExpect(status().isOk())
-              .andExpect(jsonPath("$.exito").value(true))
-              .andExpect(jsonPath("$.mensaje").value("Usuarios recuperados con éxito"))
-              .andExpect(jsonPath("$.datos").exists());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<List<UserDTO>> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Usuarios recuperados con éxito", responseBody.getMensaje());
+        assertTrue(responseBody.isExito());
+        
+        List<UserDTO> users = responseBody.getDatos();
+        assertEquals(1, users.size());
+        assertEquals("John Doe", users.get(0).getFullName());
         verify(userService, times(1)).getAllUsers();
     }
 
     @Test
-    void getAllUsers_ReturnsError() throws Exception {
+    void getAllUsers_ReturnsError() {
+        // Arrange
         when(userService.getAllUsers()).thenThrow(new RuntimeException("Error al recuperar los usuarios"));
 
-        var result = mockMvc.perform(get("/api/v1/users")
-                .contentType(MediaType.APPLICATION_JSON));
+        // Act
+        ResponseEntity<ApiResponse<List<UserDTO>>> response = restUserController.getAllUsers();
 
-        result.andExpect(status().isInternalServerError())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al recuperar los usuarios: Error al recuperar los usuarios"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        ApiResponse<List<UserDTO>> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Error al recuperar los usuarios: Error al recuperar los usuarios", errorResponse.getMensaje());
+        assertEquals(false, errorResponse.isExito());
         verify(userService, times(1)).getAllUsers();
     }
 
     @Test
-    void createUser_SuccessfulCreation_ReturnsUser() throws Exception {
+    void createUser_SuccessfulCreation_ReturnsUser() {
         // Arrange
         User user = new User();
         user.setUserId(1L);
@@ -114,41 +120,44 @@ class RestUserControllerUnitTest {
         when(userMapper.toUserDTO(user)).thenReturn(userDTO);
 
         // Act
-        var result = mockMvc.perform(post("/api/v1/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"fullName\":\"John Doe\"}"));
+        ResponseEntity<ApiResponse<UserDTO>> response = restUserController.createUser(userDTO);
 
         // Assert
-        result.andExpect(status().isCreated())
-              .andExpect(jsonPath("$.exito").value(true))
-              .andExpect(jsonPath("$.mensaje").value("Usuario creado con éxito"))
-              .andExpect(jsonPath("$.datos.userId").value(1))
-              .andExpect(jsonPath("$.datos.fullName").value("John Doe"));
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        ApiResponse<UserDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Usuario creado con éxito", responseBody.getMensaje());
+        assertTrue(responseBody.isExito());
+        
+        UserDTO createdUser = responseBody.getDatos();
+        assertEquals(1L, createdUser.getUserId());
+        assertEquals("John Doe", createdUser.getFullName());
         verify(userService, times(1)).createUser(any(User.class));
     }
     
     @Test
-    void createUser_FailedCreation_ReturnsError() throws Exception {
+    void createUser_FailedCreation_ReturnsError() {
         // Arrange
-        User user = new User();
-        when(userMapper.toUser(any(UserDTO.class))).thenReturn(user);
+        UserDTO userDTO = new UserDTO();
+        userDTO.setFullName("John Doe");
+        
+        when(userMapper.toUser(any(UserDTO.class))).thenReturn(new User());
         doThrow(new IllegalArgumentException("Error al crear el usuario")).when(userService).createUser(any(User.class));
     
         // Act
-        var result = mockMvc.perform(post("/api/v1/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"fullName\":\"John Doe\"}"));
+        ResponseEntity<ApiResponse<UserDTO>> response = restUserController.createUser(userDTO);
     
         // Assert
-        result.andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al crear el usuario: Error al crear el usuario"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiResponse<UserDTO> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Error al crear el usuario: Error al crear el usuario", errorResponse.getMensaje());
+        assertEquals(false, errorResponse.isExito());
         verify(userService, times(1)).createUser(any(User.class));
     }
 
     @Test
-    void getUserById_UserExists_ReturnsUser() throws Exception {
+    void getUserById_UserExists_ReturnsUser() {
         // Arrange
         Long userId = 1L;
         User user = new User();
@@ -163,38 +172,41 @@ class RestUserControllerUnitTest {
         when(userMapper.toUserWithRolesDTO(user)).thenReturn(userDTO);
 
         // Act
-        var result = mockMvc.perform(get("/api/v1/users/{userId}", userId)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<UserWithRolesDTO>> response = restUserController.getUserById(userId);
 
         // Assert
-        result.andExpect(status().isOk())
-              .andExpect(jsonPath("$.exito").value(true))
-              .andExpect(jsonPath("$.mensaje").value("Usuario recuperado con éxito"))
-              .andExpect(jsonPath("$.datos.userId").value(userId))
-              .andExpect(jsonPath("$.datos.fullName").value("John Doe"));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<UserWithRolesDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Usuario recuperado con éxito", responseBody.getMensaje());
+        assertTrue(responseBody.isExito());
+        
+        UserWithRolesDTO retrievedUser = responseBody.getDatos();
+        assertEquals(userId, retrievedUser.getUserId());
+        assertEquals("John Doe", retrievedUser.getFullName());
         verify(userService, times(1)).getUserById(userId);
     }
 
     @Test
-    void getUserById_UserNotFound_ReturnsError() throws Exception {
+    void getUserById_UserNotFound_ReturnsError() {
         // Arrange
         Long userId = 1L;
         when(userService.getUserById(userId)).thenReturn(null);
 
         // Act
-        var result = mockMvc.perform(get("/api/v1/users/{userId}", userId)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<UserWithRolesDTO>> response = restUserController.getUserById(userId);
 
         // Assert
-        result.andExpect(status().isNotFound())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al recuperar el usuario: Usuario no encontrado"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        ApiResponse<UserWithRolesDTO> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Error al recuperar el usuario: Usuario no encontrado", errorResponse.getMensaje());
+        assertEquals(false, errorResponse.isExito());
         verify(userService, times(1)).getUserById(userId);
     }
 
     @Test
-    void updateUser_UserExists_ReturnsUpdatedUser() throws Exception {
+    void updateUser_UserExists_ReturnsUpdatedUser() {
         // Arrange
         Long userId = 1L;
         User existingUser = new User();
@@ -220,42 +232,46 @@ class RestUserControllerUnitTest {
         when(userMapper.toUserDTO(updatedUser)).thenReturn(updatedUserDTO);
 
         // Act
-        var result = mockMvc.perform(put("/api/v1/users/{userId}", userId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"fullName\":\"John Updated\",\"email\":\"john@example.com\"}"));
+        ResponseEntity<ApiResponse<UserDTO>> response = restUserController.updateUser(userId, userDTO);
 
         // Assert
-        result.andExpect(status().isOk())
-              .andExpect(jsonPath("$.exito").value(true))
-              .andExpect(jsonPath("$.mensaje").value("Usuario actualizado con éxito"))
-              .andExpect(jsonPath("$.datos.userId").value(userId))
-              .andExpect(jsonPath("$.datos.fullName").value("John Updated"))
-              .andExpect(jsonPath("$.datos.email").value("john@example.com"));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<UserDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Usuario actualizado con éxito", responseBody.getMensaje());
+        assertTrue(responseBody.isExito());
+        
+        UserDTO updatedUserResult = responseBody.getDatos();
+        assertEquals(userId, updatedUserResult.getUserId());
+        assertEquals("John Updated", updatedUserResult.getFullName());
+        assertEquals("john@example.com", updatedUserResult.getEmail());
         verify(userService, times(1)).updateUser(any(User.class));
         verify(userService, times(2)).getUserById(userId);
     }
 
     @Test
-    void updateUser_UserNotFound_ReturnsError() throws Exception {
+    void updateUser_UserNotFound_ReturnsError() {
         // Arrange
         Long userId = 1L;
+        UserDTO userDTO = new UserDTO();
+        userDTO.setFullName("John Updated");
+        
         when(userService.getUserById(userId)).thenReturn(null);
 
         // Act
-        var result = mockMvc.perform(put("/api/v1/users/{userId}", userId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"fullName\":\"John Updated\"}"));
+        ResponseEntity<ApiResponse<UserDTO>> response = restUserController.updateUser(userId, userDTO);
 
         // Assert
-        result.andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al actualizar el usuario: Usuario no encontrado"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiResponse<UserDTO> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Error al actualizar el usuario: Usuario no encontrado", errorResponse.getMensaje());
+        assertEquals(false, errorResponse.isExito());
         verify(userService, times(1)).getUserById(userId);
     }
 
     @Test
-    void deleteUser_UserExists_ReturnsSuccess() throws Exception {
+    void deleteUser_UserExists_ReturnsSuccess() {
         // Arrange
         Long userId = 1L;
         User user = new User();
@@ -266,67 +282,135 @@ class RestUserControllerUnitTest {
         doNothing().when(userService).deleteUser(user);
 
         // Act
-        var result = mockMvc.perform(delete("/api/v1/users/{userId}", userId)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<Void>> response = restUserController.deleteUser(userId);
 
         // Assert
-        result.andExpect(status().isOk())
-              .andExpect(jsonPath("$.exito").value(true))
-              .andExpect(jsonPath("$.mensaje").value("Usuario eliminado con éxito"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<Void> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Usuario eliminado con éxito", responseBody.getMensaje());
+        assertTrue(responseBody.isExito());
         verify(userService, times(1)).getUserById(userId);
         verify(userService, times(1)).deleteUser(user);
     }
 
     @Test
-    void deleteUser_UserNotFound_ReturnsError() throws Exception {
+    void deleteUser_UserNotFound_ReturnsError() {
         // Arrange
         Long userId = 1L;
         when(userService.getUserById(userId)).thenReturn(null);
 
         // Act
-        var result = mockMvc.perform(delete("/api/v1/users/{userId}", userId)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<Void>> response = restUserController.deleteUser(userId);
 
         // Assert
-        result.andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al eliminar el usuario: Usuario no encontrado"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiResponse<Void> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Error al eliminar el usuario: Usuario no encontrado", errorResponse.getMensaje());
+        assertEquals(false, errorResponse.isExito());
         verify(userService, times(1)).getUserById(userId);
     }
 
     @Test
-    void addRoleToUser_ReturnsNotImplemented() throws Exception {
+    void assignRoleToUser_Success() {
         // Arrange
         Long userId = 1L;
         Long roleId = 1L;
+        User user = new User();
+        user.setUserId(userId);
+        user.setFullName("John Doe");
+
+        UserWithRolesDTO userWithRolesDTO = new UserWithRolesDTO();
+        userWithRolesDTO.setUserId(userId);
+        userWithRolesDTO.setFullName("John Doe");
+
+        when(userService.getUserById(userId)).thenReturn(user);
+        when(userMapper.toUserWithRolesDTO(user)).thenReturn(userWithRolesDTO);
+        doNothing().when(assignedRolesService).assignRoleToUser(roleId, userId);
 
         // Act
-        var result = mockMvc.perform(post("/api/v1/users/{userId}/roles/{roleId}", userId, roleId)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<UserWithRolesDTO>> response = restUserController.assignRoleToUser(userId, roleId);
 
         // Assert
-        result.andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al añadir rol al usuario: Funcionalidad no implementada"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<UserWithRolesDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Rol asignado al usuario con éxito", responseBody.getMensaje());
+        assertTrue(responseBody.isExito());
+        
+        UserWithRolesDTO updatedUser = responseBody.getDatos();
+        assertEquals(userId, updatedUser.getUserId());
+        assertEquals("John Doe", updatedUser.getFullName());
+        verify(assignedRolesService, times(1)).assignRoleToUser(roleId, userId);
     }
 
     @Test
-    void removeRoleFromUser_ReturnsNotImplemented() throws Exception {
+    void assignRoleToUser_Failure() {
         // Arrange
         Long userId = 1L;
         Long roleId = 1L;
+        when(userService.getUserById(userId)).thenThrow(new RuntimeException("Error al asignar rol"));
 
         // Act
-        var result = mockMvc.perform(delete("/api/v1/users/{userId}/roles/{roleId}", userId, roleId)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<UserWithRolesDTO>> response = restUserController.assignRoleToUser(userId, roleId);
 
         // Assert
-        result.andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al eliminar rol del usuario: Funcionalidad no implementada"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiResponse<UserWithRolesDTO> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Error al añadir rol al usuario: Error al asignar rol", errorResponse.getMensaje());
+        assertEquals(false, errorResponse.isExito());
+    }
+
+    @Test
+    void removeRoleFromUser_Success() {
+        // Arrange
+        Long userId = 1L;
+        Long roleId = 1L;
+        User user = new User();
+        user.setUserId(userId);
+        user.setFullName("John Doe");
+
+        UserWithRolesDTO userWithRolesDTO = new UserWithRolesDTO();
+        userWithRolesDTO.setUserId(userId);
+        userWithRolesDTO.setFullName("John Doe");
+
+        when(userService.getUserById(userId)).thenReturn(user);
+        when(userMapper.toUserWithRolesDTO(user)).thenReturn(userWithRolesDTO);
+        doNothing().when(assignedRolesService).removeRoleFromUser(roleId, userId);
+
+        // Act
+        ResponseEntity<ApiResponse<UserWithRolesDTO>> response = restUserController.removeRoleFromUser(userId, roleId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<UserWithRolesDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Rol eliminado del usuario con éxito", responseBody.getMensaje());
+        assertTrue(responseBody.isExito());
+        
+        UserWithRolesDTO updatedUser = responseBody.getDatos();
+        assertEquals(userId, updatedUser.getUserId());
+        assertEquals("John Doe", updatedUser.getFullName());
+        verify(assignedRolesService, times(1)).removeRoleFromUser(roleId, userId);
+    }
+
+    @Test
+    void removeRoleFromUser_Failure() {
+        // Arrange
+        Long userId = 1L;
+        Long roleId = 1L;
+        when(userService.getUserById(userId)).thenThrow(new RuntimeException("Error al eliminar rol"));
+
+        // Act
+        ResponseEntity<ApiResponse<UserWithRolesDTO>> response = restUserController.removeRoleFromUser(userId, roleId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiResponse<UserWithRolesDTO> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Error al eliminar rol del usuario: Error al eliminar rol", errorResponse.getMensaje());
+        assertEquals(false, errorResponse.isExito());
     }
 }

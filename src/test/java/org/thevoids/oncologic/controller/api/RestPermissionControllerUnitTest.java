@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.thevoids.oncologic.dto.custom.ApiResponse;
 import org.thevoids.oncologic.dto.entity.PermissionDTO;
 import org.thevoids.oncologic.entity.Permission;
 import org.thevoids.oncologic.mapper.PermissionMapper;
@@ -17,11 +17,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class RestPermissionControllerUnitTest {
 
@@ -34,16 +34,13 @@ class RestPermissionControllerUnitTest {
     @InjectMocks
     private RestPermissionController restPermissionController;
 
-    private MockMvc mockMvc;
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(restPermissionController).build();
     }
 
     @Test
-    void getAllPermissions_ReturnsPermissionList() throws Exception {
+    void getAllPermissions_ReturnsPermissionList() {
         // Arrange
         Permission permission1 = new Permission();
         permission1.setPermissionId(1L);
@@ -68,42 +65,43 @@ class RestPermissionControllerUnitTest {
         when(permissionMapper.toPermissionDTO(permission2)).thenReturn(permissionDTO2);
 
         // Act
-        var result = mockMvc.perform(get("/api/v1/permissions")
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<List<PermissionDTO>>> response = restPermissionController.getAllPermissions();
 
         // Assert
-        result.andExpect(status().isOk())
-              .andExpect(jsonPath("$.exito").value(true))
-              .andExpect(jsonPath("$.mensaje").value("Permisos recuperados con éxito"))
-              .andExpect(jsonPath("$.datos").isArray())
-              .andExpect(jsonPath("$.datos[0].permissionId").value(1))
-              .andExpect(jsonPath("$.datos[0].permissionName").value("VIEW_USERS"))
-              .andExpect(jsonPath("$.datos[1].permissionId").value(2))
-              .andExpect(jsonPath("$.datos[1].permissionName").value("EDIT_USERS"));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<List<PermissionDTO>> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertTrue(responseBody.isExito());
+        assertEquals("Permisos recuperados con éxito", responseBody.getMensaje());
+        
+        List<PermissionDTO> permissionDTOs = responseBody.getDatos();
+        assertEquals(2, permissionDTOs.size());
+        assertEquals("VIEW_USERS", permissionDTOs.get(0).getPermissionName());
+        assertEquals("EDIT_USERS", permissionDTOs.get(1).getPermissionName());
         
         verify(permissionService, times(1)).getAllPermissions();
     }
 
     @Test
-    void getAllPermissions_ReturnsError() throws Exception {
+    void getAllPermissions_ReturnsError() {
         // Arrange
         when(permissionService.getAllPermissions()).thenThrow(new RuntimeException("Error al recuperar permisos"));
 
         // Act
-        var result = mockMvc.perform(get("/api/v1/permissions")
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<List<PermissionDTO>>> response = restPermissionController.getAllPermissions();
 
         // Assert
-        result.andExpect(status().isInternalServerError())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al recuperar los permisos: Error al recuperar permisos"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        ApiResponse<List<PermissionDTO>> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals(false, errorResponse.isExito());
+        assertEquals("Error al recuperar los permisos: Error al recuperar permisos", errorResponse.getMensaje());
         
         verify(permissionService, times(1)).getAllPermissions();
     }
 
     @Test
-    void getPermissionById_PermissionExists_ReturnsPermission() throws Exception {
+    void getPermissionById_PermissionExists_ReturnsPermission() {
         // Arrange
         Long permissionId = 1L;
         Permission permission = new Permission();
@@ -118,40 +116,43 @@ class RestPermissionControllerUnitTest {
         when(permissionMapper.toPermissionDTO(permission)).thenReturn(permissionDTO);
 
         // Act
-        var result = mockMvc.perform(get("/api/v1/permissions/{permissionId}", permissionId)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.getPermissionById(permissionId);
 
         // Assert
-        result.andExpect(status().isOk())
-              .andExpect(jsonPath("$.exito").value(true))
-              .andExpect(jsonPath("$.mensaje").value("Permiso recuperado con éxito"))
-              .andExpect(jsonPath("$.datos.permissionId").value(permissionId))
-              .andExpect(jsonPath("$.datos.permissionName").value("VIEW_USERS"));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<PermissionDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertTrue(responseBody.isExito());
+        assertEquals("Permiso recuperado con éxito", responseBody.getMensaje());
+        
+        PermissionDTO retrievedPermission = responseBody.getDatos();
+        assertEquals(permissionId, retrievedPermission.getPermissionId());
+        assertEquals("VIEW_USERS", retrievedPermission.getPermissionName());
         
         verify(permissionService, times(1)).getPermission(permissionId);
     }
 
     @Test
-    void getPermissionById_PermissionNotFound_ReturnsError() throws Exception {
+    void getPermissionById_PermissionNotFound_ReturnsError() {
         // Arrange
         Long permissionId = 1L;
         when(permissionService.getPermission(permissionId)).thenReturn(Optional.empty());
 
         // Act
-        var result = mockMvc.perform(get("/api/v1/permissions/{permissionId}", permissionId)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.getPermissionById(permissionId);
 
         // Assert
-        result.andExpect(status().isNotFound())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al recuperar el permiso: Permiso no encontrado"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        ApiResponse<PermissionDTO> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals(false, errorResponse.isExito());
+        assertEquals("Error al recuperar el permiso: Permiso no encontrado", errorResponse.getMensaje());
         
         verify(permissionService, times(1)).getPermission(permissionId);
     }
 
     @Test
-    void createPermission_SuccessfulCreation_ReturnsPermission() throws Exception {
+    void createPermission_SuccessfulCreation_ReturnsPermission() {
         // Arrange
         Permission permission = new Permission();
         permission.setPermissionName("VIEW_USERS");
@@ -172,46 +173,47 @@ class RestPermissionControllerUnitTest {
         when(permissionMapper.toPermissionDTO(createdPermission)).thenReturn(createdPermissionDTO);
 
         // Act
-        var result = mockMvc.perform(post("/api/v1/permissions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"permissionName\":\"VIEW_USERS\"}"));
+        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.createPermission(permissionDTO);
 
         // Assert
-        result.andExpect(status().isCreated())
-              .andExpect(jsonPath("$.exito").value(true))
-              .andExpect(jsonPath("$.mensaje").value("Permiso creado con éxito"))
-              .andExpect(jsonPath("$.datos.permissionId").value(1))
-              .andExpect(jsonPath("$.datos.permissionName").value("VIEW_USERS"));
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        ApiResponse<PermissionDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertTrue(responseBody.isExito());
+        assertEquals("Permiso creado con éxito", responseBody.getMensaje());
+        
+        PermissionDTO createdPermissionResult = responseBody.getDatos();
+        assertEquals(1L, createdPermissionResult.getPermissionId());
+        assertEquals("VIEW_USERS", createdPermissionResult.getPermissionName());
         
         verify(permissionService, times(1)).createPermission(any(Permission.class));
     }
 
     @Test
-    void createPermission_FailedCreation_ReturnsError() throws Exception {
+    void createPermission_FailedCreation_ReturnsError() {
         // Arrange
-        Permission permission = new Permission();
-        permission.setPermissionName("VIEW_USERS");
+        PermissionDTO permissionDTO = new PermissionDTO();
+        permissionDTO.setPermissionName("VIEW_USERS");
 
-        when(permissionMapper.toPermission(any(PermissionDTO.class))).thenReturn(permission);
+        when(permissionMapper.toPermission(any(PermissionDTO.class))).thenReturn(new Permission());
         when(permissionService.createPermission(any(Permission.class)))
             .thenThrow(new RuntimeException("Nombre de permiso duplicado"));
 
         // Act
-        var result = mockMvc.perform(post("/api/v1/permissions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"permissionName\":\"VIEW_USERS\"}"));
+        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.createPermission(permissionDTO);
 
         // Assert
-        result.andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al crear el permiso: Nombre de permiso duplicado"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiResponse<PermissionDTO> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals(false, errorResponse.isExito());
+        assertEquals("Error al crear el permiso: Nombre de permiso duplicado", errorResponse.getMensaje());
         
         verify(permissionService, times(1)).createPermission(any(Permission.class));
     }
 
     @Test
-    void updatePermission_PermissionExists_ReturnsUpdatedPermission() throws Exception {
+    void updatePermission_PermissionExists_ReturnsUpdatedPermission() {
         // Arrange
         Long permissionId = 1L;
         
@@ -235,81 +237,80 @@ class RestPermissionControllerUnitTest {
         when(permissionMapper.toPermissionDTO(updatedPermission)).thenReturn(updatedPermissionDTO);
         
         // Act
-        var result = mockMvc.perform(put("/api/v1/permissions/{permissionId}", permissionId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"permissionName\":\"VIEW_USERS_UPDATED\"}"));
+        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.updatePermission(permissionId, permissionDTO);
                 
         // Assert
-        result.andExpect(status().isOk())
-              .andExpect(jsonPath("$.exito").value(true))
-              .andExpect(jsonPath("$.mensaje").value("Permiso actualizado con éxito"))
-              .andExpect(jsonPath("$.datos.permissionId").value(permissionId))
-              .andExpect(jsonPath("$.datos.permissionName").value("VIEW_USERS_UPDATED"));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<PermissionDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertTrue(responseBody.isExito());
+        assertEquals("Permiso actualizado con éxito", responseBody.getMensaje());
+        
+        PermissionDTO updatedPermissionResult = responseBody.getDatos();
+        assertEquals(permissionId, updatedPermissionResult.getPermissionId());
+        assertEquals("VIEW_USERS_UPDATED", updatedPermissionResult.getPermissionName());
               
         verify(permissionService, times(1)).getPermission(permissionId);
         verify(permissionService, times(1)).updatePermission(any(Permission.class));
     }
     
     @Test
-    void updatePermission_PermissionNotFound_ReturnsError() throws Exception {
+    void updatePermission_PermissionNotFound_ReturnsError() {
         // Arrange
         Long permissionId = 1L;
+        PermissionDTO permissionDTO = new PermissionDTO();
+        permissionDTO.setPermissionName("VIEW_USERS_UPDATED");
+        
         when(permissionService.getPermission(permissionId)).thenReturn(Optional.empty());
         
         // Act
-        var result = mockMvc.perform(put("/api/v1/permissions/{permissionId}", permissionId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"permissionName\":\"VIEW_USERS_UPDATED\"}"));
+        ResponseEntity<ApiResponse<PermissionDTO>> response = restPermissionController.updatePermission(permissionId, permissionDTO);
                 
         // Assert
-        result.andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al actualizar el permiso: Permiso no encontrado"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiResponse<PermissionDTO> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals(false, errorResponse.isExito());
+        assertEquals("Error al actualizar el permiso: Permiso no encontrado", errorResponse.getMensaje());
               
         verify(permissionService, times(1)).getPermission(permissionId);
         verify(permissionService, times(0)).updatePermission(any(Permission.class));
     }
     
     @Test
-    void deletePermission_SuccessfulDeletion_ReturnsSuccess() throws Exception {
+    void deletePermission_SuccessfulDeletion_ReturnsSuccess() {
         // Arrange
         Long permissionId = 1L;
-        Permission deletedPermission = new Permission();
-        deletedPermission.setPermissionId(permissionId);
-        deletedPermission.setPermissionName("VIEW_USERS");
-        
-        when(permissionService.deletePermission(permissionId)).thenReturn(deletedPermission);
         
         // Act
-        var result = mockMvc.perform(delete("/api/v1/permissions/{permissionId}", permissionId)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<Void>> response = restPermissionController.deletePermission(permissionId);
                 
         // Assert
-        result.andExpect(status().isOk())
-              .andExpect(jsonPath("$.exito").value(true))
-              .andExpect(jsonPath("$.mensaje").value("Permiso eliminado con éxito"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ApiResponse<Void> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertTrue(responseBody.isExito());
+        assertEquals("Permiso eliminado con éxito", responseBody.getMensaje());
               
         verify(permissionService, times(1)).deletePermission(permissionId);
     }
     
     @Test
-    void deletePermission_FailedDeletion_ReturnsError() throws Exception {
+    void deletePermission_FailedDeletion_ReturnsError() {
         // Arrange
         Long permissionId = 1L;
         when(permissionService.deletePermission(permissionId))
             .thenThrow(new RuntimeException("No se puede eliminar un permiso en uso"));
         
         // Act
-        var result = mockMvc.perform(delete("/api/v1/permissions/{permissionId}", permissionId)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResponseEntity<ApiResponse<Void>> response = restPermissionController.deletePermission(permissionId);
                 
         // Assert
-        result.andExpect(status().isBadRequest())
-              .andExpect(jsonPath("$.exito").value(false))
-              .andExpect(jsonPath("$.mensaje").value("Error al eliminar el permiso: No se puede eliminar un permiso en uso"))
-              .andExpect(jsonPath("$.datos").isEmpty());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiResponse<Void> errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals(false, errorResponse.isExito());
+        assertEquals("Error al eliminar el permiso: No se puede eliminar un permiso en uso", errorResponse.getMensaje());
               
         verify(permissionService, times(1)).deletePermission(permissionId);
     }

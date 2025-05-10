@@ -158,9 +158,7 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @PostMapping("/{roleId}/permissions/{permissionId}")
-    public ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> assignPermissionToRole(
-            @PathVariable Long roleId, 
-            @PathVariable Long permissionId) {
+    public ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> assignPermissionToRole(@PathVariable Long roleId, @PathVariable Long permissionId) {
         try {
             rolePermissionService.assignPermissionToRole(permissionId, roleId);
             RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(roleId));
@@ -180,9 +178,7 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @DeleteMapping("/{roleId}/permissions/{permissionId}")
-    public ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> removePermissionFromRole(
-            @PathVariable Long roleId, 
-            @PathVariable Long permissionId) {
+    public ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> removePermissionFromRole(@PathVariable Long roleId, @PathVariable Long permissionId) {
         try {
             rolePermissionService.removePermissionFromRole(permissionId, roleId);
             RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(roleId));
