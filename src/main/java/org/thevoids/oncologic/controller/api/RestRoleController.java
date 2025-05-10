@@ -67,9 +67,6 @@ public class RestRoleController {
     public ResponseEntity<ApiResponse<RoleWithPermissionsDTO>> getRoleById(@PathVariable Long roleId) {
         try {
             Role role = roleService.getRole(roleId);
-            if (role == null) {
-                throw new Exception("Rol no encontrado");
-            }
             RoleWithPermissionsDTO roleDTO = roleMapper.toRoleWithPermissionsDTO(role);
             return ResponseEntity.ok(ApiResponse.exito("Rol recuperado con éxito", roleDTO));
         } catch (Exception e) {
@@ -109,14 +106,9 @@ public class RestRoleController {
      */
     @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @PutMapping("/{roleId}")
-    public ResponseEntity<ApiResponse<RoleDTO>> updateRole(
-            @PathVariable Long roleId, 
-            @RequestBody RoleDTO roleDTO) {
+    public ResponseEntity<ApiResponse<RoleDTO>> updateRole(@PathVariable Long roleId, @RequestBody RoleDTO roleDTO) {
         try {
             Role existingRole = roleService.getRole(roleId);
-            if (existingRole == null) {
-                throw new Exception("Rol no encontrado");
-            }
             existingRole.setRoleName(roleDTO.getRoleName());
             Role updatedRole = roleService.updateRole(existingRole);
             RoleDTO updatedRoleDTO = roleMapper.toRoleDTO(updatedRole);
@@ -138,9 +130,6 @@ public class RestRoleController {
     public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable Long roleId) {
         try {
             Role role = roleService.getRole(roleId);
-            if (role == null) {
-                throw new Exception("Rol no encontrado");
-            }
             roleService.deleteRole(role);
             return ResponseEntity.ok(ApiResponse.exito("Rol eliminado con éxito", null));
         } catch (Exception e) {

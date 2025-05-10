@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -141,16 +140,18 @@ class UserServiceUnitTest {
     }
 
     @Test
-    void getUserById_WhenUserNotFound_ReturnsNull() {
+    void getUserById_WhenUserNotFound_ThrowsException() {
         // Arrange
         Long userId = 1L;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Act
-        User result = userService.getUserById(userId);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.getUserById(userId);
+        });
 
         // Assert
-        assertNull(result);
+        assertEquals("User with id " + userId + " does not exist", exception.getMessage());
     }
 
     @Test

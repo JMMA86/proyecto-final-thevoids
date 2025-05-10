@@ -191,7 +191,7 @@ class RestUserControllerUnitTest {
     void getUserById_UserNotFound_ReturnsError() {
         // Arrange
         Long userId = 1L;
-        when(userService.getUserById(userId)).thenReturn(null);
+        when(userService.getUserById(userId)).thenThrow(new IllegalArgumentException("User with id " + userId + " does not exist"));
 
         // Act
         ResponseEntity<ApiResponse<UserWithRolesDTO>> response = restUserController.getUserById(userId);
@@ -200,7 +200,7 @@ class RestUserControllerUnitTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         ApiResponse<UserWithRolesDTO> errorResponse = response.getBody();
         assertNotNull(errorResponse);
-        assertEquals("Error al recuperar el usuario: Usuario no encontrado", errorResponse.getMensaje());
+        assertEquals("Error al recuperar el usuario: User with id " + userId + " does not exist", errorResponse.getMensaje());
         assertEquals(false, errorResponse.isExito());
         verify(userService, times(1)).getUserById(userId);
     }
@@ -298,7 +298,7 @@ class RestUserControllerUnitTest {
     void deleteUser_UserNotFound_ReturnsError() {
         // Arrange
         Long userId = 1L;
-        when(userService.getUserById(userId)).thenReturn(null);
+        when(userService.getUserById(userId)).thenThrow(new IllegalArgumentException("User with id " + userId + " does not exist"));
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = restUserController.deleteUser(userId);
@@ -307,7 +307,7 @@ class RestUserControllerUnitTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         ApiResponse<Void> errorResponse = response.getBody();
         assertNotNull(errorResponse);
-        assertEquals("Error al eliminar el usuario: Usuario no encontrado", errorResponse.getMensaje());
+        assertEquals("Error al eliminar el usuario: User with id " + userId + " does not exist", errorResponse.getMensaje());
         assertEquals(false, errorResponse.isExito());
         verify(userService, times(1)).getUserById(userId);
     }

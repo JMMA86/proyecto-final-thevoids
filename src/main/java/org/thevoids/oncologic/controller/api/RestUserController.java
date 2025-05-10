@@ -67,9 +67,6 @@ public class RestUserController {
     public ResponseEntity<ApiResponse<UserWithRolesDTO>> getUserById(@PathVariable Long userId) {
         try {
             User user = userService.getUserById(userId);
-            if (user == null) {
-                throw new Exception("Usuario no encontrado");
-            }
             UserWithRolesDTO userDTO = userMapper.toUserWithRolesDTO(user);
             return ResponseEntity.ok(ApiResponse.exito("Usuario recuperado con éxito", userDTO));
         } catch (Exception e) {
@@ -108,27 +105,21 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @PutMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserDTO>> updateUser(
-            @PathVariable Long userId, 
-            @RequestBody UserDTO userDTO) {
+    public ResponseEntity<ApiResponse<UserDTO>> updateUser(@PathVariable Long userId, @RequestBody UserDTO userDTO) {
         try {
             User existingUser = userService.getUserById(userId);
             if (existingUser == null) {
                 throw new Exception("Usuario no encontrado");
             }
             
-            // Actualizar los datos del usuario con los valores del DTO
             existingUser.setFullName(userDTO.getFullName());
             existingUser.setIdentification(userDTO.getIdentification());
             existingUser.setBirthDate(userDTO.getBirthDate());
             existingUser.setGender(userDTO.getGender());
             existingUser.setAddress(userDTO.getAddress());
-            // Nota: Es posible que phoneNumber no esté definido en la entidad User
-            // existingUser.setPhoneNumber(userDTO.getPhoneNumber());
             existingUser.setEmail(userDTO.getEmail());
             
             userService.updateUser(existingUser);
-            // Como updateUser no retorna un valor, necesitamos obtener el usuario actualizado
             User updatedUser = userService.getUserById(userId);
             UserDTO updatedUserDTO = userMapper.toUserDTO(updatedUser);
             return ResponseEntity.ok(ApiResponse.exito("Usuario actualizado con éxito", updatedUserDTO));
@@ -149,9 +140,6 @@ public class RestUserController {
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long userId) {
         try {
             User user = userService.getUserById(userId);
-            if (user == null) {
-                throw new Exception("Usuario no encontrado");
-            }
             userService.deleteUser(user);
             return ResponseEntity.ok(ApiResponse.exito("Usuario eliminado con éxito", null));
         } catch (Exception e) {
@@ -169,9 +157,7 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @PostMapping("/{userId}/roles/{roleId}")
-    public ResponseEntity<ApiResponse<UserWithRolesDTO>> assignRoleToUser(
-            @PathVariable Long userId, 
-            @PathVariable Long roleId) {
+    public ResponseEntity<ApiResponse<UserWithRolesDTO>> assignRoleToUser(@PathVariable Long userId, @PathVariable Long roleId) {
         try {
             assignedRolesService.assignRoleToUser(roleId, userId);
             UserWithRolesDTO userWithRolesDTO = userMapper.toUserWithRolesDTO(userService.getUserById(userId));
@@ -191,9 +177,7 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @DeleteMapping("/{userId}/roles/{roleId}")
-    public ResponseEntity<ApiResponse<UserWithRolesDTO>> removeRoleFromUser(
-            @PathVariable Long userId, 
-            @PathVariable Long roleId) {
+    public ResponseEntity<ApiResponse<UserWithRolesDTO>> removeRoleFromUser(@PathVariable Long userId, @PathVariable Long roleId) {
         try {
             assignedRolesService.removeRoleFromUser(roleId, userId);
             UserWithRolesDTO userWithRolesDTO = userMapper.toUserWithRolesDTO(userService.getUserById(userId));

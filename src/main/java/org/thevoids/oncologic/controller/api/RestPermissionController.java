@@ -102,9 +102,7 @@ public class RestPermissionController {
      */
     @PreAuthorize("hasAuthority('EDIT_PERMISSIONS')")
     @PutMapping("/{permissionId}")
-    public ResponseEntity<ApiResponse<PermissionDTO>> updatePermission(
-            @PathVariable Long permissionId, 
-            @RequestBody PermissionDTO permissionDTO) {
+    public ResponseEntity<ApiResponse<PermissionDTO>> updatePermission(@PathVariable Long permissionId, @RequestBody PermissionDTO permissionDTO) {
         try {
             Permission existingPermission = permissionService.getPermission(permissionId)
                 .orElseThrow(() -> new Exception("Permiso no encontrado"));

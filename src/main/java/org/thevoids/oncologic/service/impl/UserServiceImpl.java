@@ -25,7 +25,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User user) {
-        if (getUserByIdentification(user.getIdentification()) != null) {
+        if (userRepository.findByIdentification(user.getIdentification()).isPresent()) {
             throw new IllegalArgumentException("User with identification " + user.getIdentification() + " already exists");
         }
 
@@ -56,11 +56,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("User with id " + id + " does not exist"));
     }
 
     @Override
     public User getUserByIdentification(String identification) {
-        return userRepository.findByIdentification(identification).orElse(null);
+        return userRepository.findByIdentification(identification).orElseThrow(() -> new IllegalArgumentException("User with identification " + identification + " does not exist"));
     }
 }
