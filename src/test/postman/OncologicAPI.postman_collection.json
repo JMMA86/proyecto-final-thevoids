@@ -17,8 +17,8 @@
           "}",
           "",
           "if (!pm.environment.get(\"username\")) {",
-          "    pm.environment.set(\"username\", \"admin\");",
-          "    console.log(\"Set default username: admin\");",
+          "    pm.environment.set(\"username\", \"123456789\");",
+          "    console.log(\"Set default username: 123456789\");",
           "}",
           "",
           "if (!pm.environment.get(\"password\")) {",
@@ -869,6 +869,706 @@
                   "pm.test(\"Status code is 204\", function () {",
                   "    pm.response.to.have.status(204);",
                   "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Appointment Tests",
+      "item": [
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"clinicAssignmentId\": 1,\n  \"appointmentTypeId\": 1,\n  \"dateTime\": \"2023-10-02T10:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "appointments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"appointmentId\", jsonData.appointmentId);",
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Appointment ID is present\", function () { pm.expect(jsonData.appointmentId).to.exist; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "appointments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response is an array\", function () { var jsonData = pm.response.json(); pm.expect(Array.isArray(jsonData)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Appointment by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/appointments/{{appointmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "appointments", "{{appointmentId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Appointment ID matches\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.appointmentId.toString()).to.equal(pm.environment.get(\"appointmentId\").toString()); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Appointment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"clinicAssignmentId\": 1,\n  \"appointmentTypeId\": 1,\n  \"dateTime\": \"2023-10-02T11:00:00.000Z\",\n  \"status\": \"confirmed\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/appointments/{{appointmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "appointments", "{{appointmentId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Updated status is correct\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.status).to.equal(\"confirmed\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Appointment",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/appointments/{{appointmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "appointments", "{{appointmentId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Appointment Type Tests",
+      "item": [
+        {
+          "name": "Create Appointment Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"typeName\": \"Follow-up\",\n  \"standardDuration\": 15\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/appointment-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "appointment-types"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"appointmentTypeId\", jsonData.typeId);",
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Appointment Type ID is present\", function () { pm.expect(jsonData.typeId).to.exist; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Appointment Types",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/appointment-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "appointment-types"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response is an array\", function () { var jsonData = pm.response.json(); pm.expect(Array.isArray(jsonData)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Appointment Type by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/appointment-types/{{appointmentTypeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "appointment-types", "{{appointmentTypeId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Appointment Type ID matches\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.typeId.toString()).to.equal(pm.environment.get(\"appointmentTypeId\").toString()); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Appointment Type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"typeName\": \"Consultation\",\n  \"standardDuration\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/appointment-types/{{appointmentTypeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "appointment-types", "{{appointmentTypeId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Updated typeName is correct\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.typeName).to.equal(\"Consultation\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Appointment Type",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/appointment-types/{{appointmentTypeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "appointment-types", "{{appointmentTypeId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Clinic Tests",
+      "item": [
+        {
+          "name": "Create Clinic",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Clinic\",\n  \"address\": \"456 Clinic Rd\",\n  \"phone\": \"555-9999\",\n  \"specialty\": \"Cardiology\",\n  \"capacity\": 20\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "clinics"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"clinicId\", jsonData.id);",
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Clinic ID is present\", function () { pm.expect(jsonData.id).to.exist; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Clinics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "clinics"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response is an array\", function () { var jsonData = pm.response.json(); pm.expect(Array.isArray(jsonData)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Clinic by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinics/{{clinicId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "clinics", "{{clinicId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Clinic ID matches\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.id.toString()).to.equal(pm.environment.get(\"clinicId\").toString()); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Clinic",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Clinic\",\n  \"address\": \"789 Clinic Rd\",\n  \"phone\": \"555-8888\",\n  \"specialty\": \"Oncology\",\n  \"capacity\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinics/{{clinicId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "clinics", "{{clinicId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Updated name is correct\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.name).to.equal(\"Updated Clinic\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Clinic",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinics/{{clinicId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "clinics", "{{clinicId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Clinic Assignment Tests",
+      "item": [
+        {
+          "name": "Create Clinic Assignment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startTime\": \"2023-10-01T08:00:00.000Z\",\n  \"endTime\": \"2023-10-01T16:00:00.000Z\",\n  \"clinicId\": 1,\n  \"userId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinic-assignments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "clinic-assignments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"clinicAssignmentId\", jsonData.id);",
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Clinic Assignment ID is present\", function () { pm.expect(jsonData.id).to.exist; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Clinic Assignments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinic-assignments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "clinic-assignments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response is an array\", function () { var jsonData = pm.response.json(); pm.expect(Array.isArray(jsonData)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Clinic Assignment by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinic-assignments/{{clinicAssignmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "clinic-assignments", "{{clinicAssignmentId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Clinic Assignment ID matches\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.id.toString()).to.equal(pm.environment.get(\"clinicAssignmentId\").toString()); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Clinic Assignment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startTime\": \"2023-10-01T09:00:00.000Z\",\n  \"endTime\": \"2023-10-01T17:00:00.000Z\",\n  \"clinicId\": 1,\n  \"userId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinic-assignments/{{clinicAssignmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "clinic-assignments", "{{clinicAssignmentId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Updated startTime is correct\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.startTime).to.include(\"09:00:00\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Clinic Assignment",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinic-assignments/{{clinicAssignmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "clinic-assignments", "{{clinicAssignmentId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Task Tests",
+      "item": [
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Prepare patient report\",\n  \"completed\": true,\n  \"startDate\": \"2023-10-02T09:00:00.000Z\",\n  \"endDate\": \"2023-10-02T09:30:00.000Z\",\n  \"appointmentId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "tasks"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"taskId\", jsonData.id);",
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Task ID is present\", function () { pm.expect(jsonData.id).to.exist; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "tasks"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response is an array\", function () { var jsonData = pm.response.json(); pm.expect(Array.isArray(jsonData)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Task by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "tasks", "{{taskId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Task ID matches\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.id.toString()).to.equal(pm.environment.get(\"taskId\").toString()); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Prepare patient report updated\",\n  \"completed\": false,\n  \"startDate\": \"2023-10-02T09:00:00.000Z\",\n  \"endDate\": \"2023-10-02T09:45:00.000Z\",\n  \"appointmentId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "tasks", "{{taskId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Updated description is correct\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.description).to.equal(\"Prepare patient report updated\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "tasks", "{{taskId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });"
                 ]
               }
             }
