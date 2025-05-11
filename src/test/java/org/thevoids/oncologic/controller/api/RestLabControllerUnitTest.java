@@ -24,7 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.thevoids.oncologic.dto.LabDTO;
 import org.thevoids.oncologic.service.LabService;
 
-class LabControllerUnitTest {
+class RestLabControllerUnitTest {
 
     @InjectMocks
     private RestLabController labController;

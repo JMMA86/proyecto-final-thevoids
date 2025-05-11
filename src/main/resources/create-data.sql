@@ -25,6 +25,36 @@ INSERT INTO Permissions (permission_name) VALUES ('ADD_PERMISSIONS');
 INSERT INTO Permissions (permission_name) VALUES ('EDIT_PERMISSIONS');
 INSERT INTO Permissions (permission_name) VALUES ('DELETE_PERMISSIONS');
 
+-- Add specific permissions for appointments
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_APPOINTMENTS');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_APPOINTMENTS');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_APPOINTMENTS');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_APPOINTMENTS');
+
+-- Add specific permissions for appointment types
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_APPOINTMENT_TYPES');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_APPOINTMENT_TYPES');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_APPOINTMENT_TYPES');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_APPOINTMENT_TYPES');
+
+-- Add specific permissions for clinics
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_CLINICS');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_CLINICS');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_CLINICS');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_CLINICS');
+
+-- Add specific permissions for clinic assignments
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_CLINIC_ASSIGNMENTS');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_CLINIC_ASSIGNMENTS');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_CLINIC_ASSIGNMENTS');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_CLINIC_ASSIGNMENTS');
+
+-- Add specific permissions for tasks
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_TASKS');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_TASKS');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_TASKS');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_TASKS');
+
 -- Assign new permissions to the ADMIN role
 
 -- Users
