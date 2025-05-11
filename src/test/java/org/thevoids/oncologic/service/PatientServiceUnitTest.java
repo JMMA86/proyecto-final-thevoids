@@ -14,7 +14,6 @@ import org.thevoids.oncologic.repository.PatientRepository;
 import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.impl.PatientServiceImpl;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
