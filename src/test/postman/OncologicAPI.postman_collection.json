@@ -2,7 +2,7 @@
   "info": {
     "name": "Oncologic API - Complete Test Suite",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Combined collection for testing all controllers of the Oncologic API in sequence\n\n## Automatic Environment Setup\n\nThis collection automatically sets up the required environment variables if they don't exist:\n\n- `baseUrl`: Default is 'http://localhost:8080'\n- `username`: Default is 'admin'\n- `password`: Default is 'password123'\n- `userId`: Default is 1\n- `technicianId`: Default is 1\n\nThe following variables are set automatically during execution:\n\n- `token`: Set after successful login\n- `patientId`: Set after creating a patient\n- `medicalHistoryId`: Set after creating a medical history\n- `labId`: Set after creating a lab test\n- `scheduleId`: Set after creating a schedule\n\nYou can override these defaults by setting the variables in your environment before running the collection."
+    "description": "Combined collection for testing all controllers of the Oncologic API in sequence\n\n## Automatic Environment Setup\n\nThis collection automatically sets up the required environment variables if they don't exist:\n\n- `baseUrl`: Default is 'http://localhost:8080'\n- `username`: Default is '123456789'\n- `password`: Default is '123'\n- `userId`: Default is 1\n- `technicianId`: Default is 1\n- `roleId`: Default is 1\n- `permissionId`: Default is 1\n\nThe following variables are set automatically during execution:\n\n- `token`: Set after successful login\n- `patientId`: Set after creating a patient\n- `medicalHistoryId`: Set after creating a medical history\n- `labId`: Set after creating a lab test\n- `scheduleId`: Set after creating a schedule\n\nYou can override these defaults by setting the variables in your environment before running the collection."
   },
   "event": [
     {
@@ -22,13 +22,23 @@
           "}",
           "",
           "if (!pm.environment.get(\"password\")) {",
-          "    pm.environment.set(\"password\", \"password123\");",
-          "    console.log(\"Set default password: password123\");",
+          "    pm.environment.set(\"password\", \"123\");",
+          "    console.log(\"Set default password: 123\");",
           "}",
           "",
           "if (!pm.environment.get(\"userId\")) {",
           "    pm.environment.set(\"userId\", 1);",
           "    console.log(\"Set default userId: 1\");",
+          "}",
+          "",
+          "if (!pm.environment.get(\"roleId\")) {",
+          "    pm.environment.set(\"roleId\", 1);",
+          "    console.log(\"Set default roleId: 1\");",
+          "}",
+          "",
+          "if (!pm.environment.get(\"permissionId\")) {",
+          "    pm.environment.set(\"permissionId\", 1);",
+          "    console.log(\"Set default permissionId: 1\");",
           "}",
           "",
           "if (!pm.environment.get(\"technicianId\")) {",
@@ -104,13 +114,904 @@
                 "type": "text/javascript",
                 "exec": [
                   "var jsonData = JSON.parse(responseBody);",
-                  "pm.environment.set(\"token\", jsonData.accessToken);",
+                  "pm.environment.set(\"token\", jsonData.token);",
                   "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
                   "pm.test(\"Token is present\", function () {",
-                  "    pm.expect(jsonData.accessToken).to.exist;",
+                  "    pm.expect(jsonData.token).to.exist;",
+                  "});",
+                  "pm.test(\"Username is present\", function () {",
+                  "    pm.expect(jsonData.username).to.exist;",
                   "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Profile data is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.username).to.exist;",
+                  "    pm.expect(jsonData.roles).to.exist;",
+                  "    pm.expect(jsonData.permissions).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users Management",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullName\": \"Test User\",\n    \"identification\": \"555555555\",\n    \"password\": \"123\",\n    \"birthDate\": \"1990-01-01\",\n    \"gender\": \"M\",\n    \"address\": \"Test Address\",\n    \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"User data is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.userId).to.exist;",
+                  "    pm.expect(jsonData.fullName).to.equal(\"Test User\");",
+                  "});",
+                  "pm.environment.set(\"userId\", jsonData.userId);",
+                  "console.log(\"Updated userId to: \" + jsonData.userId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "{{userId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"User data is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.userId).to.exist;",
+                  "    pm.expect(jsonData.roles).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullName\": \"Updated Test User\",\n    \"identification\": \"1234567890\",\n    \"birthDate\": \"1990-01-01\",\n    \"gender\": \"M\",\n    \"address\": \"Updated Test Address\",\n    \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "{{userId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"User data is updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.fullName).to.equal(\"Updated Test User\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "{{userId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create User Again For Next Tests",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullName\": \"Test User\",\n    \"identification\": \"555555555\",\n    \"password\": \"123\",\n    \"birthDate\": \"1990-01-01\",\n    \"gender\": \"M\",\n    \"address\": \"Test Address\",\n    \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"User data is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.userId).to.exist;",
+                  "    pm.expect(jsonData.fullName).to.equal(\"Test User\");",
+                  "    pm.environment.set(\"userId\", jsonData.userId);",
+                  "    console.log(\"Updated userId to: \" + jsonData.userId);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "{{userId}}", "roles", "{{roleId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"User roles are updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.roles).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Role from User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "{{userId}}", "roles", "{{roleId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"User roles are updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.roles).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Roles Management",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roles"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Role by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roles", "{{roleId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Role data is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.roleId).to.exist;",
+                  "    pm.expect(jsonData.permissions).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"roleName\": \"Test Role\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roles"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Role data is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.roleId).to.exist;",
+                  "    pm.expect(jsonData.roleName).to.equal(\"Test Role\");",
+                  "});",
+                  "pm.environment.set(\"roleId\", jsonData.roleId);",
+                  "console.log(\"Updated roleId to: \" + jsonData.roleId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"roleName\": \"Updated Test Role\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roles", "{{roleId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Role data is updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.roleName).to.equal(\"Updated Test Role\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roles", "{{roleId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Role Again For Next Tests",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"roleName\": \"Test Role\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roles"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Role data is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.roleId).to.exist;",
+                  "    pm.expect(jsonData.roleName).to.equal(\"Test Role\");",
+                  "});",
+                  "pm.environment.set(\"roleId\", jsonData.roleId);",
+                  "console.log(\"Updated roleId to: \" + jsonData.roleId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Permission to Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles/{{roleId}}/permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roles", "{{roleId}}", "permissions", "{{permissionId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Role permissions are updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.permissions).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Permission from Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles/{{roleId}}/permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roles", "{{roleId}}", "permissions", "{{permissionId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Role permissions are updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.permissions).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Permissions Management",
+      "item": [
+        {
+          "name": "Get All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "permissions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Permission by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "permissions", "{{permissionId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Permission data is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.permissionId).to.exist;",
+                  "    pm.expect(jsonData.permissionName).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"permissionName\": \"TEST_PERMISSION\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "permissions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Permission data is present\", function () {",
+                  "    pm.expect(jsonData.permissionId).to.exist;",
+                  "    pm.expect(jsonData.permissionName).to.equal(\"TEST_PERMISSION\");",
+                  "});",
+                  "pm.environment.set(\"permissionId\", jsonData.permissionId);",
+                  "console.log(\"Updated permissionId to: \" + jsonData.permissionId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Permission",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"permissionName\": \"UPDATED_TEST_PERMISSION\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "permissions", "{{permissionId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Permission data is updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.permissionName).to.equal(\"UPDATED_TEST_PERMISSION\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "permissions", "{{permissionId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Permission Again For Next Tests",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"permissionName\": \"TEST_PERMISSION\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "permissions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Permission data is present\", function () {",
+                  "    pm.expect(jsonData.permissionId).to.exist;",
+                  "    pm.expect(jsonData.permissionName).to.equal(\"TEST_PERMISSION\");",
+                  "});",
+                  "pm.environment.set(\"permissionId\", jsonData.permissionId);",
+                  "console.log(\"Updated permissionId to: \" + jsonData.permissionId);"
                 ]
               }
             }
@@ -170,7 +1071,9 @@
                   "});",
                   "pm.test(\"Patient ID is present\", function () {",
                   "    pm.expect(jsonData.patientId).to.exist;",
-                  "});"
+                  "});",
+                  "pm.environment.set(\"patientId\", jsonData.patientId);",
+                  "console.log(\"Updated patientId to: \" + jsonData.patientId);"
                 ]
               }
             }
@@ -340,7 +1243,9 @@
                   "});",
                   "pm.test(\"Medical History ID is present\", function () {",
                   "    pm.expect(jsonData.historyId).to.exist;",
-                  "});"
+                  "});",
+                  "pm.environment.set(\"medicalHistoryId\", jsonData.historyId);",
+                  "console.log(\"Updated medicalHistoryId to: \" + jsonData.historyId);"
                 ]
               }
             }
@@ -481,6 +1386,63 @@
                   "pm.test(\"Status code is 204\", function () {",
                   "    pm.response.to.have.status(204);",
                   "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Medical History Again For Next Tests",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"patientId\": {{patientId}},\n    \"diagnosis\": \"Hypertension\",\n    \"treatment\": \"Medication and lifestyle changes\",\n    \"medications\": \"Lisinopril 10mg daily\",\n    \"recordDate\": \"{{$isoTimestamp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/medical-histories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "medical-histories"]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Ensure we have a patientId before making this request",
+                  "if (!pm.environment.get(\"patientId\")) {",
+                  "    console.log(\"No patientId found. Please run the Create Patient request first.\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "pm.environment.set(\"medicalHistoryId\", jsonData.historyId);",
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Medical History ID is present\", function () {",
+                  "    pm.expect(jsonData.historyId).to.exist;",
+                  "});",
+                  "pm.environment.set(\"medicalHistoryId\", jsonData.historyId);",
+                  "console.log(\"Updated medicalHistoryId to: \" + jsonData.historyId);"
                 ]
               }
             }
@@ -728,7 +1690,9 @@
                   "});",
                   "pm.test(\"Schedule ID is present\", function () {",
                   "    pm.expect(jsonData.scheduleId).to.exist;",
-                  "});"
+                  "});",
+                  "pm.environment.set(\"scheduleId\", jsonData.scheduleId);",
+                  "console.log(\"Updated scheduleId to: \" + jsonData.scheduleId);"
                 ]
               }
             }
