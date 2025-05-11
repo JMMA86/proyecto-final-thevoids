@@ -46,6 +46,7 @@ class RestClinicControllerUnitTest {
         clinicDTO.setName("City Clinic");
     }
 
+    @SuppressWarnings("null")
     @Test
     void getAllClinics_Success() {
         when(clinicService.getAllClinics()).thenReturn(Arrays.asList(clinic));

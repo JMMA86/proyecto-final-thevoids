@@ -48,6 +48,7 @@ class RestAppointmentTypeControllerUnitTest {
         typeDTO.setStandardDuration(30);
     }
 
+    @SuppressWarnings("null")
     @Test
     void getAllAppointmentTypes_Success() {
         when(appointmentTypeService.getAllAppointmentTypes()).thenReturn(Arrays.asList(type));

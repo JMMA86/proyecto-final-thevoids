@@ -49,6 +49,7 @@ class RestClinicAssignmentControllerUnitTest {
         assignmentDTO.setEndTime(assignment.getEndTime());
     }
 
+    @SuppressWarnings("null")
     @Test
     void getAllClinicAssignments_Success() {
         when(clinicAssigmentService.getAllClinicAssignments()).thenReturn(Arrays.asList(assignment));

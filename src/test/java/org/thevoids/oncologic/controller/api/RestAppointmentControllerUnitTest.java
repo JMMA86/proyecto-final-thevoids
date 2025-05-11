@@ -50,6 +50,7 @@ class RestAppointmentControllerUnitTest {
         appointmentDTO.setStatus("pending");
     }
 
+    @SuppressWarnings("null")
     @Test
     void getAllAppointments_Success() {
         when(appointmentService.getAllAppointments()).thenReturn(Arrays.asList(appointment));
