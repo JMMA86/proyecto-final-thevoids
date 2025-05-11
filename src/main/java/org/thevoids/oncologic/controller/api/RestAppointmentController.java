@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thevoids.oncologic.dto.AppointmentDTO;
+import org.thevoids.oncologic.dto.entity.AppointmentDTO;
 import org.thevoids.oncologic.entity.Appointment;
 import org.thevoids.oncologic.mapper.AppointmentMapper;
 import org.thevoids.oncologic.service.AppointmentService;
@@ -103,9 +103,23 @@ public class RestAppointmentController {
     @PutMapping("/{id}")
     public ResponseEntity<AppointmentDTO> updateAppointment(@PathVariable Long id, @RequestBody AppointmentDTO dto) {
         try {
-            Appointment appointment = appointmentMapper.toAppointment(dto);
-            appointment.setAppointmentId(id);
-            Appointment updated = appointmentService.updateAppointment(appointment);
+            Appointment existing = appointmentService.getAppointmentById(id);
+            // Only update fields from DTO
+            if (dto.getDateTime() != null)
+                existing.setDateTime(dto.getDateTime());
+            if (dto.getStatus() != null)
+                existing.setStatus(dto.getStatus());
+            // Optionally update related entities if IDs are provided
+            if (dto.getPatientId() != null)
+                existing.getPatient().setPatientId(dto.getPatientId());
+            if (dto.getDoctorId() != null)
+                existing.getDoctor().setUserId(dto.getDoctorId());
+            if (dto.getAppointmentTypeId() != null)
+                existing.getAppointmentType().setTypeId(dto.getAppointmentTypeId());
+            if (dto.getClinicAssignmentId() != null)
+                existing.getClinicAssignment().setId(dto.getClinicAssignmentId());
+
+            Appointment updated = appointmentService.updateAppointment(existing);
             return ResponseEntity.ok(appointmentMapper.toAppointmentDTO(updated));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

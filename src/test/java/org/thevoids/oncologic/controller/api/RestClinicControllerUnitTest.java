@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.thevoids.oncologic.dto.ClinicDTO;
+import org.thevoids.oncologic.dto.entity.ClinicDTO;
 import org.thevoids.oncologic.entity.Clinic;
 import org.thevoids.oncologic.mapper.ClinicMapper;
 import org.thevoids.oncologic.service.ClinicService;
@@ -124,7 +124,7 @@ class RestClinicControllerUnitTest {
 
     @Test
     void updateClinic_Success() {
-        when(clinicMapper.toClinic(clinicDTO)).thenReturn(clinic);
+        when(clinicService.getClinicById(1L)).thenReturn(clinic);
         when(clinicService.updateClinic(1L, clinic)).thenReturn(clinic);
         when(clinicMapper.toClinicDTO(clinic)).thenReturn(clinicDTO);
 
@@ -135,8 +135,17 @@ class RestClinicControllerUnitTest {
     }
 
     @Test
+    void updateClinic_NotFound() {
+        when(clinicService.getClinicById(1L)).thenReturn(null);
+
+        ResponseEntity<ClinicDTO> response = controller.updateClinic(1L, clinicDTO);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
     void updateClinic_BadRequest() {
-        when(clinicMapper.toClinic(clinicDTO)).thenReturn(clinic);
+        when(clinicService.getClinicById(1L)).thenReturn(clinic);
         when(clinicService.updateClinic(1L, clinic)).thenThrow(new IllegalArgumentException());
 
         ResponseEntity<ClinicDTO> response = controller.updateClinic(1L, clinicDTO);
@@ -146,7 +155,7 @@ class RestClinicControllerUnitTest {
 
     @Test
     void updateClinic_InternalServerError() {
-        when(clinicMapper.toClinic(clinicDTO)).thenReturn(clinic);
+        when(clinicService.getClinicById(1L)).thenReturn(clinic);
         when(clinicService.updateClinic(1L, clinic)).thenThrow(new RuntimeException());
         ResponseEntity<ClinicDTO> response = controller.updateClinic(1L, clinicDTO);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());

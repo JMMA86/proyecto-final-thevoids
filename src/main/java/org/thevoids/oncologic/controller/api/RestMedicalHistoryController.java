@@ -3,7 +3,7 @@ package org.thevoids.oncologic.controller.api;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.thevoids.oncologic.dto.MedicalHistoryDTO;
+import org.thevoids.oncologic.dto.entity.MedicalHistoryDTO;
 import org.thevoids.oncologic.service.MedicalHistoryService;
 
 import java.util.List;
@@ -57,7 +57,8 @@ public class RestMedicalHistoryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateMedicalHistory(@PathVariable Long id, @RequestBody MedicalHistoryDTO medicalHistoryDTO) {
+    public ResponseEntity<?> updateMedicalHistory(@PathVariable Long id,
+            @RequestBody MedicalHistoryDTO medicalHistoryDTO) {
         try {
             medicalHistoryDTO.setHistoryId(id);
             MedicalHistoryDTO updatedMedicalHistory = medicalHistoryService.updateMedicalHistory(medicalHistoryDTO);

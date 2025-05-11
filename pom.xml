@@ -185,6 +185,7 @@
                 <configuration>
                     <excludes>
                         <exclude>org/thevoids/oncologic/entity/**</exclude>
+                        <exclude>../../../target/**</exclude>
                     </excludes>
                     <rules>
                         <rule>

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.thevoids.oncologic.dto.MedicalHistoryDTO;
+import org.thevoids.oncologic.dto.entity.MedicalHistoryDTO;
 import org.thevoids.oncologic.entity.MedicalHistory;
 import org.thevoids.oncologic.mapper.MedicalHistoryMapper;
 import org.thevoids.oncologic.repository.MedicalHistoryRepository;
@@ -36,14 +36,12 @@ public class MedicalHistoryServiceUnitTest {
         // Create entity list
         List<MedicalHistory> entityList = List.of(
                 createMedicalHistoryEntity(1L),
-                createMedicalHistoryEntity(2L)
-        );
+                createMedicalHistoryEntity(2L));
 
         // Create DTO list
         List<MedicalHistoryDTO> dtoList = List.of(
                 createMedicalHistoryDTO(1L),
-                createMedicalHistoryDTO(2L)
-        );
+                createMedicalHistoryDTO(2L));
 
         // Mock repository and mapper
         when(medicalHistoryRepository.findAll()).thenReturn(entityList);
@@ -84,8 +82,8 @@ public class MedicalHistoryServiceUnitTest {
 
         when(medicalHistoryRepository.findById(id)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                medicalHistoryService.getMedicalHistoryById(id));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> medicalHistoryService.getMedicalHistoryById(id));
 
         assertEquals("MedicalHistory with id 1 does not exist", exception.getMessage());
         verify(medicalHistoryRepository).findById(id);
@@ -114,8 +112,8 @@ public class MedicalHistoryServiceUnitTest {
 
     @Test
     void createMedicalHistoryThrowsExceptionWhenMedicalHistoryIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                medicalHistoryService.createMedicalHistory(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> medicalHistoryService.createMedicalHistory(null));
 
         assertEquals("MedicalHistory cannot be null", exception.getMessage());
         verify(medicalHistoryMapper, never()).toMedicalHistory(any());
@@ -147,8 +145,8 @@ public class MedicalHistoryServiceUnitTest {
 
     @Test
     void updateMedicalHistoryThrowsExceptionWhenMedicalHistoryIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                medicalHistoryService.updateMedicalHistory(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> medicalHistoryService.updateMedicalHistory(null));
 
         assertEquals("MedicalHistory cannot be null", exception.getMessage());
         verify(medicalHistoryRepository, never()).existsById(any());
@@ -160,8 +158,8 @@ public class MedicalHistoryServiceUnitTest {
     void updateMedicalHistoryThrowsExceptionWhenIdIsNull() {
         MedicalHistoryDTO dto = createMedicalHistoryDTO(null);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                medicalHistoryService.updateMedicalHistory(dto));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> medicalHistoryService.updateMedicalHistory(dto));
 
         assertEquals("MedicalHistory ID cannot be null", exception.getMessage());
         verify(medicalHistoryRepository, never()).existsById(any());
@@ -176,8 +174,8 @@ public class MedicalHistoryServiceUnitTest {
 
         when(medicalHistoryRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                medicalHistoryService.updateMedicalHistory(dto));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> medicalHistoryService.updateMedicalHistory(dto));
 
         assertEquals("MedicalHistory with id 1 does not exist", exception.getMessage());
         verify(medicalHistoryRepository).existsById(id);
@@ -203,8 +201,8 @@ public class MedicalHistoryServiceUnitTest {
 
         when(medicalHistoryRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                medicalHistoryService.deleteMedicalHistory(id));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> medicalHistoryService.deleteMedicalHistory(id));
 
         assertEquals("MedicalHistory with id 1 does not exist", exception.getMessage());
         verify(medicalHistoryRepository).existsById(id);

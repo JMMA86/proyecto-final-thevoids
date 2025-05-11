@@ -3,7 +3,7 @@ package org.thevoids.oncologic.controller.api;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.thevoids.oncologic.dto.ScheduleDTO;
+import org.thevoids.oncologic.dto.entity.ScheduleDTO;
 import org.thevoids.oncologic.service.ScheduleService;
 
 import java.util.List;

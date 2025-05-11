@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thevoids.oncologic.dto.AppointmentTypeDTO;
+import org.thevoids.oncologic.dto.entity.AppointmentTypeDTO;
 import org.thevoids.oncologic.entity.AppointmentType;
 import org.thevoids.oncologic.mapper.AppointmentTypeMapper;
 import org.thevoids.oncologic.service.AppointmentTypeService;

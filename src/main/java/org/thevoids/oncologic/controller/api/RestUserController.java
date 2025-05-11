@@ -22,8 +22,8 @@ import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.UserMapper;
-import org.thevoids.oncologic.service.UserService;
 import org.thevoids.oncologic.service.AssignedRoles;
+import org.thevoids.oncologic.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -101,7 +101,7 @@ public class RestUserController {
     /**
      * Updates an existing user.
      *
-     * @param userId the ID of the user to update.
+     * @param userId  the ID of the user to update.
      * @param userDTO the updated user data.
      * @return the updated user as a DTO.
      */
@@ -116,7 +116,7 @@ public class RestUserController {
             existingUser.setGender(userDTO.getGender());
             existingUser.setAddress(userDTO.getAddress());
             existingUser.setEmail(userDTO.getEmail());
-            
+
             userService.updateUser(existingUser);
             User updatedUser = userService.getUserById(userId);
             UserDTO updatedUserDTO = userMapper.toUserDTO(updatedUser);
@@ -149,7 +149,7 @@ public class RestUserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     /**
      * Adds a role to a user.
      *

@@ -2,7 +2,7 @@ package org.thevoids.oncologic.service.impl;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.thevoids.oncologic.dto.LabDTO;
+import org.thevoids.oncologic.dto.entity.LabDTO;
 import org.thevoids.oncologic.entity.Lab;
 import org.thevoids.oncologic.entity.Patient;
 import org.thevoids.oncologic.entity.User;
@@ -27,8 +27,7 @@ public class LabServiceImpl implements LabService {
             LabRepository labRepository,
             UserRepository userRepository,
             PatientRepository patientRepository,
-            LabMapper labMapper
-    ) {
+            LabMapper labMapper) {
         this.labRepository = labRepository;
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
@@ -61,13 +60,15 @@ public class LabServiceImpl implements LabService {
         // Fetch the complete entities to avoid null references
         if (lab.getPatient() != null && lab.getPatient().getPatientId() != null) {
             Patient patient = patientRepository.findById(lab.getPatient().getPatientId())
-                    .orElseThrow(() -> new IllegalArgumentException("Patient with id " + lab.getPatient().getPatientId() + " does not exist"));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Patient with id " + lab.getPatient().getPatientId() + " does not exist"));
             lab.setPatient(patient);
         }
 
         if (lab.getLabTechnician() != null && lab.getLabTechnician().getUserId() != null) {
             User user = userRepository.findById(lab.getLabTechnician().getUserId())
-                    .orElseThrow(() -> new IllegalArgumentException("User with id " + lab.getLabTechnician().getUserId() + " does not exist"));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "User with id " + lab.getLabTechnician().getUserId() + " does not exist"));
             lab.setLabTechnician(user);
         }
 

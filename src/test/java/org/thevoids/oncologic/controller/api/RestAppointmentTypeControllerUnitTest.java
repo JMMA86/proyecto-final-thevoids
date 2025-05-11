@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.thevoids.oncologic.dto.AppointmentTypeDTO;
+import org.thevoids.oncologic.dto.entity.AppointmentTypeDTO;
 import org.thevoids.oncologic.entity.AppointmentType;
 import org.thevoids.oncologic.mapper.AppointmentTypeMapper;
 import org.thevoids.oncologic.service.AppointmentTypeService;

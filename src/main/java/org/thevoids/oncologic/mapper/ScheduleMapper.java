@@ -3,7 +3,7 @@ package org.thevoids.oncologic.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-import org.thevoids.oncologic.dto.ScheduleDTO;
+import org.thevoids.oncologic.dto.entity.ScheduleDTO;
 import org.thevoids.oncologic.entity.Schedule;
 
 @Mapper(componentModel = "spring")

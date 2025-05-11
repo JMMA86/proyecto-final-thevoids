@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thevoids.oncologic.dto.ClinicAssignmentDTO;
+import org.thevoids.oncologic.dto.entity.ClinicAssignmentDTO;
 import org.thevoids.oncologic.entity.ClinicAssignment;
 import org.thevoids.oncologic.mapper.ClinicAssignmentMapper;
 import org.thevoids.oncologic.service.ClinicAssigmentService;
@@ -70,17 +70,17 @@ public class RestClinicAssignmentController {
     }
 
     /**
-     * Creates a new clinic assignment.
+     * Creates a new clinic assignment (assigns a user to a clinic).
      *
      * @param dto the clinic assignment to create as a DTO.
-     * @return the created clinic assignment as a DTO.
+     * @return a success or error response.
      */
     @PreAuthorize("hasAuthority('ADD_APPOINTMENTS')")
     @PostMapping
     public ResponseEntity<ClinicAssignmentDTO> createClinicAssignment(@RequestBody ClinicAssignmentDTO dto) {
         try {
             ClinicAssignment assignment = clinicAssignmentMapper.toClinicAssignment(dto);
-            ClinicAssignment created = clinicAssigmentService.updateClinicAssignment(assignment);
+            ClinicAssignment created = clinicAssigmentService.assignClinic(assignment);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(clinicAssignmentMapper.toClinicAssignmentDTO(created));
         } catch (IllegalArgumentException e) {

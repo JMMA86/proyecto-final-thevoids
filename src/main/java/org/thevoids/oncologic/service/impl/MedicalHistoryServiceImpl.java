@@ -1,7 +1,7 @@
 package org.thevoids.oncologic.service.impl;
 
 import org.springframework.stereotype.Service;
-import org.thevoids.oncologic.dto.MedicalHistoryDTO;
+import org.thevoids.oncologic.dto.entity.MedicalHistoryDTO;
 import org.thevoids.oncologic.entity.MedicalHistory;
 import org.thevoids.oncologic.mapper.MedicalHistoryMapper;
 import org.thevoids.oncologic.repository.MedicalHistoryRepository;
@@ -15,7 +15,8 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     private final MedicalHistoryRepository medicalHistoryRepository;
     private final MedicalHistoryMapper medicalHistoryMapper;
 
-    public MedicalHistoryServiceImpl(MedicalHistoryRepository medicalHistoryRepository, MedicalHistoryMapper medicalHistoryMapper) {
+    public MedicalHistoryServiceImpl(MedicalHistoryRepository medicalHistoryRepository,
+            MedicalHistoryMapper medicalHistoryMapper) {
         this.medicalHistoryRepository = medicalHistoryRepository;
         this.medicalHistoryMapper = medicalHistoryMapper;
     }
@@ -57,7 +58,8 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
         }
 
         if (!medicalHistoryRepository.existsById(medicalHistoryDTO.getHistoryId())) {
-            throw new IllegalArgumentException("MedicalHistory with id " + medicalHistoryDTO.getHistoryId() + " does not exist");
+            throw new IllegalArgumentException(
+                    "MedicalHistory with id " + medicalHistoryDTO.getHistoryId() + " does not exist");
         }
 
         MedicalHistory medicalHistory = medicalHistoryMapper.toMedicalHistory(medicalHistoryDTO);

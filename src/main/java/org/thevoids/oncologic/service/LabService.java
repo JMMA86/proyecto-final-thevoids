@@ -1,9 +1,9 @@
 package org.thevoids.oncologic.service;
 
-import org.thevoids.oncologic.dto.LabDTO;
-
 import java.util.Date;
 import java.util.List;
+
+import org.thevoids.oncologic.dto.entity.LabDTO;
 
 public interface LabService {
     LabDTO getLabById(Long id);

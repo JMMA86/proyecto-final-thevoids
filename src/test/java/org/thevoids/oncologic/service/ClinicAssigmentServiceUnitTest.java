@@ -1,10 +1,21 @@
 package org.thevoids.oncologic.service;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thevoids.oncologic.entity.Clinic;
 import org.thevoids.oncologic.entity.ClinicAssignment;
@@ -14,206 +25,189 @@ import org.thevoids.oncologic.repository.ClinicRepository;
 import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.impl.ClinicAssigmentImpl;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class ClinicAssigmentServiceUnitTest {
 
     @Mock
     private ClinicAssignmentRepository clinicAssignmentRepository;
-
     @Mock
     private ClinicRepository clinicRepository;
-
     @Mock
     private UserRepository userRepository;
 
     @InjectMocks
     private ClinicAssigmentImpl clinicAssigmentService;
 
+    private ClinicAssignment validAssignment;
+    private Clinic clinic;
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        clinic = new Clinic();
+        clinic.setId(2L);
+
+        user = new User();
+        user.setUserId(1L);
+
+        validAssignment = new ClinicAssignment();
+        validAssignment.setId(10L);
+        validAssignment.setStartTime(new Date());
+        validAssignment.setEndTime(new Date());
+        validAssignment.setClinic(clinic);
+        validAssignment.setUser(user);
+    }
+
     @Test
-    void getAllClinicAssignmentsReturnsAllAssignments() {
-        List<ClinicAssignment> expectedAssignments = List.of(
-                new ClinicAssignment(),
-                new ClinicAssignment()
-        );
-
-        when(clinicAssignmentRepository.findAll()).thenReturn(expectedAssignments);
-
+    void getAllClinicAssignments_ReturnsList() {
+        when(clinicAssignmentRepository.findAll()).thenReturn(List.of(validAssignment));
         List<ClinicAssignment> result = clinicAssigmentService.getAllClinicAssignments();
-
-        assertEquals(expectedAssignments, result);
-        assertEquals(2, result.size());
+        assertEquals(1, result.size());
+        assertEquals(validAssignment, result.get(0));
     }
 
     @Test
-    void getClinicAssignmentByIdReturnsAssignmentWhenExists() {
-        Long id = 1L;
-        ClinicAssignment expectedAssignment = new ClinicAssignment();
-        expectedAssignment.setId(id);
-
-        when(clinicAssignmentRepository.findById(id)).thenReturn(Optional.of(expectedAssignment));
-
-        ClinicAssignment result = clinicAssigmentService.getClinicAssignmentById(id);
-
-        assertNotNull(result);
-        assertEquals(id, result.getId());
+    void getClinicAssignmentById_ReturnsAssignment() {
+        when(clinicAssignmentRepository.findById(10L)).thenReturn(Optional.of(validAssignment));
+        ClinicAssignment result = clinicAssigmentService.getClinicAssignmentById(10L);
+        assertEquals(validAssignment, result);
     }
 
     @Test
-    void getClinicAssignmentByIdReturnsNullWhenNotExists() {
-        Long id = 1L;
-
-        when(clinicAssignmentRepository.findById(id)).thenReturn(Optional.empty());
-
-        ClinicAssignment result = clinicAssigmentService.getClinicAssignmentById(id);
-
+    void getClinicAssignmentById_ReturnsNullIfNotFound() {
+        when(clinicAssignmentRepository.findById(99L)).thenReturn(Optional.empty());
+        ClinicAssignment result = clinicAssigmentService.getClinicAssignmentById(99L);
         assertNull(result);
     }
 
     @Test
-    void updateClinicAssignmentSuccessfullyUpdatesAssignment() {
-        Long id = 1L;
-        ClinicAssignment assignment = new ClinicAssignment();
-        assignment.setId(id);
+    void updateClinicAssignment_Success() {
+        when(clinicAssignmentRepository.existsById(validAssignment.getId())).thenReturn(true);
+        when(clinicAssignmentRepository.save(validAssignment)).thenReturn(validAssignment);
+        ClinicAssignment result = clinicAssigmentService.updateClinicAssignment(validAssignment);
+        assertEquals(validAssignment, result);
+    }
 
-        when(clinicAssignmentRepository.existsById(id)).thenReturn(true);
-        when(clinicAssignmentRepository.save(assignment)).thenReturn(assignment);
+    @Test
+    void updateClinicAssignment_ThrowsIfNull() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.updateClinicAssignment(null));
+        assertEquals("ClinicAssigment cannot be null", ex.getMessage());
+    }
 
-        ClinicAssignment result = clinicAssigmentService.updateClinicAssignment(assignment);
+    @Test
+    void updateClinicAssignment_ThrowsIfIdNull() {
+        validAssignment.setId(null);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.updateClinicAssignment(validAssignment));
+        assertEquals("ClinicAssigment ID cannot be null", ex.getMessage());
+    }
 
+    @Test
+    void updateClinicAssignment_ThrowsIfNotExists() {
+        when(clinicAssignmentRepository.existsById(validAssignment.getId())).thenReturn(false);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.updateClinicAssignment(validAssignment));
+        assertEquals("ClinicAssigment with id 10 does not exist", ex.getMessage());
+    }
+
+    @Test
+    void deleteClinicAssigment_Success() {
+        when(clinicAssignmentRepository.existsById(10L)).thenReturn(true);
+        clinicAssigmentService.deleteClinicAssigment(10L);
+        verify(clinicAssignmentRepository).deleteById(10L);
+    }
+
+    @Test
+    void deleteClinicAssigment_ThrowsIfNotExists() {
+        when(clinicAssignmentRepository.existsById(10L)).thenReturn(false);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.deleteClinicAssigment(10L));
+        assertEquals("ClinicAssigment with id 10 does not exist", ex.getMessage());
+    }
+
+    @Test
+    void assignClinic_Success() {
+        when(clinicRepository.findById(2L)).thenReturn(Optional.of(clinic));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(clinicAssignmentRepository.save(validAssignment)).thenReturn(validAssignment);
+
+        ClinicAssignment result = clinicAssigmentService.assignClinic(validAssignment);
         assertNotNull(result);
-        assertEquals(assignment, result);
+        assertEquals(clinic, result.getClinic());
+        assertEquals(user, result.getUser());
+        verify(clinicAssignmentRepository).save(validAssignment);
     }
 
     @Test
-    void updateClinicAssignmentThrowsExceptionWhenAssignmentIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicAssigmentService.updateClinicAssignment(null));
-
-        assertEquals("ClinicAssigment cannot be null", exception.getMessage());
+    void assignClinic_ThrowsIfNull() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.assignClinic(null));
+        assertEquals("ClinicAssignment cannot be null", ex.getMessage());
     }
 
     @Test
-    void updateClinicAssignmentThrowsExceptionWhenIdIsNull() {
-        ClinicAssignment assignment = new ClinicAssignment();
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicAssigmentService.updateClinicAssignment(assignment));
-
-        assertEquals("ClinicAssigment ID cannot be null", exception.getMessage());
+    void assignClinic_ThrowsIfUserNull() {
+        validAssignment.setUser(null);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.assignClinic(validAssignment));
+        assertEquals("User ID cannot be null", ex.getMessage());
     }
 
     @Test
-    void updateClinicAssignmentThrowsExceptionWhenAssignmentDoesNotExist() {
-        Long id = 1L;
-        ClinicAssignment assignment = new ClinicAssignment();
-        assignment.setId(id);
-
-        when(clinicAssignmentRepository.existsById(id)).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicAssigmentService.updateClinicAssignment(assignment));
-
-        assertEquals("ClinicAssigment with id 1 does not exist", exception.getMessage());
+    void assignClinic_ThrowsIfUserIdNull() {
+        validAssignment.setUser(new User());
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.assignClinic(validAssignment));
+        assertEquals("User ID cannot be null", ex.getMessage());
     }
 
     @Test
-    void deleteClinicAssigmentSuccessfullyDeletesAssignment() {
-        Long id = 1L;
-
-        when(clinicAssignmentRepository.existsById(id)).thenReturn(true);
-
-        clinicAssigmentService.deleteClinicAssigment(id);
-
-        verify(clinicAssignmentRepository).deleteById(id);
+    void assignClinic_ThrowsIfClinicNull() {
+        validAssignment.setClinic(null);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.assignClinic(validAssignment));
+        assertEquals("Clinic ID cannot be null", ex.getMessage());
     }
 
     @Test
-    void deleteClinicAssigmentThrowsExceptionWhenAssignmentDoesNotExist() {
-        Long id = 1L;
-
-        when(clinicAssignmentRepository.existsById(id)).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicAssigmentService.deleteClinicAssigment(id));
-
-        assertEquals("ClinicAssigment with id 1 does not exist", exception.getMessage());
+    void assignClinic_ThrowsIfClinicIdNull() {
+        validAssignment.setClinic(new Clinic());
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.assignClinic(validAssignment));
+        assertEquals("Clinic ID cannot be null", ex.getMessage());
     }
 
     @Test
-    void assignClinicSuccessfullyAssignsClinicToUser() {
-        Long userId = 1L;
-        Long clinicId = 2L;
-
-        User user = new User();
-        user.setUserId(userId);
-
-        Clinic clinic = new Clinic();
-        clinic.setId(clinicId);
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(clinicRepository.findById(clinicId)).thenReturn(Optional.of(clinic));
-
-        clinicAssigmentService.assignClinic(userId, clinicId);
-
-        ArgumentCaptor<ClinicAssignment> captor = ArgumentCaptor.forClass(ClinicAssignment.class);
-        verify(clinicAssignmentRepository).save(captor.capture());
-
-        ClinicAssignment savedAssignment = captor.getValue();
-        assertEquals(user, savedAssignment.getUser());
-        assertEquals(clinic, savedAssignment.getClinic());
+    void assignClinic_ThrowsIfStartTimeNull() {
+        validAssignment.setStartTime(null);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.assignClinic(validAssignment));
+        assertEquals("Start time and end time cannot be null", ex.getMessage());
     }
 
     @Test
-    void assignClinicThrowsExceptionWhenUserIdIsNull() {
-        Long clinicId = 2L;
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicAssigmentService.assignClinic(null, clinicId));
-
-        assertEquals("User ID cannot be null", exception.getMessage());
+    void assignClinic_ThrowsIfEndTimeNull() {
+        validAssignment.setEndTime(null);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.assignClinic(validAssignment));
+        assertEquals("Start time and end time cannot be null", ex.getMessage());
     }
 
     @Test
-    void assignClinicThrowsExceptionWhenClinicIdIsNull() {
-        Long userId = 1L;
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicAssigmentService.assignClinic(userId, null));
-
-        assertEquals("Clinic ID cannot be null", exception.getMessage());
+    void assignClinic_ThrowsIfClinicNotExists() {
+        when(clinicRepository.findById(2L)).thenReturn(Optional.empty());
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.assignClinic(validAssignment));
+        assertEquals("Clinic with id 2 does not exist", ex.getMessage());
     }
 
     @Test
-    void assignClinicThrowsExceptionWhenUserDoesNotExist() {
-        Long userId = 1L;
-        Long clinicId = 2L;
-
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-        when(clinicRepository.findById(clinicId)).thenReturn(Optional.of(new Clinic()));
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicAssigmentService.assignClinic(userId, clinicId));
-
-        assertEquals("User with id 1 does not exist", exception.getMessage());
-    }
-
-    @Test
-    void assignClinicThrowsExceptionWhenClinicDoesNotExist() {
-        Long userId = 1L;
-        Long clinicId = 2L;
-
-        when(clinicRepository.findById(clinicId)).thenReturn(Optional.empty());
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicAssigmentService.assignClinic(userId, clinicId));
-
-        assertEquals("Clinic with id 2 does not exist", exception.getMessage());
+    void assignClinic_ThrowsIfUserNotExists() {
+        when(clinicRepository.findById(2L)).thenReturn(Optional.of(clinic));
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> clinicAssigmentService.assignClinic(validAssignment));
+        assertEquals("User with id 1 does not exist", ex.getMessage());
     }
 }
