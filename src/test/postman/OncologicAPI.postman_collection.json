@@ -2,7 +2,7 @@
   "info": {
     "name": "Oncologic API - Complete Test Suite",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Combined collection for testing all controllers of the Oncologic API in sequence\n\n## Automatic Environment Setup\n\nThis collection automatically sets up the required environment variables if they don't exist:\n\n- `baseUrl`: Default is 'http://localhost:8080'\n- `username`: Default is '123456789'\n- `password`: Default is '123'\n- `userId`: Default is 1\n- `technicianId`: Default is 1\n- `roleId`: Default is 1\n- `permissionId`: Default is 1\n\nThe following variables are set automatically during execution:\n\n- `token`: Set after successful login\n- `patientId`: Set after creating a patient\n- `medicalHistoryId`: Set after creating a medical history\n- `labId`: Set after creating a lab test\n- `scheduleId`: Set after creating a schedule\n\nYou can override these defaults by setting the variables in your environment before running the collection."
+    "description": "Combined collection for testing all controllers of the Oncologic API in sequence\n\n## Automatic Environment Setup\n\nThis collection automatically sets up the required environment variables if they don't exist:\n\n- `baseUrl`: Default is 'http://localhost:8080'\n- `username`: Default is '123456789'\n- `password`: Default is '123'\n- `userId`: Default is 1\n- `technicianId`: Default is 1\n- `roleId`: Default is 1\n- `permissionId`: Default is 1\n- `specialtyId`: Default is 1\n\nThe following variables are set automatically during execution:\n\n- `token`: Set after successful login\n- `patientId`: Set after creating a patient\n- `medicalHistoryId`: Set after creating a medical history\n- `labId`: Set after creating a lab test\n- `scheduleId`: Set after creating a schedule\n- `specialtyId`: Set after creating a specialty\n- `userSpecialtyId`: Set after creating a user specialty\n\nYou can override these defaults by setting the variables in your environment before running the collection."
   },
   "event": [
     {
@@ -44,6 +44,15 @@
           "if (!pm.environment.get(\"technicianId\")) {",
           "    pm.environment.set(\"technicianId\", 1);",
           "    console.log(\"Set default technicianId: 1\");",
+          "}",
+          "",
+          "if (!pm.environment.get(\"specialtyId\")) {",
+          "    pm.environment.set(\"specialtyId\", 1);",
+          "    console.log(\"Set default specialtyId: 1\");",
+          "}",
+          "if (!pm.environment.get(\"userSpecialtyId\")) {",
+          "    pm.environment.set(\"userSpecialtyId\", 1);",
+          "    console.log(\"Set default userSpecialtyId: 1\");",
           "}"
         ]
       }
@@ -1012,6 +1021,278 @@
                   "});",
                   "pm.environment.set(\"permissionId\", jsonData.permissionId);",
                   "console.log(\"Updated permissionId to: \" + jsonData.permissionId);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Specialty Tests",
+      "item": [
+        {
+          "name": "Create Specialty",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"specialtyName\": \"Specialty Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/specialties",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "specialties"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"specialtyId\", jsonData.specialtyId);",
+                  "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Specialty ID is present\", function () { pm.expect(jsonData.specialtyId).to.exist; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Specialties",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/specialties",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "specialties"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response is an array\", function () { var jsonData = pm.response.json(); pm.expect(Array.isArray(jsonData)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Specialty by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/specialties/{{specialtyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "specialties", "{{specialtyId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Specialty ID matches\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.specialtyId.toString()).to.equal(pm.environment.get(\"specialtyId\").toString()); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Specialty",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"specialtyName\": \"Updated Specialist Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/specialties/{{specialtyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "specialties", "{{specialtyId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Updated name is correct\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.specialtyName).to.equal(\"Updated Specialist Test\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Specialty",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/specialties/{{specialtyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "specialties", "{{specialtyId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Specialty Again For Next Tests",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"specialtyName\": \"Specialty Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/specialties",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "specialties"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"specialtyId\", jsonData.specialtyId);",
+                  "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Specialty ID is present\", function () { pm.expect(jsonData.specialtyId).to.exist; });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User Specialty Tests",
+      "item": [
+        {
+          "name": "Get All User Specialties",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/user-specialties",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "user-specialties"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response is an array\", function () { var jsonData = pm.response.json(); pm.expect(Array.isArray(jsonData)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Specialty to User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/user-specialties/users/{{userId}}/specialties/{{specialtyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "user-specialties", "users", "{{userId}}", "specialties", "{{specialtyId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User Specialty by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/user-specialties/{{userSpecialtyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "user-specialties", "{{userSpecialtyId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"User Specialty ID matches\", function () { var jsonData = pm.response.json(); pm.expect(jsonData.id.toString()).to.equal(pm.environment.get(\"userSpecialtyId\").toString()); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete User Specialty",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/user-specialties/{{userSpecialtyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "user-specialties", "{{userSpecialtyId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });"
                 ]
               }
             }
