@@ -24,7 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.thevoids.oncologic.dto.MedicalHistoryDTO;
 import org.thevoids.oncologic.service.MedicalHistoryService;
 
-class MedicalHistoryControllerUnitTest {
+class RestMedicalHistoryControllerUnitTest {
 
     @InjectMocks
     private RestMedicalHistoryController medicalHistoryController;
@@ -64,7 +64,8 @@ class MedicalHistoryControllerUnitTest {
     @Test
     void testGetAllMedicalHistories_Success() {
         // Arrange
-        when(medicalHistoryService.getAllMedicalHistories()).thenReturn(Arrays.asList(testMedicalHistory1, testMedicalHistory2));
+        when(medicalHistoryService.getAllMedicalHistories())
+                .thenReturn(Arrays.asList(testMedicalHistory1, testMedicalHistory2));
 
         // Act
         ResponseEntity<List<MedicalHistoryDTO>> response = medicalHistoryController.getAllMedicalHistories();
@@ -109,7 +110,8 @@ class MedicalHistoryControllerUnitTest {
     @Test
     void testGetMedicalHistoryById_NotFound() {
         // Arrange
-        when(medicalHistoryService.getMedicalHistoryById(1L)).thenThrow(new IllegalArgumentException("MedicalHistory not found"));
+        when(medicalHistoryService.getMedicalHistoryById(1L))
+                .thenThrow(new IllegalArgumentException("MedicalHistory not found"));
 
         // Act
         ResponseEntity<?> response = medicalHistoryController.getMedicalHistoryById(1L);
@@ -140,7 +142,8 @@ class MedicalHistoryControllerUnitTest {
     @Test
     void testCreateMedicalHistory_BadRequest() {
         // Arrange
-        when(medicalHistoryService.createMedicalHistory(any(MedicalHistoryDTO.class))).thenThrow(new IllegalArgumentException("Invalid data"));
+        when(medicalHistoryService.createMedicalHistory(any(MedicalHistoryDTO.class)))
+                .thenThrow(new IllegalArgumentException("Invalid data"));
 
         // Act
         ResponseEntity<?> response = medicalHistoryController.createMedicalHistory(testMedicalHistory1);
@@ -172,7 +175,8 @@ class MedicalHistoryControllerUnitTest {
     @Test
     void testUpdateMedicalHistory_BadRequest() {
         // Arrange
-        when(medicalHistoryService.updateMedicalHistory(any(MedicalHistoryDTO.class))).thenThrow(new IllegalArgumentException("Invalid data"));
+        when(medicalHistoryService.updateMedicalHistory(any(MedicalHistoryDTO.class)))
+                .thenThrow(new IllegalArgumentException("Invalid data"));
 
         // Act
         ResponseEntity<?> response = medicalHistoryController.updateMedicalHistory(1L, testMedicalHistory1);
@@ -197,7 +201,8 @@ class MedicalHistoryControllerUnitTest {
     @Test
     void testDeleteMedicalHistory_NotFound() {
         // Arrange
-        doThrow(new IllegalArgumentException("MedicalHistory not found")).when(medicalHistoryService).deleteMedicalHistory(anyLong());
+        doThrow(new IllegalArgumentException("MedicalHistory not found")).when(medicalHistoryService)
+                .deleteMedicalHistory(anyLong());
 
         // Act
         ResponseEntity<?> response = medicalHistoryController.deleteMedicalHistory(1L);
