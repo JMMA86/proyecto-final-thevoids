@@ -51,6 +51,7 @@ class RestClinicAssignmentControllerUnitTest {
         assignmentDTO.setClinicId(3L);
     }
 
+    @SuppressWarnings("null")
     @Test
     void getAllClinicAssignments_Success() {
         when(clinicAssigmentService.getAllClinicAssignments()).thenReturn(Arrays.asList(assignment));

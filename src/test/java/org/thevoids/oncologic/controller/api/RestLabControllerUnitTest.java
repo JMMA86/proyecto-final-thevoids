@@ -120,6 +120,7 @@ class RestLabControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        @SuppressWarnings("unchecked")
         Map<String, String> errorResponse = (Map<String, String>) response.getBody();
         assertNotNull(errorResponse);
         assertEquals("Lab not found", errorResponse.get("error"));
@@ -151,6 +152,7 @@ class RestLabControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        @SuppressWarnings("unchecked")
         Map<String, String> errorResponse = (Map<String, String>) response.getBody();
         assertNotNull(errorResponse);
         assertEquals("Invalid data", errorResponse.get("error"));
@@ -183,6 +185,7 @@ class RestLabControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        @SuppressWarnings("unchecked")
         Map<String, String> errorResponse = (Map<String, String>) response.getBody();
         assertNotNull(errorResponse);
         assertEquals("Invalid data", errorResponse.get("error"));
@@ -208,6 +211,7 @@ class RestLabControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        @SuppressWarnings("unchecked")
         Map<String, String> errorResponse = (Map<String, String>) response.getBody();
         assertNotNull(errorResponse);
         assertEquals("Lab not found", errorResponse.get("error"));

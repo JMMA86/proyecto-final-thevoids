@@ -185,7 +185,7 @@
                 <configuration>
                     <excludes>
                         <exclude>org/thevoids/oncologic/entity/**</exclude>
-                        <exclude>../../../target/**</exclude>
+                        <exclude>org/thevoids/oncologic/mapper/*Impl.class</exclude>
                     </excludes>
                     <rules>
                         <rule>

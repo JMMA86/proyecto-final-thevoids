@@ -53,6 +53,7 @@ class RestTaskControllerUnitTest {
         taskDTO.setEndDate(task.getEndDate());
     }
 
+    @SuppressWarnings("null")
     @Test
     void getAllTasks_Success() {
         when(taskService.getAllTasks()).thenReturn(Arrays.asList(task));
