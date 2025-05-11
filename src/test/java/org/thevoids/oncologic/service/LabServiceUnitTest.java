@@ -9,6 +9,8 @@ import org.thevoids.oncologic.dto.LabDTO;
 import org.thevoids.oncologic.entity.Lab;
 import org.thevoids.oncologic.entity.Patient;
 import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.exception.InvalidOperationException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.LabMapper;
 import org.thevoids.oncologic.repository.LabRepository;
 import org.thevoids.oncologic.repository.PatientRepository;
@@ -66,10 +68,10 @@ public class LabServiceUnitTest {
 
         when(labRepository.findById(id)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 labService.getLabById(id));
 
-        assertEquals("Lab with id 1 does not exist", exception.getMessage());
+        assertEquals("Lab no encontrado con id : '1'", exception.getMessage());
     }
 
     @Test
@@ -103,7 +105,7 @@ public class LabServiceUnitTest {
 
     @Test
     void updateLabThrowsExceptionWhenLabIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        InvalidOperationException exception = assertThrows(InvalidOperationException.class, () ->
                 labService.updateLab(null));
 
         assertEquals("Lab cannot be null", exception.getMessage());
@@ -114,7 +116,7 @@ public class LabServiceUnitTest {
     void updateLabThrowsExceptionWhenLabIdIsNull() {
         LabDTO labDTO = new LabDTO();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        InvalidOperationException exception = assertThrows(InvalidOperationException.class, () ->
                 labService.updateLab(labDTO));
 
         assertEquals("Lab ID cannot be null", exception.getMessage());
@@ -130,10 +132,10 @@ public class LabServiceUnitTest {
 
         when(labRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 labService.updateLab(labDTO));
 
-        assertEquals("Lab with id 1 does not exist", exception.getMessage());
+        assertEquals("Lab no encontrado con id : '1'", exception.getMessage());
         verify(labRepository, never()).save(any(Lab.class));
         verify(labMapper, never()).toLab(any(LabDTO.class));
     }
@@ -155,10 +157,10 @@ public class LabServiceUnitTest {
 
         when(labRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 labService.deleteLab(id));
 
-        assertEquals("Lab with id 1 does not exist", exception.getMessage());
+        assertEquals("Lab no encontrado con id : '1'", exception.getMessage());
         verify(labRepository, never()).deleteById(any(Long.class));
     }
 
@@ -245,7 +247,7 @@ public class LabServiceUnitTest {
         Long userId = 2L;
         Date requestDate = new Date();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        InvalidOperationException exception = assertThrows(InvalidOperationException.class, () ->
                 labService.assignLab(null, userId, requestDate));
 
         assertEquals("Patient ID, User ID, and Request Date cannot be null", exception.getMessage());
@@ -257,7 +259,7 @@ public class LabServiceUnitTest {
         Long patientId = 1L;
         Date requestDate = new Date();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        InvalidOperationException exception = assertThrows(InvalidOperationException.class, () ->
                 labService.assignLab(patientId, null, requestDate));
 
         assertEquals("Patient ID, User ID, and Request Date cannot be null", exception.getMessage());
@@ -269,7 +271,7 @@ public class LabServiceUnitTest {
         Long patientId = 1L;
         Long userId = 2L;
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        InvalidOperationException exception = assertThrows(InvalidOperationException.class, () ->
                 labService.assignLab(patientId, userId, null));
 
         assertEquals("Patient ID, User ID, and Request Date cannot be null", exception.getMessage());
@@ -284,10 +286,10 @@ public class LabServiceUnitTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 labService.assignLab(patientId, userId, requestDate));
 
-        assertEquals("User with id 2 does not exist", exception.getMessage());
+        assertEquals("User no encontrado con id : '2'", exception.getMessage());
         verify(labRepository, never()).save(any(Lab.class));
     }
 
@@ -303,10 +305,10 @@ public class LabServiceUnitTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(patientRepository.findById(patientId)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 labService.assignLab(patientId, userId, requestDate));
 
-        assertEquals("Patient with id 1 does not exist", exception.getMessage());
+        assertEquals("Patient no encontrado con id : '1'", exception.getMessage());
         verify(labRepository, never()).save(any(Lab.class));
     }
 

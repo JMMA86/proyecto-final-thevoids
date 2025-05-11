@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.thevoids.oncologic.dto.PatientDTO;
 import org.thevoids.oncologic.service.PatientService;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
 
 import java.util.List;
 import java.util.Map;
@@ -19,12 +21,13 @@ public class RestPatientController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PatientDTO>> getAllPatients() {
+    public ResponseEntity<?> getAllPatients() {
         try {
             List<PatientDTO> patients = patientService.getAllPatients();
             return ResponseEntity.ok(patients);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -33,12 +36,12 @@ public class RestPatientController {
         try {
             PatientDTO patient = patientService.getPatientById(id);
             return ResponseEntity.ok(patient);
-        } catch (IllegalArgumentException e) {
+        } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -47,12 +50,15 @@ public class RestPatientController {
         try {
             PatientDTO createdPatient = patientService.createPatient(patientDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdPatient);
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -62,12 +68,15 @@ public class RestPatientController {
             patientDTO.setPatientId(id);
             PatientDTO updatedPatient = patientService.updatePatient(patientDTO);
             return ResponseEntity.ok(updatedPatient);
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -76,12 +85,12 @@ public class RestPatientController {
         try {
             patientService.deletePatient(id);
             return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
+        } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 }

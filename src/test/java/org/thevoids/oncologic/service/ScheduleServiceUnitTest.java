@@ -7,6 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thevoids.oncologic.dto.ScheduleDTO;
 import org.thevoids.oncologic.entity.Schedule;
+import org.thevoids.oncologic.exception.InvalidOperationException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.ScheduleMapper;
 import org.thevoids.oncologic.repository.ScheduleRepository;
 import org.thevoids.oncologic.service.impl.ScheduleServiceImpl;
@@ -34,13 +36,11 @@ public class ScheduleServiceUnitTest {
     void getAllSchedulesReturnsAllSchedules() {
         List<Schedule> schedules = List.of(
                 createSchedule(1L),
-                createSchedule(2L)
-        );
+                createSchedule(2L));
 
         List<ScheduleDTO> expectedScheduleDTOs = List.of(
                 createScheduleDTO(1L),
-                createScheduleDTO(2L)
-        );
+                createScheduleDTO(2L));
 
         when(scheduleRepository.findAll()).thenReturn(schedules);
         when(scheduleMapper.toScheduleDTO(schedules.get(0))).thenReturn(expectedScheduleDTOs.get(0));
@@ -75,13 +75,8 @@ public class ScheduleServiceUnitTest {
     @Test
     void getScheduleByIdThrowsExceptionWhenNotExists() {
         Long id = 1L;
-
         when(scheduleRepository.findById(id)).thenReturn(Optional.empty());
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.getScheduleById(id));
-
-        assertEquals("Schedule with id 1 does not exist", exception.getMessage());
+        assertThrows(ResourceNotFoundException.class, () -> scheduleService.getScheduleById(id));
     }
 
     @Test
@@ -108,10 +103,7 @@ public class ScheduleServiceUnitTest {
 
     @Test
     void createScheduleThrowsExceptionWhenScheduleIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.createSchedule(null));
-
-        assertEquals("Schedule cannot be null", exception.getMessage());
+        assertThrows(InvalidOperationException.class, () -> scheduleService.createSchedule(null));
         verify(scheduleRepository, never()).save(any());
     }
 
@@ -141,21 +133,14 @@ public class ScheduleServiceUnitTest {
 
     @Test
     void updateScheduleThrowsExceptionWhenScheduleIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(null));
-
-        assertEquals("Schedule cannot be null", exception.getMessage());
+        assertThrows(InvalidOperationException.class, () -> scheduleService.updateSchedule(null));
         verify(scheduleRepository, never()).save(any());
     }
 
     @Test
     void updateScheduleThrowsExceptionWhenIdIsNull() {
         ScheduleDTO scheduleDTO = createScheduleDTO(null);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(scheduleDTO));
-
-        assertEquals("Schedule ID cannot be null", exception.getMessage());
+        assertThrows(InvalidOperationException.class, () -> scheduleService.updateSchedule(scheduleDTO));
         verify(scheduleRepository, never()).save(any());
         verify(scheduleMapper, never()).toSchedule(any(ScheduleDTO.class));
     }
@@ -164,13 +149,8 @@ public class ScheduleServiceUnitTest {
     void updateScheduleThrowsExceptionWhenScheduleDoesNotExist() {
         Long id = 1L;
         ScheduleDTO scheduleDTO = createScheduleDTO(id);
-
         when(scheduleRepository.existsById(id)).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(scheduleDTO));
-
-        assertEquals("Schedule with id 1 does not exist", exception.getMessage());
+        assertThrows(ResourceNotFoundException.class, () -> scheduleService.updateSchedule(scheduleDTO));
         verify(scheduleRepository, never()).save(any());
         verify(scheduleMapper, never()).toSchedule(any(ScheduleDTO.class));
     }
@@ -178,24 +158,16 @@ public class ScheduleServiceUnitTest {
     @Test
     void deleteScheduleSuccessfullyDeletesSchedule() {
         Long id = 1L;
-
         when(scheduleRepository.existsById(id)).thenReturn(true);
-
         scheduleService.deleteSchedule(id);
-
         verify(scheduleRepository).deleteById(id);
     }
 
     @Test
     void deleteScheduleThrowsExceptionWhenScheduleDoesNotExist() {
         Long id = 1L;
-
         when(scheduleRepository.existsById(id)).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.deleteSchedule(id));
-
-        assertEquals("Schedule with id 1 does not exist", exception.getMessage());
+        assertThrows(ResourceNotFoundException.class, () -> scheduleService.deleteSchedule(id));
         verify(scheduleRepository, never()).deleteById(any());
     }
 

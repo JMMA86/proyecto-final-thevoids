@@ -3,6 +3,8 @@ package org.thevoids.oncologic.service.impl;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.dto.ScheduleDTO;
 import org.thevoids.oncologic.entity.Schedule;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.mapper.ScheduleMapper;
 import org.thevoids.oncologic.repository.ScheduleRepository;
 import org.thevoids.oncologic.service.ScheduleService;
@@ -31,14 +33,14 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     public ScheduleDTO getScheduleById(Long id) {
         Schedule schedule = scheduleRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Schedule with id " + id + " does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule", "id", id));
         return scheduleMapper.toScheduleDTO(schedule);
     }
 
     @Override
     public ScheduleDTO createSchedule(ScheduleDTO scheduleDTO) {
         if (scheduleDTO == null) {
-            throw new IllegalArgumentException("Schedule cannot be null");
+            throw new InvalidOperationException("Schedule cannot be null");
         }
 
         Schedule schedule = scheduleMapper.toSchedule(scheduleDTO);
@@ -49,15 +51,15 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     public ScheduleDTO updateSchedule(ScheduleDTO scheduleDTO) {
         if (scheduleDTO == null) {
-            throw new IllegalArgumentException("Schedule cannot be null");
+            throw new InvalidOperationException("Schedule cannot be null");
         }
 
         if (scheduleDTO.getScheduleId() == null) {
-            throw new IllegalArgumentException("Schedule ID cannot be null");
+            throw new InvalidOperationException("Schedule ID cannot be null");
         }
 
         if (!scheduleRepository.existsById(scheduleDTO.getScheduleId())) {
-            throw new IllegalArgumentException("Schedule with id " + scheduleDTO.getScheduleId() + " does not exist");
+            throw new ResourceNotFoundException("Schedule", "id", scheduleDTO.getScheduleId());
         }
 
         Schedule schedule = scheduleMapper.toSchedule(scheduleDTO);
@@ -68,7 +70,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     public void deleteSchedule(Long id) {
         if (!scheduleRepository.existsById(id)) {
-            throw new IllegalArgumentException("Schedule with id " + id + " does not exist");
+            throw new ResourceNotFoundException("Schedule", "id", id);
         }
 
         scheduleRepository.deleteById(id);

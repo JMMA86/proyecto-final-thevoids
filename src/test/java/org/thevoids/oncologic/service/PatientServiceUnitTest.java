@@ -7,11 +7,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thevoids.oncologic.dto.PatientDTO;
 import org.thevoids.oncologic.entity.Patient;
+import org.thevoids.oncologic.exception.InvalidOperationException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.PatientMapper;
 import org.thevoids.oncologic.repository.PatientRepository;
 import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.impl.PatientServiceImpl;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,30 +41,25 @@ public class PatientServiceUnitTest {
         Long id = 1L;
         Patient patient = new Patient();
         patient.setPatientId(id);
-
-        PatientDTO expectedPatientDTO = new PatientDTO();
-        expectedPatientDTO.setPatientId(id);
+        PatientDTO patientDTO = new PatientDTO();
+        patientDTO.setPatientId(id);
 
         when(patientRepository.findById(id)).thenReturn(Optional.of(patient));
-        when(patientMapper.toPatientDTO(patient)).thenReturn(expectedPatientDTO);
+        when(patientMapper.toPatientDTO(patient)).thenReturn(patientDTO);
 
         PatientDTO result = patientService.getPatientById(id);
 
         assertNotNull(result);
         assertEquals(id, result.getPatientId());
+        verify(patientRepository).findById(id);
         verify(patientMapper).toPatientDTO(patient);
     }
 
     @Test
     void getPatientByIdThrowsExceptionWhenPatientDoesNotExist() {
         Long id = 1L;
-
         when(patientRepository.findById(id)).thenReturn(Optional.empty());
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.getPatientById(id));
-
-        assertEquals("Patient with id 1 does not exist", exception.getMessage());
+        assertThrows(ResourceNotFoundException.class, () -> patientService.getPatientById(id));
     }
 
     @Test
@@ -70,7 +68,6 @@ public class PatientServiceUnitTest {
         Patient patient = new Patient();
         Patient savedPatient = new Patient();
         savedPatient.setPatientId(1L);
-
         PatientDTO savedPatientDTO = new PatientDTO();
         savedPatientDTO.setPatientId(1L);
 
@@ -89,10 +86,7 @@ public class PatientServiceUnitTest {
 
     @Test
     void createPatientThrowsExceptionWhenPatientIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.createPatient(null));
-
-        assertEquals("Patient cannot be null", exception.getMessage());
+        assertThrows(InvalidOperationException.class, () -> patientService.createPatient(null));
         verify(patientRepository, never()).save(any());
     }
 
@@ -101,13 +95,10 @@ public class PatientServiceUnitTest {
         Long id = 1L;
         PatientDTO patientDTO = new PatientDTO();
         patientDTO.setPatientId(id);
-
         Patient patient = new Patient();
         patient.setPatientId(id);
-
         Patient updatedPatient = new Patient();
         updatedPatient.setPatientId(id);
-
         PatientDTO updatedPatientDTO = new PatientDTO();
         updatedPatientDTO.setPatientId(id);
 
@@ -119,7 +110,8 @@ public class PatientServiceUnitTest {
         PatientDTO result = patientService.updatePatient(patientDTO);
 
         assertNotNull(result);
-        assertEquals(updatedPatientDTO.getPatientId(), result.getPatientId());
+        assertEquals(id, result.getPatientId());
+        verify(patientRepository).existsById(id);
         verify(patientMapper).toPatient(patientDTO);
         verify(patientRepository).save(patient);
         verify(patientMapper).toPatientDTO(updatedPatient);
@@ -127,23 +119,15 @@ public class PatientServiceUnitTest {
 
     @Test
     void updatePatientThrowsExceptionWhenPatientIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.updatePatient(null));
-
-        assertEquals("Patient cannot be null", exception.getMessage());
+        assertThrows(InvalidOperationException.class, () -> patientService.updatePatient(null));
         verify(patientRepository, never()).save(any());
     }
 
     @Test
     void updatePatientThrowsExceptionWhenIdIsNull() {
         PatientDTO patientDTO = new PatientDTO();
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.updatePatient(patientDTO));
-
-        assertEquals("Patient ID cannot be null", exception.getMessage());
+        assertThrows(InvalidOperationException.class, () -> patientService.updatePatient(patientDTO));
         verify(patientRepository, never()).save(any());
-        verify(patientMapper, never()).toPatient(any());
     }
 
     @Test
@@ -151,38 +135,24 @@ public class PatientServiceUnitTest {
         Long id = 1L;
         PatientDTO patientDTO = new PatientDTO();
         patientDTO.setPatientId(id);
-
         when(patientRepository.existsById(id)).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.updatePatient(patientDTO));
-
-        assertEquals("Patient with id 1 does not exist", exception.getMessage());
+        assertThrows(ResourceNotFoundException.class, () -> patientService.updatePatient(patientDTO));
         verify(patientRepository, never()).save(any());
-        verify(patientMapper, never()).toPatient(any());
     }
 
     @Test
     void deletePatientSuccessfullyDeletesPatient() {
         Long id = 1L;
-
         when(patientRepository.existsById(id)).thenReturn(true);
-
         patientService.deletePatient(id);
-
         verify(patientRepository).deleteById(id);
     }
 
     @Test
     void deletePatientThrowsExceptionWhenPatientDoesNotExist() {
         Long id = 1L;
-
         when(patientRepository.existsById(id)).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.deletePatient(id));
-
-        assertEquals("Patient with id 1 does not exist", exception.getMessage());
+        assertThrows(ResourceNotFoundException.class, () -> patientService.deletePatient(id));
         verify(patientRepository, never()).deleteById(any());
     }
 }

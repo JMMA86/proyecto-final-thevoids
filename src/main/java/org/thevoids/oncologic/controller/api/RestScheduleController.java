@@ -5,12 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.thevoids.oncologic.dto.ScheduleDTO;
 import org.thevoids.oncologic.service.ScheduleService;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
 
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/schedule")
+@RequestMapping("/api/v1/schedules")
 public class RestScheduleController {
     private final ScheduleService scheduleService;
 
@@ -19,12 +21,13 @@ public class RestScheduleController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ScheduleDTO>> getAllSchedules() {
+    public ResponseEntity<?> getAllSchedules() {
         try {
             List<ScheduleDTO> schedules = scheduleService.getAllSchedules();
             return ResponseEntity.ok(schedules);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -33,12 +36,12 @@ public class RestScheduleController {
         try {
             ScheduleDTO schedule = scheduleService.getScheduleById(id);
             return ResponseEntity.ok(schedule);
-        } catch (IllegalArgumentException e) {
+        } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -47,12 +50,15 @@ public class RestScheduleController {
         try {
             ScheduleDTO createdSchedule = scheduleService.createSchedule(scheduleDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdSchedule);
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -62,12 +68,15 @@ public class RestScheduleController {
             scheduleDTO.setScheduleId(id);
             ScheduleDTO updatedSchedule = scheduleService.updateSchedule(scheduleDTO);
             return ResponseEntity.ok(updatedSchedule);
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -76,12 +85,12 @@ public class RestScheduleController {
         try {
             scheduleService.deleteSchedule(id);
             return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
+        } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 }

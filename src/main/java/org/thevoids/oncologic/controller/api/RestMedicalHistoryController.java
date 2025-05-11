@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.thevoids.oncologic.dto.MedicalHistoryDTO;
 import org.thevoids.oncologic.service.MedicalHistoryService;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
 
 import java.util.List;
 import java.util.Map;
@@ -19,55 +21,62 @@ public class RestMedicalHistoryController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MedicalHistoryDTO>> getAllMedicalHistories() {
+    public ResponseEntity<?> getAllMedicalHistories() {
         try {
-            List<MedicalHistoryDTO> medicalHistories = medicalHistoryService.getAllMedicalHistories();
-            return ResponseEntity.ok(medicalHistories);
+            List<MedicalHistoryDTO> histories = medicalHistoryService.getAllMedicalHistories();
+            return ResponseEntity.ok(histories);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getMedicalHistoryById(@PathVariable Long id) {
         try {
-            MedicalHistoryDTO medicalHistory = medicalHistoryService.getMedicalHistoryById(id);
-            return ResponseEntity.ok(medicalHistory);
-        } catch (IllegalArgumentException e) {
+            MedicalHistoryDTO history = medicalHistoryService.getMedicalHistoryById(id);
+            return ResponseEntity.ok(history);
+        } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @PostMapping
-    public ResponseEntity<?> createMedicalHistory(@RequestBody MedicalHistoryDTO medicalHistoryDTO) {
+    public ResponseEntity<?> createMedicalHistory(@RequestBody MedicalHistoryDTO dto) {
         try {
-            MedicalHistoryDTO createdMedicalHistory = medicalHistoryService.createMedicalHistory(medicalHistoryDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdMedicalHistory);
-        } catch (IllegalArgumentException e) {
+            MedicalHistoryDTO created = medicalHistoryService.createMedicalHistory(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (InvalidOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateMedicalHistory(@PathVariable Long id, @RequestBody MedicalHistoryDTO medicalHistoryDTO) {
+    public ResponseEntity<?> updateMedicalHistory(@PathVariable Long id, @RequestBody MedicalHistoryDTO dto) {
         try {
-            medicalHistoryDTO.setHistoryId(id);
-            MedicalHistoryDTO updatedMedicalHistory = medicalHistoryService.updateMedicalHistory(medicalHistoryDTO);
-            return ResponseEntity.ok(updatedMedicalHistory);
-        } catch (IllegalArgumentException e) {
+            dto.setHistoryId(id);
+            MedicalHistoryDTO updated = medicalHistoryService.updateMedicalHistory(dto);
+            return ResponseEntity.ok(updated);
+        } catch (InvalidOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -76,12 +85,12 @@ public class RestMedicalHistoryController {
         try {
             medicalHistoryService.deleteMedicalHistory(id);
             return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
+        } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 }

@@ -3,6 +3,8 @@ package org.thevoids.oncologic.service.impl;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.dto.PatientDTO;
 import org.thevoids.oncologic.entity.Patient;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.mapper.PatientMapper;
 import org.thevoids.oncologic.repository.PatientRepository;
 import org.thevoids.oncologic.service.PatientService;
@@ -17,8 +19,7 @@ public class PatientServiceImpl implements PatientService {
 
     public PatientServiceImpl(
             PatientRepository patientRepository,
-            PatientMapper patientMapper
-    ) {
+            PatientMapper patientMapper) {
         this.patientRepository = patientRepository;
         this.patientMapper = patientMapper;
     }
@@ -26,14 +27,14 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public PatientDTO getPatientById(Long id) {
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Patient with id " + id + " does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
         return patientMapper.toPatientDTO(patient);
     }
 
     @Override
     public PatientDTO createPatient(PatientDTO patientDTO) {
         if (patientDTO == null) {
-            throw new IllegalArgumentException("Patient cannot be null");
+            throw new InvalidOperationException("Patient cannot be null");
         }
 
         Patient patient = patientMapper.toPatient(patientDTO);
@@ -44,15 +45,15 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public PatientDTO updatePatient(PatientDTO patientDTO) {
         if (patientDTO == null) {
-            throw new IllegalArgumentException("Patient cannot be null");
+            throw new InvalidOperationException("Patient cannot be null");
         }
 
         if (patientDTO.getPatientId() == null) {
-            throw new IllegalArgumentException("Patient ID cannot be null");
+            throw new InvalidOperationException("Patient ID cannot be null");
         }
 
         if (!patientRepository.existsById(patientDTO.getPatientId())) {
-            throw new IllegalArgumentException("Patient with id " + patientDTO.getPatientId() + " does not exist");
+            throw new ResourceNotFoundException("Patient", "id", patientDTO.getPatientId());
         }
 
         Patient patient = patientMapper.toPatient(patientDTO);
@@ -63,7 +64,7 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public void deletePatient(Long id) {
         if (!patientRepository.existsById(id)) {
-            throw new IllegalArgumentException("Patient with id " + id + " does not exist");
+            throw new ResourceNotFoundException("Patient", "id", id);
         }
 
         patientRepository.deleteById(id);

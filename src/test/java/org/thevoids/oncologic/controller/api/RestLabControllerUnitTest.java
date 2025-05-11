@@ -2,6 +2,7 @@ package org.thevoids.oncologic.controller.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
@@ -23,6 +24,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.thevoids.oncologic.dto.LabDTO;
 import org.thevoids.oncologic.service.LabService;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
 
 class RestLabControllerUnitTest {
 
@@ -71,15 +74,17 @@ class RestLabControllerUnitTest {
         when(labService.getAllLabs()).thenReturn(Arrays.asList(testLab1, testLab2));
 
         // Act
-        ResponseEntity<List<LabDTO>> response = labController.getAllLabs();
+        ResponseEntity<?> response = labController.getAllLabs();
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<LabDTO> labs = response.getBody();
-        assertNotNull(labs);
-        assertEquals(2, labs.size());
-        assertEquals("Blood Test", labs.get(0).getTestType());
-        assertEquals("X-Ray", labs.get(1).getTestType());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody() instanceof List);
+        List<?> labsRaw = (List<?>) response.getBody();
+        assertEquals(2, labsRaw.size());
+        assertTrue(labsRaw.get(0) instanceof LabDTO);
+        assertEquals("Blood Test", ((LabDTO) labsRaw.get(0)).getTestType());
+        assertEquals("X-Ray", ((LabDTO) labsRaw.get(1)).getTestType());
     }
 
     @Test
@@ -88,10 +93,14 @@ class RestLabControllerUnitTest {
         when(labService.getAllLabs()).thenThrow(new RuntimeException("Database error"));
 
         // Act
-        ResponseEntity<List<LabDTO>> response = labController.getAllLabs();
+        ResponseEntity<?> response = labController.getAllLabs();
 
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        @SuppressWarnings("unchecked")
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals("Database error", errorResponse.get("error"));
     }
 
     @Test
@@ -113,7 +122,7 @@ class RestLabControllerUnitTest {
     @Test
     void testGetLabById_NotFound() {
         // Arrange
-        when(labService.getLabById(1L)).thenThrow(new IllegalArgumentException("Lab not found"));
+        when(labService.getLabById(1L)).thenThrow(new ResourceNotFoundException("Lab", "id", 1L));
 
         // Act
         ResponseEntity<?> response = labController.getLabById(1L);
@@ -123,7 +132,7 @@ class RestLabControllerUnitTest {
         @SuppressWarnings("unchecked")
         Map<String, String> errorResponse = (Map<String, String>) response.getBody();
         assertNotNull(errorResponse);
-        assertEquals("Lab not found", errorResponse.get("error"));
+        assertEquals("Lab no encontrado con id : '1'", errorResponse.get("error"));
     }
 
     @Test
@@ -145,7 +154,7 @@ class RestLabControllerUnitTest {
     @Test
     void testAssignLab_BadRequest() {
         // Arrange
-        when(labService.assignLab(1L, 1L, testDate)).thenThrow(new IllegalArgumentException("Invalid data"));
+        when(labService.assignLab(1L, 1L, testDate)).thenThrow(new InvalidOperationException("Invalid data"));
 
         // Act
         ResponseEntity<?> response = labController.assignLab(1L, 1L, testDate);
@@ -178,7 +187,7 @@ class RestLabControllerUnitTest {
     @Test
     void testUpdateLab_BadRequest() {
         // Arrange
-        when(labService.updateLab(any(LabDTO.class))).thenThrow(new IllegalArgumentException("Invalid data"));
+        when(labService.updateLab(any(LabDTO.class))).thenThrow(new InvalidOperationException("Invalid data"));
 
         // Act
         ResponseEntity<?> response = labController.updateLab(1L, testLab1);
@@ -204,7 +213,7 @@ class RestLabControllerUnitTest {
     @Test
     void testDeleteLab_NotFound() {
         // Arrange
-        doThrow(new IllegalArgumentException("Lab not found")).when(labService).deleteLab(anyLong());
+        doThrow(new ResourceNotFoundException("Lab", "id", 1L)).when(labService).deleteLab(anyLong());
 
         // Act
         ResponseEntity<?> response = labController.deleteLab(1L);
@@ -214,6 +223,6 @@ class RestLabControllerUnitTest {
         @SuppressWarnings("unchecked")
         Map<String, String> errorResponse = (Map<String, String>) response.getBody();
         assertNotNull(errorResponse);
-        assertEquals("Lab not found", errorResponse.get("error"));
+        assertEquals("Lab no encontrado con id : '1'", errorResponse.get("error"));
     }
 }
