@@ -1,17 +1,20 @@
 package org.thevoids.oncologic.controller.api;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.thevoids.oncologic.dto.ClinicAssignmentDTO;
 import org.thevoids.oncologic.entity.ClinicAssignment;
@@ -51,10 +54,18 @@ class RestClinicAssignmentControllerUnitTest {
         when(clinicAssigmentService.getAllClinicAssignments()).thenReturn(Arrays.asList(assignment));
         when(clinicAssignmentMapper.toClinicAssignmentDTO(assignment)).thenReturn(assignmentDTO);
 
-        List<ClinicAssignmentDTO> result = controller.getAllClinicAssignments();
+        ResponseEntity<List<ClinicAssignmentDTO>> response = controller.getAllClinicAssignments();
 
-        assertEquals(1, result.size());
-        assertEquals(assignmentDTO.getId(), result.get(0).getId());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        assertEquals(assignmentDTO.getId(), response.getBody().get(0).getId());
+    }
+
+    @Test
+    void getAllClinicAssignments_InternalServerError() {
+        when(clinicAssigmentService.getAllClinicAssignments()).thenThrow(new RuntimeException());
+        ResponseEntity<List<ClinicAssignmentDTO>> response = controller.getAllClinicAssignments();
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -64,7 +75,7 @@ class RestClinicAssignmentControllerUnitTest {
 
         ResponseEntity<ClinicAssignmentDTO> response = controller.getClinicAssignmentById(1L);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(assignmentDTO, response.getBody());
     }
 
@@ -74,7 +85,14 @@ class RestClinicAssignmentControllerUnitTest {
 
         ResponseEntity<ClinicAssignmentDTO> response = controller.getClinicAssignmentById(1L);
 
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void getClinicAssignmentById_InternalServerError() {
+        when(clinicAssigmentService.getClinicAssignmentById(1L)).thenThrow(new RuntimeException());
+        ResponseEntity<ClinicAssignmentDTO> response = controller.getClinicAssignmentById(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -85,7 +103,7 @@ class RestClinicAssignmentControllerUnitTest {
 
         ResponseEntity<ClinicAssignmentDTO> response = controller.createClinicAssignment(assignmentDTO);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(assignmentDTO, response.getBody());
     }
 
@@ -96,7 +114,15 @@ class RestClinicAssignmentControllerUnitTest {
 
         ResponseEntity<ClinicAssignmentDTO> response = controller.createClinicAssignment(assignmentDTO);
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void createClinicAssignment_InternalServerError() {
+        when(clinicAssignmentMapper.toClinicAssignment(assignmentDTO)).thenReturn(assignment);
+        when(clinicAssigmentService.updateClinicAssignment(assignment)).thenThrow(new RuntimeException());
+        ResponseEntity<ClinicAssignmentDTO> response = controller.createClinicAssignment(assignmentDTO);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -107,7 +133,7 @@ class RestClinicAssignmentControllerUnitTest {
 
         ResponseEntity<ClinicAssignmentDTO> response = controller.updateClinicAssignment(1L, assignmentDTO);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(assignmentDTO, response.getBody());
     }
 
@@ -118,13 +144,21 @@ class RestClinicAssignmentControllerUnitTest {
 
         ResponseEntity<ClinicAssignmentDTO> response = controller.updateClinicAssignment(1L, assignmentDTO);
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void updateClinicAssignment_InternalServerError() {
+        when(clinicAssignmentMapper.toClinicAssignment(assignmentDTO)).thenReturn(assignment);
+        when(clinicAssigmentService.updateClinicAssignment(assignment)).thenThrow(new RuntimeException());
+        ResponseEntity<ClinicAssignmentDTO> response = controller.updateClinicAssignment(1L, assignmentDTO);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
     void deleteClinicAssignment_Success() {
         ResponseEntity<Void> response = controller.deleteClinicAssignment(1L);
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(clinicAssigmentService, times(1)).deleteClinicAssigment(1L);
     }
 
@@ -134,6 +168,13 @@ class RestClinicAssignmentControllerUnitTest {
 
         ResponseEntity<Void> response = controller.deleteClinicAssignment(1L);
 
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void deleteClinicAssignment_InternalServerError() {
+        doThrow(new RuntimeException()).when(clinicAssigmentService).deleteClinicAssigment(1L);
+        ResponseEntity<Void> response = controller.deleteClinicAssignment(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }

@@ -1,18 +1,21 @@
 package org.thevoids.oncologic.controller.api;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.util.ReflectionTestUtils.setField;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.thevoids.oncologic.dto.AppointmentDTO;
 import org.thevoids.oncologic.entity.Appointment;
@@ -52,10 +55,18 @@ class RestAppointmentControllerUnitTest {
         when(appointmentService.getAllAppointments()).thenReturn(Arrays.asList(appointment));
         when(appointmentMapper.toAppointmentDTO(appointment)).thenReturn(appointmentDTO);
 
-        List<AppointmentDTO> result = controller.getAllAppointments();
+        ResponseEntity<List<AppointmentDTO>> response = controller.getAllAppointments();
 
-        assertEquals(1, result.size());
-        assertEquals(appointmentDTO.getAppointmentId(), result.get(0).getAppointmentId());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        assertEquals(appointmentDTO.getAppointmentId(), response.getBody().get(0).getAppointmentId());
+    }
+
+    @Test
+    void getAllAppointments_InternalServerError() {
+        when(appointmentService.getAllAppointments()).thenThrow(new RuntimeException("DB error"));
+        ResponseEntity<List<AppointmentDTO>> response = controller.getAllAppointments();
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -65,17 +76,22 @@ class RestAppointmentControllerUnitTest {
 
         ResponseEntity<AppointmentDTO> response = controller.getAppointmentById(1L);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(appointmentDTO, response.getBody());
     }
 
     @Test
     void getAppointmentById_NotFound() {
         when(appointmentService.getAppointmentById(1L)).thenThrow(new IllegalArgumentException());
-
         ResponseEntity<AppointmentDTO> response = controller.getAppointmentById(1L);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
 
-        assertEquals(404, response.getStatusCodeValue());
+    @Test
+    void getAppointmentById_InternalServerError() {
+        when(appointmentService.getAppointmentById(1L)).thenThrow(new RuntimeException());
+        ResponseEntity<AppointmentDTO> response = controller.getAppointmentById(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -85,7 +101,7 @@ class RestAppointmentControllerUnitTest {
 
         ResponseEntity<AppointmentDTO> response = controller.createAppointment(appointmentDTO);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(appointmentDTO, response.getBody());
     }
 
@@ -96,7 +112,15 @@ class RestAppointmentControllerUnitTest {
 
         ResponseEntity<AppointmentDTO> response = controller.createAppointment(appointmentDTO);
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void createAppointment_InternalServerError() {
+        when(appointmentService.createAppointment(any(), any(), any(), any()))
+                .thenThrow(new RuntimeException());
+        ResponseEntity<AppointmentDTO> response = controller.createAppointment(appointmentDTO);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -107,7 +131,7 @@ class RestAppointmentControllerUnitTest {
 
         ResponseEntity<AppointmentDTO> response = controller.updateAppointment(1L, appointmentDTO);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(appointmentDTO, response.getBody());
     }
 
@@ -118,13 +142,21 @@ class RestAppointmentControllerUnitTest {
 
         ResponseEntity<AppointmentDTO> response = controller.updateAppointment(1L, appointmentDTO);
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void updateAppointment_InternalServerError() {
+        when(appointmentMapper.toAppointment(appointmentDTO)).thenReturn(appointment);
+        when(appointmentService.updateAppointment(any())).thenThrow(new RuntimeException());
+        ResponseEntity<AppointmentDTO> response = controller.updateAppointment(1L, appointmentDTO);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
     void deleteAppointment_Success() {
         ResponseEntity<Void> response = controller.deleteAppointment(1L);
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(appointmentService, times(1)).deleteAppointment(1L);
     }
 
@@ -134,6 +166,13 @@ class RestAppointmentControllerUnitTest {
 
         ResponseEntity<Void> response = controller.deleteAppointment(1L);
 
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void deleteAppointment_InternalServerError() {
+        doThrow(new RuntimeException()).when(appointmentService).deleteAppointment(1L);
+        ResponseEntity<Void> response = controller.deleteAppointment(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }

@@ -1,17 +1,20 @@
 package org.thevoids.oncologic.controller.api;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.thevoids.oncologic.dto.TaskDTO;
 import org.thevoids.oncologic.entity.Task;
@@ -55,10 +58,18 @@ class RestTaskControllerUnitTest {
         when(taskService.getAllTasks()).thenReturn(Arrays.asList(task));
         when(taskMapper.toTaskDTO(task)).thenReturn(taskDTO);
 
-        List<TaskDTO> result = controller.getAllTasks();
+        ResponseEntity<List<TaskDTO>> response = controller.getAllTasks();
 
-        assertEquals(1, result.size());
-        assertEquals(taskDTO.getId(), result.get(0).getId());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        assertEquals(taskDTO.getId(), response.getBody().get(0).getId());
+    }
+
+    @Test
+    void getAllTasks_InternalServerError() {
+        when(taskService.getAllTasks()).thenThrow(new RuntimeException());
+        ResponseEntity<List<TaskDTO>> response = controller.getAllTasks();
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -68,7 +79,7 @@ class RestTaskControllerUnitTest {
 
         ResponseEntity<TaskDTO> response = controller.getTaskById(1L);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(taskDTO, response.getBody());
     }
 
@@ -78,7 +89,14 @@ class RestTaskControllerUnitTest {
 
         ResponseEntity<TaskDTO> response = controller.getTaskById(1L);
 
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void getTaskById_InternalServerError() {
+        when(taskService.getTaskById(1L)).thenThrow(new RuntimeException());
+        ResponseEntity<TaskDTO> response = controller.getTaskById(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -89,7 +107,7 @@ class RestTaskControllerUnitTest {
 
         ResponseEntity<TaskDTO> response = controller.createTask(taskDTO);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(taskDTO, response.getBody());
     }
 
@@ -100,7 +118,15 @@ class RestTaskControllerUnitTest {
 
         ResponseEntity<TaskDTO> response = controller.createTask(taskDTO);
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void createTask_InternalServerError() {
+        when(taskMapper.toTask(taskDTO)).thenReturn(task);
+        when(taskService.createTask(task)).thenThrow(new RuntimeException());
+        ResponseEntity<TaskDTO> response = controller.createTask(taskDTO);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -111,7 +137,7 @@ class RestTaskControllerUnitTest {
 
         ResponseEntity<TaskDTO> response = controller.updateTask(1L, taskDTO);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(taskDTO, response.getBody());
     }
 
@@ -122,13 +148,21 @@ class RestTaskControllerUnitTest {
 
         ResponseEntity<TaskDTO> response = controller.updateTask(1L, taskDTO);
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void updateTask_InternalServerError() {
+        when(taskMapper.toTask(taskDTO)).thenReturn(task);
+        when(taskService.updateTask(task)).thenThrow(new RuntimeException());
+        ResponseEntity<TaskDTO> response = controller.updateTask(1L, taskDTO);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
     void deleteTask_Success() {
         ResponseEntity<Void> response = controller.deleteTask(1L);
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(taskService, times(1)).deleteTask(1L);
     }
 
@@ -138,6 +172,13 @@ class RestTaskControllerUnitTest {
 
         ResponseEntity<Void> response = controller.deleteTask(1L);
 
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void deleteTask_InternalServerError() {
+        doThrow(new RuntimeException()).when(taskService).deleteTask(1L);
+        ResponseEntity<Void> response = controller.deleteTask(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }

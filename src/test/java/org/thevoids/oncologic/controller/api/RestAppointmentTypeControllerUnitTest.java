@@ -1,16 +1,19 @@
 package org.thevoids.oncologic.controller.api;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.thevoids.oncologic.dto.AppointmentTypeDTO;
 import org.thevoids.oncologic.entity.AppointmentType;
@@ -50,10 +53,18 @@ class RestAppointmentTypeControllerUnitTest {
         when(appointmentTypeService.getAllAppointmentTypes()).thenReturn(Arrays.asList(type));
         when(appointmentTypeMapper.toAppointmentTypeDTO(type)).thenReturn(typeDTO);
 
-        List<AppointmentTypeDTO> result = controller.getAllAppointmentTypes();
+        ResponseEntity<List<AppointmentTypeDTO>> response = controller.getAllAppointmentTypes();
 
-        assertEquals(1, result.size());
-        assertEquals(typeDTO.getTypeId(), result.get(0).getTypeId());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        assertEquals(typeDTO.getTypeId(), response.getBody().get(0).getTypeId());
+    }
+
+    @Test
+    void getAllAppointmentTypes_InternalServerError() {
+        when(appointmentTypeService.getAllAppointmentTypes()).thenThrow(new RuntimeException());
+        ResponseEntity<List<AppointmentTypeDTO>> response = controller.getAllAppointmentTypes();
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -63,7 +74,7 @@ class RestAppointmentTypeControllerUnitTest {
 
         ResponseEntity<AppointmentTypeDTO> response = controller.getAppointmentTypeById(1L);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(typeDTO, response.getBody());
     }
 
@@ -73,7 +84,14 @@ class RestAppointmentTypeControllerUnitTest {
 
         ResponseEntity<AppointmentTypeDTO> response = controller.getAppointmentTypeById(1L);
 
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void getAppointmentTypeById_InternalServerError() {
+        when(appointmentTypeService.getAppointmentTypeById(1L)).thenThrow(new RuntimeException());
+        ResponseEntity<AppointmentTypeDTO> response = controller.getAppointmentTypeById(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -84,7 +102,7 @@ class RestAppointmentTypeControllerUnitTest {
 
         ResponseEntity<AppointmentTypeDTO> response = controller.createAppointmentType(typeDTO);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(typeDTO, response.getBody());
     }
 
@@ -95,7 +113,15 @@ class RestAppointmentTypeControllerUnitTest {
 
         ResponseEntity<AppointmentTypeDTO> response = controller.createAppointmentType(typeDTO);
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void createAppointmentType_InternalServerError() {
+        when(appointmentTypeMapper.toAppointmentType(typeDTO)).thenReturn(type);
+        when(appointmentTypeService.createAppointmentType(type)).thenThrow(new RuntimeException());
+        ResponseEntity<AppointmentTypeDTO> response = controller.createAppointmentType(typeDTO);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -106,7 +132,7 @@ class RestAppointmentTypeControllerUnitTest {
 
         ResponseEntity<AppointmentTypeDTO> response = controller.updateAppointmentType(1L, typeDTO);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(typeDTO, response.getBody());
     }
 
@@ -117,13 +143,21 @@ class RestAppointmentTypeControllerUnitTest {
 
         ResponseEntity<AppointmentTypeDTO> response = controller.updateAppointmentType(1L, typeDTO);
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void updateAppointmentType_InternalServerError() {
+        when(appointmentTypeMapper.toAppointmentType(typeDTO)).thenReturn(type);
+        when(appointmentTypeService.updateAppointmentType(type)).thenThrow(new RuntimeException());
+        ResponseEntity<AppointmentTypeDTO> response = controller.updateAppointmentType(1L, typeDTO);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
     void deleteAppointmentType_Success() {
         ResponseEntity<Void> response = controller.deleteAppointmentType(1L);
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(appointmentTypeService, times(1)).deleteAppointmentType(1L);
     }
 
@@ -133,6 +167,13 @@ class RestAppointmentTypeControllerUnitTest {
 
         ResponseEntity<Void> response = controller.deleteAppointmentType(1L);
 
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void deleteAppointmentType_InternalServerError() {
+        doThrow(new RuntimeException()).when(appointmentTypeService).deleteAppointmentType(1L);
+        ResponseEntity<Void> response = controller.deleteAppointmentType(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }
