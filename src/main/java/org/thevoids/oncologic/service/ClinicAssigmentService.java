@@ -1,8 +1,8 @@
 package org.thevoids.oncologic.service;
 
-import org.thevoids.oncologic.entity.ClinicAssignment;
-
 import java.util.List;
+
+import org.thevoids.oncologic.entity.ClinicAssignment;
 
 public interface ClinicAssigmentService {
     List<ClinicAssignment> getAllClinicAssignments();
@@ -13,5 +13,5 @@ public interface ClinicAssigmentService {
 
     void deleteClinicAssigment(Long id);
 
-    void assignClinic(Long userId, Long clinicId);
+    ClinicAssignment assignClinic(ClinicAssignment clinicAssignment);
 }

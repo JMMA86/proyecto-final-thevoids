@@ -17,8 +17,7 @@ public class PatientServiceImpl implements PatientService {
 
     public PatientServiceImpl(
             PatientRepository patientRepository,
-            PatientMapper patientMapper
-    ) {
+            PatientMapper patientMapper) {
         this.patientRepository = patientRepository;
         this.patientMapper = patientMapper;
     }

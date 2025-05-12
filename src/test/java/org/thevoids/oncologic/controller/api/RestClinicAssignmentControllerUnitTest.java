@@ -47,6 +47,8 @@ class RestClinicAssignmentControllerUnitTest {
         assignmentDTO.setId(1L);
         assignmentDTO.setStartTime(assignment.getStartTime());
         assignmentDTO.setEndTime(assignment.getEndTime());
+        assignmentDTO.setUserId(2L);
+        assignmentDTO.setClinicId(3L);
     }
 
     @SuppressWarnings("null")
@@ -99,29 +101,30 @@ class RestClinicAssignmentControllerUnitTest {
     @Test
     void createClinicAssignment_Success() {
         when(clinicAssignmentMapper.toClinicAssignment(assignmentDTO)).thenReturn(assignment);
-        when(clinicAssigmentService.updateClinicAssignment(assignment)).thenReturn(assignment);
+        when(clinicAssigmentService.assignClinic(assignment)).thenReturn(assignment);
         when(clinicAssignmentMapper.toClinicAssignmentDTO(assignment)).thenReturn(assignmentDTO);
 
         ResponseEntity<ClinicAssignmentDTO> response = controller.createClinicAssignment(assignmentDTO);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(assignmentDTO, response.getBody());
+        verify(clinicAssigmentService, times(1)).assignClinic(assignment);
     }
 
     @Test
     void createClinicAssignment_BadRequest() {
         when(clinicAssignmentMapper.toClinicAssignment(assignmentDTO)).thenReturn(assignment);
-        when(clinicAssigmentService.updateClinicAssignment(assignment)).thenThrow(new IllegalArgumentException());
+        doThrow(new IllegalArgumentException()).when(clinicAssigmentService).assignClinic(assignment);
 
         ResponseEntity<ClinicAssignmentDTO> response = controller.createClinicAssignment(assignmentDTO);
-
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
     void createClinicAssignment_InternalServerError() {
         when(clinicAssignmentMapper.toClinicAssignment(assignmentDTO)).thenReturn(assignment);
-        when(clinicAssigmentService.updateClinicAssignment(assignment)).thenThrow(new RuntimeException());
+        doThrow(new RuntimeException()).when(clinicAssigmentService).assignClinic(assignment);
+
         ResponseEntity<ClinicAssignmentDTO> response = controller.createClinicAssignment(assignmentDTO);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }

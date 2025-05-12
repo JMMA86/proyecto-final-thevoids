@@ -147,12 +147,28 @@ public class RestClinicController {
         @RequestBody ClinicDTO dto
     ) {
         try {
-            Clinic clinic = clinicMapper.toClinic(dto);
-            Clinic updated = clinicService.updateClinic(id, clinic);
+            Clinic existing = clinicService.getClinicById(id);
+            if (existing == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            // Only update fields from DTO
+            if (dto.getName() != null)
+                existing.setName(dto.getName());
+            if (dto.getAddress() != null)
+                existing.setAddress(dto.getAddress());
+            if (dto.getPhone() != null)
+                existing.setPhone(dto.getPhone());
+            if (dto.getSpecialty() != null)
+                existing.setSpecialty(dto.getSpecialty());
+            if (dto.getCapacity() != null)
+                existing.setCapacity(dto.getCapacity());
+
+            Clinic updated = clinicService.updateClinic(id, existing);
             return ResponseEntity.ok(clinicMapper.toClinicDTO(updated));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

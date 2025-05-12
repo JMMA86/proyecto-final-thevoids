@@ -45,16 +45,25 @@ public class ClinicServiceImpl implements ClinicService {
         }
 
         Clinic existingClinic = clinicRepository.findById(id).orElse(null);
+        if (existingClinic == null) {
+            throw new IllegalArgumentException("Clinic with id " + id + " does not exist");
+        }
 
-        existingClinic.setName(clinic.getName());
-        existingClinic.setAddress(clinic.getAddress());
-        existingClinic.setPhone(clinic.getPhone());
-        existingClinic.setSpecialty(clinic.getSpecialty());
-        existingClinic.setCapacity(clinic.getCapacity());
+        // Only update fields from the input clinic
+        if (clinic.getName() != null)
+            existingClinic.setName(clinic.getName());
+        if (clinic.getAddress() != null)
+            existingClinic.setAddress(clinic.getAddress());
+        if (clinic.getPhone() != null)
+            existingClinic.setPhone(clinic.getPhone());
+        if (clinic.getSpecialty() != null)
+            existingClinic.setSpecialty(clinic.getSpecialty());
+        if (clinic.getCapacity() != null)
+            existingClinic.setCapacity(clinic.getCapacity());
 
         clinicRepository.save(existingClinic);
 
-        return clinic;
+        return existingClinic;
     }
 
     @Override

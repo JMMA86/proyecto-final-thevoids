@@ -126,8 +126,8 @@ class RestAppointmentControllerUnitTest {
 
     @Test
     void updateAppointment_Success() {
-        when(appointmentMapper.toAppointment(appointmentDTO)).thenReturn(appointment);
-        when(appointmentService.updateAppointment(any())).thenReturn(appointment);
+        when(appointmentService.getAppointmentById(1L)).thenReturn(appointment);
+        when(appointmentService.updateAppointment(appointment)).thenReturn(appointment);
         when(appointmentMapper.toAppointmentDTO(appointment)).thenReturn(appointmentDTO);
 
         ResponseEntity<AppointmentDTO> response = controller.updateAppointment(1L, appointmentDTO);
@@ -138,8 +138,8 @@ class RestAppointmentControllerUnitTest {
 
     @Test
     void updateAppointment_BadRequest() {
-        when(appointmentMapper.toAppointment(appointmentDTO)).thenReturn(appointment);
-        when(appointmentService.updateAppointment(any())).thenThrow(new IllegalArgumentException());
+        when(appointmentService.getAppointmentById(1L)).thenReturn(appointment);
+        when(appointmentService.updateAppointment(appointment)).thenThrow(new IllegalArgumentException());
 
         ResponseEntity<AppointmentDTO> response = controller.updateAppointment(1L, appointmentDTO);
 

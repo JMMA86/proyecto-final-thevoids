@@ -94,10 +94,10 @@ public class RestClinicAssignmentController {
     }
 
     /**
-     * Creates a new clinic assignment.
+     * Creates a new clinic assignment (assigns a user to a clinic).
      *
      * @param dto the clinic assignment to create as a DTO.
-     * @return the created clinic assignment as a DTO.
+     * @return a success or error response.
      */
     @Operation(summary = "Crear asignación", description = "Crea una nueva asignación de médico a clínica")
     @ApiResponses(value = {
@@ -114,7 +114,7 @@ public class RestClinicAssignmentController {
     ) {
         try {
             ClinicAssignment assignment = clinicAssignmentMapper.toClinicAssignment(dto);
-            ClinicAssignment created = clinicAssigmentService.updateClinicAssignment(assignment);
+            ClinicAssignment created = clinicAssigmentService.assignClinic(assignment);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(clinicAssignmentMapper.toClinicAssignmentDTO(created));
         } catch (IllegalArgumentException e) {

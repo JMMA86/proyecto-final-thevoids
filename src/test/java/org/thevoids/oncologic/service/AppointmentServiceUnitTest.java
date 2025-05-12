@@ -57,7 +57,8 @@ class AppointmentServiceUnitTest {
         when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Capture the saved appointment directly
-        Appointment result = appointmentService.createAppointment(patientId, clinicAssignmentId, appointmentTypeId, dateTime);
+        Appointment result = appointmentService.createAppointment(patientId, clinicAssignmentId, appointmentTypeId,
+                dateTime);
 
         assertNotNull(result);
         assertEquals(patient, result.getPatient());
@@ -73,8 +74,8 @@ class AppointmentServiceUnitTest {
         Long appointmentTypeId = 3L;
         Date dateTime = new Date();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.createAppointment(null, clinicAssignmentId, appointmentTypeId, dateTime));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.createAppointment(null, clinicAssignmentId, appointmentTypeId, dateTime));
 
         assertEquals("Missing required parameter(s): patientId", exception.getMessage());
     }
@@ -89,28 +90,16 @@ class AppointmentServiceUnitTest {
         when(patientRepository.findById(patientId)).thenReturn(Optional.of(new Patient()));
         when(clinicAssignmentRepository.findById(clinicAssignmentId)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.createAppointment(patientId, clinicAssignmentId, appointmentTypeId, dateTime));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.createAppointment(patientId, clinicAssignmentId, appointmentTypeId, dateTime));
 
         assertEquals("ClinicAssignment with id 2 does not exist", exception.getMessage());
     }
 
     @Test
-    void deleteAppointmentThrowsExceptionWhenAppointmentDoesNotExist() {
-        Long appointmentId = 1L;
-
-        when(appointmentRepository.existsById(appointmentId)).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.deleteAppointment(appointmentId));
-
-        assertEquals("Appointment with id 1 does not exist", exception.getMessage());
-    }
-
-    @Test
     void updateAppointmentThrowsExceptionWhenAppointmentIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.updateAppointment(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.updateAppointment(null));
 
         assertEquals("Appointment cannot be null", exception.getMessage());
     }
@@ -119,8 +108,7 @@ class AppointmentServiceUnitTest {
     void getAllAppointmentsReturnsAllAppointments() {
         List<Appointment> expectedAppointments = List.of(
                 createAppointment(1L),
-                createAppointment(2L)
-        );
+                createAppointment(2L));
 
         when(appointmentRepository.findAll()).thenReturn(expectedAppointments);
 
@@ -149,8 +137,8 @@ class AppointmentServiceUnitTest {
 
         when(appointmentRepository.findById(id)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.getAppointmentById(id));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.getAppointmentById(id));
 
         assertEquals("Appointment with id 1 does not exist", exception.getMessage());
     }
@@ -161,8 +149,8 @@ class AppointmentServiceUnitTest {
         Long appointmentTypeId = 3L;
         Date dateTime = new Date();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.createAppointment(patientId, null, appointmentTypeId, dateTime));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.createAppointment(patientId, null, appointmentTypeId, dateTime));
 
         assertEquals("Missing required parameter(s): clinicAssignmentId", exception.getMessage());
     }
@@ -173,8 +161,8 @@ class AppointmentServiceUnitTest {
         Long clinicAssignmentId = 2L;
         Date dateTime = new Date();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.createAppointment(patientId, clinicAssignmentId, null, dateTime));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.createAppointment(patientId, clinicAssignmentId, null, dateTime));
 
         assertEquals("Missing required parameter(s): appointmentTypeId", exception.getMessage());
     }
@@ -185,16 +173,16 @@ class AppointmentServiceUnitTest {
         Long clinicAssignmentId = 2L;
         Long appointmentTypeId = 3L;
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.createAppointment(patientId, clinicAssignmentId, appointmentTypeId, null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.createAppointment(patientId, clinicAssignmentId, appointmentTypeId, null));
 
         assertEquals("Missing required parameter(s): dateTime", exception.getMessage());
     }
 
     @Test
     void createAppointmentThrowsExceptionWhenMultipleParametersAreNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.createAppointment(null, null, null, null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.createAppointment(null, null, null, null));
 
         assertEquals("Missing required parameter(s): patientId, clinicAssignmentId, appointmentTypeId, dateTime",
                 exception.getMessage());
@@ -209,8 +197,8 @@ class AppointmentServiceUnitTest {
 
         when(patientRepository.findById(patientId)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.createAppointment(patientId, clinicAssignmentId, appointmentTypeId, dateTime));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.createAppointment(patientId, clinicAssignmentId, appointmentTypeId, dateTime));
 
         assertEquals("Patient with id 1 does not exist", exception.getMessage());
     }
@@ -226,8 +214,8 @@ class AppointmentServiceUnitTest {
         when(clinicAssignmentRepository.findById(clinicAssignmentId)).thenReturn(Optional.of(new ClinicAssignment()));
         when(appointmentTypeRepository.findById(appointmentTypeId)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.createAppointment(patientId, clinicAssignmentId, appointmentTypeId, dateTime));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.createAppointment(patientId, clinicAssignmentId, appointmentTypeId, dateTime));
 
         assertEquals("AppointmentType with id 3 does not exist", exception.getMessage());
     }
@@ -237,7 +225,7 @@ class AppointmentServiceUnitTest {
         Long id = 1L;
         Appointment appointment = createAppointment(id);
 
-        when(appointmentRepository.existsById(id)).thenReturn(true);
+        when(appointmentRepository.findById(id)).thenReturn(Optional.of(appointment));
         when(appointmentRepository.save(appointment)).thenReturn(appointment);
 
         Appointment result = appointmentService.updateAppointment(appointment);
@@ -250,8 +238,8 @@ class AppointmentServiceUnitTest {
     void updateAppointmentThrowsExceptionWhenIdIsNull() {
         Appointment appointment = createAppointment(null);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.updateAppointment(appointment));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.updateAppointment(appointment));
 
         assertEquals("Appointment ID cannot be null", exception.getMessage());
     }
@@ -261,10 +249,10 @@ class AppointmentServiceUnitTest {
         Long id = 1L;
         Appointment appointment = createAppointment(id);
 
-        when(appointmentRepository.existsById(id)).thenReturn(false);
+        when(appointmentRepository.findById(id)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                appointmentService.updateAppointment(appointment));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.updateAppointment(appointment));
 
         assertEquals("Appointment with id 1 does not exist", exception.getMessage());
     }
@@ -278,6 +266,18 @@ class AppointmentServiceUnitTest {
         appointmentService.deleteAppointment(id);
 
         verify(appointmentRepository).deleteById(id);
+    }
+
+    @Test
+    void deleteAppointmentThrowsExceptionWhenAppointmentDoesNotExist() {
+        Long id = 1L;
+
+        when(appointmentRepository.existsById(id)).thenReturn(false);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> appointmentService.deleteAppointment(id));
+
+        assertEquals("Appointment with id 1 does not exist", exception.getMessage());
     }
 
     private Appointment createAppointment(Long id) {

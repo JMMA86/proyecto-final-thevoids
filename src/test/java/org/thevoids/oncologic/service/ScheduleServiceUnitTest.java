@@ -34,13 +34,11 @@ public class ScheduleServiceUnitTest {
     void getAllSchedulesReturnsAllSchedules() {
         List<Schedule> schedules = List.of(
                 createSchedule(1L),
-                createSchedule(2L)
-        );
+                createSchedule(2L));
 
         List<ScheduleDTO> expectedScheduleDTOs = List.of(
                 createScheduleDTO(1L),
-                createScheduleDTO(2L)
-        );
+                createScheduleDTO(2L));
 
         when(scheduleRepository.findAll()).thenReturn(schedules);
         when(scheduleMapper.toScheduleDTO(schedules.get(0))).thenReturn(expectedScheduleDTOs.get(0));
@@ -78,8 +76,8 @@ public class ScheduleServiceUnitTest {
 
         when(scheduleRepository.findById(id)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.getScheduleById(id));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> scheduleService.getScheduleById(id));
 
         assertEquals("Schedule with id 1 does not exist", exception.getMessage());
     }
@@ -108,8 +106,8 @@ public class ScheduleServiceUnitTest {
 
     @Test
     void createScheduleThrowsExceptionWhenScheduleIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.createSchedule(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> scheduleService.createSchedule(null));
 
         assertEquals("Schedule cannot be null", exception.getMessage());
         verify(scheduleRepository, never()).save(any());
@@ -141,8 +139,8 @@ public class ScheduleServiceUnitTest {
 
     @Test
     void updateScheduleThrowsExceptionWhenScheduleIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> scheduleService.updateSchedule(null));
 
         assertEquals("Schedule cannot be null", exception.getMessage());
         verify(scheduleRepository, never()).save(any());
@@ -152,8 +150,8 @@ public class ScheduleServiceUnitTest {
     void updateScheduleThrowsExceptionWhenIdIsNull() {
         ScheduleDTO scheduleDTO = createScheduleDTO(null);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(scheduleDTO));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> scheduleService.updateSchedule(scheduleDTO));
 
         assertEquals("Schedule ID cannot be null", exception.getMessage());
         verify(scheduleRepository, never()).save(any());
@@ -167,8 +165,8 @@ public class ScheduleServiceUnitTest {
 
         when(scheduleRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(scheduleDTO));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> scheduleService.updateSchedule(scheduleDTO));
 
         assertEquals("Schedule with id 1 does not exist", exception.getMessage());
         verify(scheduleRepository, never()).save(any());
@@ -192,8 +190,8 @@ public class ScheduleServiceUnitTest {
 
         when(scheduleRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.deleteSchedule(id));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> scheduleService.deleteSchedule(id));
 
         assertEquals("Schedule with id 1 does not exist", exception.getMessage());
         verify(scheduleRepository, never()).deleteById(any());

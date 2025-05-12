@@ -58,8 +58,8 @@ public class PatientServiceUnitTest {
 
         when(patientRepository.findById(id)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.getPatientById(id));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> patientService.getPatientById(id));
 
         assertEquals("Patient with id 1 does not exist", exception.getMessage());
     }
@@ -89,8 +89,8 @@ public class PatientServiceUnitTest {
 
     @Test
     void createPatientThrowsExceptionWhenPatientIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.createPatient(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> patientService.createPatient(null));
 
         assertEquals("Patient cannot be null", exception.getMessage());
         verify(patientRepository, never()).save(any());
@@ -127,8 +127,8 @@ public class PatientServiceUnitTest {
 
     @Test
     void updatePatientThrowsExceptionWhenPatientIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.updatePatient(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> patientService.updatePatient(null));
 
         assertEquals("Patient cannot be null", exception.getMessage());
         verify(patientRepository, never()).save(any());
@@ -138,8 +138,8 @@ public class PatientServiceUnitTest {
     void updatePatientThrowsExceptionWhenIdIsNull() {
         PatientDTO patientDTO = new PatientDTO();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.updatePatient(patientDTO));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> patientService.updatePatient(patientDTO));
 
         assertEquals("Patient ID cannot be null", exception.getMessage());
         verify(patientRepository, never()).save(any());
@@ -154,8 +154,8 @@ public class PatientServiceUnitTest {
 
         when(patientRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.updatePatient(patientDTO));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> patientService.updatePatient(patientDTO));
 
         assertEquals("Patient with id 1 does not exist", exception.getMessage());
         verify(patientRepository, never()).save(any());
@@ -179,8 +179,8 @@ public class PatientServiceUnitTest {
 
         when(patientRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                patientService.deletePatient(id));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> patientService.deletePatient(id));
 
         assertEquals("Patient with id 1 does not exist", exception.getMessage());
         verify(patientRepository, never()).deleteById(any());
