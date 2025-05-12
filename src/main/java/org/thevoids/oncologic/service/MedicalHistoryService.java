@@ -1,8 +1,8 @@
 package org.thevoids.oncologic.service;
 
-import org.thevoids.oncologic.dto.MedicalHistoryDTO;
-
 import java.util.List;
+
+import org.thevoids.oncologic.dto.entity.MedicalHistoryDTO;
 
 public interface MedicalHistoryService {
 

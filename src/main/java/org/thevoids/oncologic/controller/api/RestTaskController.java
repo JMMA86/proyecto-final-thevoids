@@ -1,11 +1,18 @@
 package org.thevoids.oncologic.controller.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.thevoids.oncologic.dto.TaskDTO;
+import org.thevoids.oncologic.dto.entity.TaskDTO;
 import org.thevoids.oncologic.entity.Task;
 import org.thevoids.oncologic.mapper.TaskMapper;
 import org.thevoids.oncologic.service.TaskService;
@@ -18,6 +25,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/v1/tasks")
+@Tag(name = "Tareas", description = "API para la gestión de tareas médicas")
 public class RestTaskController {
 
     @Autowired
@@ -30,6 +38,13 @@ public class RestTaskController {
      *
      * @return a list of all tasks as DTOs.
      */
+    @Operation(summary = "Obtener todas las tareas", description = "Recupera una lista de todas las tareas médicas")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de tareas recuperada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskDTO.class))),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver tareas"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PreAuthorize("hasAuthority('VIEW_APPOINTMENTS')")
     @GetMapping
     public ResponseEntity<List<TaskDTO>> getAllTasks() {
@@ -49,9 +64,20 @@ public class RestTaskController {
      * @param id the ID of the task to retrieve.
      * @return the task with the specified ID as a DTO.
      */
+    @Operation(summary = "Obtener tarea por ID", description = "Recupera una tarea específica por su ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Tarea encontrada",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Tarea no encontrada"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver tareas"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PreAuthorize("hasAuthority('VIEW_APPOINTMENTS')")
     @GetMapping("/{id}")
-    public ResponseEntity<TaskDTO> getTaskById(@PathVariable Long id) {
+    public ResponseEntity<TaskDTO> getTaskById(
+        @Parameter(description = "ID de la tarea a buscar")
+        @PathVariable Long id
+    ) {
         try {
             Task task = taskService.getTaskById(id);
             return ResponseEntity.ok(taskMapper.toTaskDTO(task));
@@ -68,9 +94,20 @@ public class RestTaskController {
      * @param dto the task to create as a DTO.
      * @return the created task as a DTO.
      */
+    @Operation(summary = "Crear tarea", description = "Crea una nueva tarea médica")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Tarea creada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Datos de tarea inválidos"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para crear tareas"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PreAuthorize("hasAuthority('ADD_APPOINTMENTS')")
     @PostMapping
-    public ResponseEntity<TaskDTO> createTask(@RequestBody TaskDTO dto) {
+    public ResponseEntity<TaskDTO> createTask(
+        @Parameter(description = "Datos de la tarea a crear")
+        @RequestBody TaskDTO dto
+    ) {
         try {
             Task task = taskMapper.toTask(dto);
             Task created = taskService.createTask(task);
@@ -89,9 +126,23 @@ public class RestTaskController {
      * @param dto the updated task data.
      * @return the updated task as a DTO.
      */
+    @Operation(summary = "Actualizar tarea", description = "Actualiza una tarea existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Tarea actualizada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Tarea no encontrada"),
+        @ApiResponse(responseCode = "400", description = "Datos de actualización inválidos"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para actualizar tareas"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PreAuthorize("hasAuthority('EDIT_APPOINTMENTS')")
     @PutMapping("/{id}")
-    public ResponseEntity<TaskDTO> updateTask(@PathVariable Long id, @RequestBody TaskDTO dto) {
+    public ResponseEntity<TaskDTO> updateTask(
+        @Parameter(description = "ID de la tarea a actualizar")
+        @PathVariable Long id,
+        @Parameter(description = "Datos actualizados de la tarea")
+        @RequestBody TaskDTO dto
+    ) {
         try {
             Task task = taskMapper.toTask(dto);
             task.setId(id);
@@ -110,9 +161,19 @@ public class RestTaskController {
      * @param id the ID of the task to delete.
      * @return a success or error response.
      */
+    @Operation(summary = "Eliminar tarea", description = "Elimina una tarea del sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Tarea eliminada exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Tarea no encontrada"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para eliminar tareas"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PreAuthorize("hasAuthority('DELETE_APPOINTMENTS')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTask(
+        @Parameter(description = "ID de la tarea a eliminar")
+        @PathVariable Long id
+    ) {
         try {
             taskService.deleteTask(id);
             return ResponseEntity.ok().build();

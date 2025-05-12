@@ -15,16 +15,24 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thevoids.oncologic.dto.ClinicAssignmentDTO;
+import org.thevoids.oncologic.dto.entity.ClinicAssignmentDTO;
 import org.thevoids.oncologic.entity.ClinicAssignment;
 import org.thevoids.oncologic.mapper.ClinicAssignmentMapper;
 import org.thevoids.oncologic.service.ClinicAssigmentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * REST controller for managing clinic assignments.
  */
 @RestController
 @RequestMapping("/api/v1/clinic-assignments")
+@Tag(name = "Asignaciones de Clínicas", description = "API para la gestión de asignaciones de médicos a clínicas")
 public class RestClinicAssignmentController {
 
     @Autowired
@@ -37,6 +45,12 @@ public class RestClinicAssignmentController {
      *
      * @return a list of all clinic assignments as DTOs.
      */
+    @Operation(summary = "Obtener todas las asignaciones", description = "Recupera una lista de todas las asignaciones de médicos a clínicas")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de asignaciones recuperada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ClinicAssignmentDTO.class))),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver asignaciones")
+    })
     @PreAuthorize("hasAuthority('VIEW_APPOINTMENTS')")
     @GetMapping
     public ResponseEntity<List<ClinicAssignmentDTO>> getAllClinicAssignments() {
@@ -56,9 +70,19 @@ public class RestClinicAssignmentController {
      * @param id the ID of the clinic assignment to retrieve.
      * @return the clinic assignment with the specified ID as a DTO.
      */
+    @Operation(summary = "Obtener asignación por ID", description = "Recupera una asignación específica por su ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Asignación encontrada",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ClinicAssignmentDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Asignación no encontrada"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver asignaciones")
+    })
     @PreAuthorize("hasAuthority('VIEW_APPOINTMENTS')")
     @GetMapping("/{id}")
-    public ResponseEntity<ClinicAssignmentDTO> getClinicAssignmentById(@PathVariable Long id) {
+    public ResponseEntity<ClinicAssignmentDTO> getClinicAssignmentById(
+        @Parameter(description = "ID de la asignación a buscar")
+        @PathVariable Long id
+    ) {
         try {
             ClinicAssignment assignment = clinicAssigmentService.getClinicAssignmentById(id);
             if (assignment == null)
@@ -75,9 +99,19 @@ public class RestClinicAssignmentController {
      * @param dto the clinic assignment to create as a DTO.
      * @return the created clinic assignment as a DTO.
      */
+    @Operation(summary = "Crear asignación", description = "Crea una nueva asignación de médico a clínica")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Asignación creada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ClinicAssignmentDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Datos de asignación inválidos"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para crear asignaciones")
+    })
     @PreAuthorize("hasAuthority('ADD_APPOINTMENTS')")
     @PostMapping
-    public ResponseEntity<ClinicAssignmentDTO> createClinicAssignment(@RequestBody ClinicAssignmentDTO dto) {
+    public ResponseEntity<ClinicAssignmentDTO> createClinicAssignment(
+        @Parameter(description = "Datos de la asignación a crear")
+        @RequestBody ClinicAssignmentDTO dto
+    ) {
         try {
             ClinicAssignment assignment = clinicAssignmentMapper.toClinicAssignment(dto);
             ClinicAssignment created = clinicAssigmentService.updateClinicAssignment(assignment);
@@ -97,10 +131,22 @@ public class RestClinicAssignmentController {
      * @param dto the updated clinic assignment data.
      * @return the updated clinic assignment as a DTO.
      */
+    @Operation(summary = "Actualizar asignación", description = "Actualiza una asignación existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Asignación actualizada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ClinicAssignmentDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Asignación no encontrada"),
+        @ApiResponse(responseCode = "400", description = "Datos de actualización inválidos"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para actualizar asignaciones")
+    })
     @PreAuthorize("hasAuthority('EDIT_APPOINTMENTS')")
     @PutMapping("/{id}")
-    public ResponseEntity<ClinicAssignmentDTO> updateClinicAssignment(@PathVariable Long id,
-            @RequestBody ClinicAssignmentDTO dto) {
+    public ResponseEntity<ClinicAssignmentDTO> updateClinicAssignment(
+        @Parameter(description = "ID de la asignación a actualizar")
+        @PathVariable Long id,
+        @Parameter(description = "Datos de la asignación a actualizar")
+        @RequestBody ClinicAssignmentDTO dto
+    ) {
         try {
             ClinicAssignment assignment = clinicAssignmentMapper.toClinicAssignment(dto);
             assignment.setId(id);
@@ -119,9 +165,18 @@ public class RestClinicAssignmentController {
      * @param id the ID of the clinic assignment to delete.
      * @return a success or error response.
      */
+    @Operation(summary = "Eliminar asignación", description = "Elimina una asignación del sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Asignación eliminada exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Asignación no encontrada"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para eliminar asignaciones")
+    })
     @PreAuthorize("hasAuthority('DELETE_APPOINTMENTS')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteClinicAssignment(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteClinicAssignment(
+        @Parameter(description = "ID de la asignación a eliminar")
+        @PathVariable Long id
+    ) {
         try {
             clinicAssigmentService.deleteClinicAssigment(id);
             return ResponseEntity.ok().build();

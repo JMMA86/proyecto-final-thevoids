@@ -17,7 +17,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.thevoids.oncologic.dto.AppointmentDTO;
+import org.thevoids.oncologic.dto.entity.AppointmentDTO;
 import org.thevoids.oncologic.entity.Appointment;
 import org.thevoids.oncologic.mapper.AppointmentMapper;
 import org.thevoids.oncologic.service.AppointmentService;

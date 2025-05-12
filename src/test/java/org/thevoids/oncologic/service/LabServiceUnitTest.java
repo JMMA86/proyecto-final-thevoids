@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.thevoids.oncologic.dto.LabDTO;
+import org.thevoids.oncologic.dto.entity.LabDTO;
 import org.thevoids.oncologic.entity.Lab;
 import org.thevoids.oncologic.entity.Patient;
 import org.thevoids.oncologic.entity.User;

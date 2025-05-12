@@ -24,9 +24,17 @@ import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.UserService;
 import org.thevoids.oncologic.service.AssignedRoles;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@Tag(name = "Usuarios", description = "API para la gestión de usuarios del sistema")
 public class RestUserController {
 
     @Autowired
@@ -63,9 +71,19 @@ public class RestUserController {
      * @param userId the ID of the user to retrieve.
      * @return the user with the specified ID as a DTO.
      */
+    @Operation(summary = "Obtener usuario por ID", description = "Recupera un usuario específico por su ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario encontrado",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver usuarios")
+    })
     @PreAuthorize("hasAuthority('VIEW_USERS')")
     @GetMapping("/{userId}")
-    public ResponseEntity<UserWithRolesDTO> getUserById(@PathVariable Long userId) {
+    public ResponseEntity<UserWithRolesDTO> getUserById(
+        @Parameter(description = "ID del usuario a buscar")
+        @PathVariable Long userId
+    ) {
         try {
             User user = userService.getUserById(userId);
             UserWithRolesDTO userDTO = userMapper.toUserWithRolesDTO(user);
@@ -83,9 +101,19 @@ public class RestUserController {
      * @param userDTO the user to create as a DTO.
      * @return the created user as a DTO.
      */
+    @Operation(summary = "Crear nuevo usuario", description = "Crea un nuevo usuario en el sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario creado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Datos de usuario inválidos"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para crear usuarios")
+    })
     @PreAuthorize("hasAuthority('ADD_USERS')")
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> createUser(
+        @Parameter(description = "Datos del usuario a crear")
+        @RequestBody UserDTO userDTO
+    ) {
         try {
             User user = userMapper.toUser(userDTO);
             User createdUser = userService.createUser(user);
@@ -105,9 +133,22 @@ public class RestUserController {
      * @param userDTO the updated user data.
      * @return the updated user as a DTO.
      */
+    @Operation(summary = "Actualizar usuario", description = "Actualiza los datos de un usuario existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario actualizado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+        @ApiResponse(responseCode = "400", description = "Datos de actualización inválidos"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para actualizar usuarios")
+    })
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @PutMapping("/{userId}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long userId, @RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> updateUser(
+        @Parameter(description = "ID del usuario a actualizar")
+        @PathVariable Long userId,
+        @Parameter(description = "Datos del usuario a actualizar")
+        @RequestBody UserDTO userDTO
+    ) {
         try {
             User existingUser = userService.getUserById(userId);
             existingUser.setFullName(userDTO.getFullName());
@@ -134,9 +175,18 @@ public class RestUserController {
      * @param userId the ID of the user to delete.
      * @return a success or error response.
      */
+    @Operation(summary = "Eliminar usuario", description = "Elimina un usuario del sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario eliminado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para eliminar usuarios")
+    })
     @PreAuthorize("hasAuthority('DELETE_USERS')")
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+    public ResponseEntity<Void> deleteUser(
+        @Parameter(description = "ID del usuario a eliminar")
+        @PathVariable Long userId
+    ) {
         try {
             User user = userService.getUserById(userId);
             userService.deleteUser(user);
@@ -159,7 +209,12 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @PostMapping("/{userId}/roles/{roleId}")
-    public ResponseEntity<UserWithRolesDTO> assignRoleToUser(@PathVariable Long userId, @PathVariable Long roleId) {
+    public ResponseEntity<UserWithRolesDTO> assignRoleToUser(
+        @Parameter(description = "ID del usuario")
+        @PathVariable Long userId,
+        @Parameter(description = "ID del rol")
+        @PathVariable Long roleId
+    ) {
         try {
             assignedRolesService.assignRoleToUser(roleId, userId);
             UserWithRolesDTO userWithRolesDTO = userMapper.toUserWithRolesDTO(userService.getUserById(userId));
@@ -182,7 +237,12 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @DeleteMapping("/{userId}/roles/{roleId}")
-    public ResponseEntity<UserWithRolesDTO> removeRoleFromUser(@PathVariable Long userId, @PathVariable Long roleId) {
+    public ResponseEntity<UserWithRolesDTO> removeRoleFromUser(
+        @Parameter(description = "ID del usuario")
+        @PathVariable Long userId,
+        @Parameter(description = "ID del rol")
+        @PathVariable Long roleId
+    ) {
         try {
             assignedRolesService.removeRoleFromUser(roleId, userId);
             UserWithRolesDTO userWithRolesDTO = userMapper.toUserWithRolesDTO(userService.getUserById(userId));

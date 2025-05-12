@@ -1,7 +1,7 @@
 package org.thevoids.oncologic.service.impl;
 
 import org.springframework.stereotype.Service;
-import org.thevoids.oncologic.dto.MedicalHistoryDTO;
+import org.thevoids.oncologic.dto.entity.MedicalHistoryDTO;
 import org.thevoids.oncologic.entity.MedicalHistory;
 import org.thevoids.oncologic.mapper.MedicalHistoryMapper;
 import org.thevoids.oncologic.repository.MedicalHistoryRepository;

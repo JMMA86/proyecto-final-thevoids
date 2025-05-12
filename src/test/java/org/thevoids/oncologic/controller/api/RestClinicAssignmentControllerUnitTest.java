@@ -16,7 +16,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.thevoids.oncologic.dto.ClinicAssignmentDTO;
+import org.thevoids.oncologic.dto.entity.ClinicAssignmentDTO;
 import org.thevoids.oncologic.entity.ClinicAssignment;
 import org.thevoids.oncologic.mapper.ClinicAssignmentMapper;
 import org.thevoids.oncologic.service.ClinicAssigmentService;

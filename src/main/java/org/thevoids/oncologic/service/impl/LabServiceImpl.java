@@ -2,7 +2,7 @@ package org.thevoids.oncologic.service.impl;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.thevoids.oncologic.dto.LabDTO;
+import org.thevoids.oncologic.dto.entity.LabDTO;
 import org.thevoids.oncologic.entity.Lab;
 import org.thevoids.oncologic.entity.Patient;
 import org.thevoids.oncologic.entity.User;

@@ -24,9 +24,17 @@ import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.RoleMapper;
 import org.thevoids.oncologic.service.RolePermissionService;
 import org.thevoids.oncologic.service.RoleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v1/roles")
+@Tag(name = "Roles", description = "API para la gestión de roles y permisos de usuarios")
 public class RestRoleController {
 
     @Autowired
@@ -43,6 +51,12 @@ public class RestRoleController {
      *
      * @return a list of all roles as DTOs.
      */
+    @Operation(summary = "Obtener todos los roles", description = "Recupera una lista de todos los roles disponibles")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de roles recuperada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoleDTO.class))),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver roles")
+    })
     @PreAuthorize("hasAuthority('VIEW_ROLES')")
     @GetMapping
     public ResponseEntity<List<RoleDTO>> getAllRoles() {
@@ -58,14 +72,24 @@ public class RestRoleController {
     }
 
     /**
-     * Retrieves a specific role by its ID.
+     * Retrieves a role by its ID.
      *
      * @param roleId the ID of the role to retrieve.
      * @return the role with the specified ID as a DTO.
      */
+    @Operation(summary = "Obtener rol por ID", description = "Recupera un rol específico por su ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Rol encontrado",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoleDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Rol no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver roles")
+    })
     @PreAuthorize("hasAuthority('VIEW_ROLES')")
     @GetMapping("/{roleId}")
-    public ResponseEntity<RoleWithPermissionsDTO> getRoleById(@PathVariable Long roleId) {
+    public ResponseEntity<RoleWithPermissionsDTO> getRoleById(
+        @Parameter(description = "ID del rol a buscar")
+        @PathVariable Long roleId
+    ) {
         try {
             Role role = roleService.getRole(roleId);
             RoleWithPermissionsDTO roleDTO = roleMapper.toRoleWithPermissionsDTO(role);
@@ -83,9 +107,19 @@ public class RestRoleController {
      * @param roleDTO the role to create as a DTO.
      * @return the created role as a DTO.
      */
+    @Operation(summary = "Crear rol", description = "Crea un nuevo rol en el sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Rol creado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoleDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Datos de rol inválidos"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para crear roles")
+    })
     @PreAuthorize("hasAuthority('ADD_ROLES')")
     @PostMapping
-    public ResponseEntity<RoleDTO> createRole(@RequestBody RoleDTO roleDTO) {
+    public ResponseEntity<RoleDTO> createRole(
+        @Parameter(description = "Datos del rol a crear")
+        @RequestBody RoleDTO roleDTO
+    ) {
         try {
             Role role = new Role();
             role.setRoleName(roleDTO.getRoleName());
@@ -103,12 +137,25 @@ public class RestRoleController {
      * Updates an existing role.
      *
      * @param roleId the ID of the role to update.
-     * @param roleDTO the updated role data.
+     * @param roleDTO the updated role as a DTO.
      * @return the updated role as a DTO.
      */
+    @Operation(summary = "Actualizar rol", description = "Actualiza un rol existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Rol actualizado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoleDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Rol no encontrado"),
+        @ApiResponse(responseCode = "400", description = "Datos de actualización inválidos"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para actualizar roles")
+    })
     @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @PutMapping("/{roleId}")
-    public ResponseEntity<RoleDTO> updateRole(@PathVariable Long roleId, @RequestBody RoleDTO roleDTO) {
+    public ResponseEntity<RoleDTO> updateRole(
+        @Parameter(description = "ID del rol a actualizar")
+        @PathVariable Long roleId,
+        @Parameter(description = "Datos del rol a actualizar")
+        @RequestBody RoleDTO roleDTO
+    ) {
         try {
             Role existingRole = roleService.getRole(roleId);
             existingRole.setRoleName(roleDTO.getRoleName());
@@ -123,14 +170,23 @@ public class RestRoleController {
     }
 
     /**
-     * Deletes a role.
+     * Deletes a role by its ID.
      *
      * @param roleId the ID of the role to delete.
-     * @return a success or error response.
+     * @return a response entity with no content.
      */
+    @Operation(summary = "Eliminar rol", description = "Elimina un rol del sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Rol eliminado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Rol no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para eliminar roles")
+    })
     @PreAuthorize("hasAuthority('DELETE_ROLES')")
     @DeleteMapping("/{roleId}")
-    public ResponseEntity<Void> deleteRole(@PathVariable Long roleId) {
+    public ResponseEntity<Void> deleteRole(
+        @Parameter(description = "ID del rol a eliminar")
+        @PathVariable Long roleId
+    ) {
         try {
             Role role = roleService.getRole(roleId);
             roleService.deleteRole(role);
@@ -145,15 +201,26 @@ public class RestRoleController {
     }
 
     /**
-     * Adds a permission to a role.
+     * Assigns a permission to a role.
      *
-     * @param roleId the ID of the role.
-     * @param permissionId the ID of the permission to add.
-     * @return a success or error response.
+     * @param roleId the ID of the role to assign the permission to.
+     * @param permissionId the ID of the permission to assign.
+     * @return the role with the assigned permission as a DTO.
      */
+    @Operation(summary = "Asignar permiso a rol", description = "Asigna un permiso específico a un rol")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Permiso asignado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Rol o permiso no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para asignar permisos")
+    })
     @PreAuthorize("hasAuthority('EDIT_ROLES')")
     @PostMapping("/{roleId}/permissions/{permissionId}")
-    public ResponseEntity<RoleWithPermissionsDTO> assignPermissionToRole(@PathVariable Long roleId, @PathVariable Long permissionId) {
+    public ResponseEntity<RoleWithPermissionsDTO> assignPermissionToRole(
+        @Parameter(description = "ID del rol a asignar el permiso")
+        @PathVariable Long roleId,
+        @Parameter(description = "ID del permiso a asignar")
+        @PathVariable Long permissionId
+    ) {
         try {
             rolePermissionService.assignPermissionToRole(permissionId, roleId);
             RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(roleId));
@@ -170,13 +237,24 @@ public class RestRoleController {
     /**
      * Removes a permission from a role.
      *
-     * @param roleId the ID of the role.
+     * @param roleId the ID of the role to remove the permission from.
      * @param permissionId the ID of the permission to remove.
-     * @return a success or error response.
+     * @return the role with the removed permission as a DTO.
      */
-    @PreAuthorize("hasAuthority('EDIT_ROLES')")
+    @Operation(summary = "Remover permiso de rol", description = "Remueve un permiso específico de un rol")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Permiso removido exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Rol o permiso no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para remover permisos")
+    })
+    @PreAuthorize("hasAuthority('DELETE_ROLES')")
     @DeleteMapping("/{roleId}/permissions/{permissionId}")
-    public ResponseEntity<RoleWithPermissionsDTO> removePermissionFromRole(@PathVariable Long roleId, @PathVariable Long permissionId) {
+    public ResponseEntity<RoleWithPermissionsDTO> removePermissionFromRole(
+        @Parameter(description = "ID del rol a remover el permiso")
+        @PathVariable Long roleId,
+        @Parameter(description = "ID del permiso a remover")
+        @PathVariable Long permissionId
+    ) {
         try {
             rolePermissionService.removePermissionFromRole(permissionId, roleId);
             RoleWithPermissionsDTO roleWithPermissionsDTO = roleMapper.toRoleWithPermissionsDTO(roleService.getRole(roleId));

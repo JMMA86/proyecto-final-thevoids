@@ -3,6 +3,13 @@ package org.thevoids.oncologic.controller.api;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,6 +21,7 @@ import org.thevoids.oncologic.dto.custom.UserProfileDTO;
 
 @RestController
 @RequestMapping("/api/v1/profile")
+@Tag(name = "Perfil", description = "API para la gestión del perfil de usuario")
 public class RestHomeController {
 
     /**
@@ -22,8 +30,17 @@ public class RestHomeController {
      * @param authentication the authenticated user.
      * @return a response with the user's profile information.
      */
+    @Operation(summary = "Obtener perfil de usuario", description = "Recupera la información del perfil del usuario autenticado")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Perfil recuperado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserProfileDTO.class))),
+        @ApiResponse(responseCode = "401", description = "Usuario no autenticado")
+    })
     @GetMapping
-    public ResponseEntity<UserProfileDTO> getUserProfile(Authentication authentication) {
+    public ResponseEntity<UserProfileDTO> getUserProfile(
+        @Parameter(description = "Datos de autenticación")
+        Authentication authentication
+    ) {
         if (authentication == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

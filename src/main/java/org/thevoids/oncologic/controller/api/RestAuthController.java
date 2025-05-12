@@ -1,5 +1,12 @@
 package org.thevoids.oncologic.controller.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +25,7 @@ import org.thevoids.oncologic.utils.JwtService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Autenticación", description = "API para la gestión de autenticación de usuarios")
 public class RestAuthController {
     @Autowired
     private JwtService jwtService;
@@ -33,8 +41,18 @@ public class RestAuthController {
      * @param request AuthRequest object containing username and password
      * @return JWT token if authentication is successful
      */
+    @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y genera un token JWT")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Autenticación exitosa",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponseDTO.class))),
+        @ApiResponse(responseCode = "401", description = "Credenciales inválidas"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<AuthResponseDTO> login(
+        @Parameter(description = "Datos de autenticación")
+        @RequestBody AuthRequest request
+    ) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
