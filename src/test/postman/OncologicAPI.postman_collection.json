@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "15d2f96d-bcb3-4ba5-85a7-9bb9658bcd28",
+		"_postman_id": "add81057-197a-4c5d-88ff-0704ef013b56",
 		"name": "OncologicAPI",
 		"description": "Combined collection for testing all controllers of the Oncologic API in sequence\n\n## Automatic Environment Setup\n\nThis collection automatically sets up the required environment variables if they don't exist:\n\n- `baseUrl`: Default is 'http://localhost:8080'\n- `username`: Default is '123456789'\n- `password`: Default is '123'\n- `userId`: Default is 1\n- `technicianId`: Default is 1\n- `roleId`: Default is 1\n- `permissionId`: Default is 1\n\nThe following variables are set automatically during execution:\n\n- `token`: Set after successful login\n- `patientId`: Set after creating a patient\n- `medicalHistoryId`: Set after creating a medical history\n- `labId`: Set after creating a lab test\n- `scheduleId`: Set after creating a schedule\n\nYou can override these defaults by setting the variables in your environment before running the collection.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -1690,7 +1690,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"patientId\": {{patientId}},\n  \"labTechnicianId\": {{labTechnicianId}},\n  \"testType\": \"Blood Test\",\n  \"requestDate\": \"{{$isoTimestamp}}\"\n}"
+							"raw": "{\n  \"patientId\": {{patientId}},\n  \"labTechnicianId\": {{technicianId}},\n  \"testType\": \"Blood Test\",\n  \"requestDate\": \"{{$isoTimestamp}}\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/labs",

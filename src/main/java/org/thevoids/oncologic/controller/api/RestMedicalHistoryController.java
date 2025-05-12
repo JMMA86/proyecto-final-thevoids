@@ -9,7 +9,6 @@ import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.exception.InvalidOperationException;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/medical-histories")
@@ -21,76 +20,66 @@ public class RestMedicalHistoryController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllMedicalHistories() {
+    public ResponseEntity<List<MedicalHistoryDTO>> getAllMedicalHistories() {
         try {
             List<MedicalHistoryDTO> histories = medicalHistoryService.getAllMedicalHistories();
             return ResponseEntity.ok(histories);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getMedicalHistoryById(@PathVariable Long id) {
+    public ResponseEntity<MedicalHistoryDTO> getMedicalHistoryById(@PathVariable Long id) {
         try {
             MedicalHistoryDTO history = medicalHistoryService.getMedicalHistoryById(id);
             return ResponseEntity.ok(history);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
     @PostMapping
-    public ResponseEntity<?> createMedicalHistory(@RequestBody MedicalHistoryDTO dto) {
+    public ResponseEntity<MedicalHistoryDTO> createMedicalHistory(@RequestBody MedicalHistoryDTO dto) {
         try {
             MedicalHistoryDTO created = medicalHistoryService.createMedicalHistory(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (InvalidOperationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateMedicalHistory(@PathVariable Long id, @RequestBody MedicalHistoryDTO dto) {
+    public ResponseEntity<MedicalHistoryDTO> updateMedicalHistory(@PathVariable Long id,
+            @RequestBody MedicalHistoryDTO dto) {
         try {
             dto.setHistoryId(id);
             MedicalHistoryDTO updated = medicalHistoryService.updateMedicalHistory(dto);
             return ResponseEntity.ok(updated);
         } catch (InvalidOperationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteMedicalHistory(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteMedicalHistory(@PathVariable Long id) {
         try {
             medicalHistoryService.deleteMedicalHistory(id);
             return ResponseEntity.noContent().build();
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

@@ -7,7 +7,6 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,34 +52,29 @@ class RestPatientControllerUnitTest {
     @Test
     void testGetAllPatients_Success() {
         when(patientService.getAllPatients()).thenReturn(Arrays.asList(testPatient1, testPatient2));
-        ResponseEntity<?> response = patientController.getAllPatients();
+        ResponseEntity<List<PatientDTO>> response = patientController.getAllPatients();
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertTrue(response.getBody() instanceof List);
-        List<?> patients = (List<?>) response.getBody();
+        List<PatientDTO> patients = response.getBody();
         assertEquals(2, patients.size());
-        assertTrue(patients.get(0) instanceof PatientDTO);
-        assertEquals("A+", ((PatientDTO) patients.get(0)).getBloodGroup());
-        assertEquals("O-", ((PatientDTO) patients.get(1)).getBloodGroup());
+        assertEquals("A+", patients.get(0).getBloodGroup());
+        assertEquals("O-", patients.get(1).getBloodGroup());
     }
 
     @Test
     void testGetAllPatients_Failure() {
         when(patientService.getAllPatients()).thenThrow(new RuntimeException("Database error"));
-        ResponseEntity<?> response = patientController.getAllPatients();
+        ResponseEntity<List<PatientDTO>> response = patientController.getAllPatients();
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Database error", errorResponse.get("error"));
+        assertNull(response.getBody());
     }
 
     @Test
     void testGetPatientById_Success() {
         when(patientService.getPatientById(1L)).thenReturn(testPatient1);
-        ResponseEntity<?> response = patientController.getPatientById(1L);
+        ResponseEntity<PatientDTO> response = patientController.getPatientById(1L);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        PatientDTO patient = (PatientDTO) response.getBody();
+        PatientDTO patient = response.getBody();
         assertNotNull(patient);
         assertEquals(1L, patient.getPatientId());
         assertEquals("A+", patient.getBloodGroup());
@@ -89,20 +83,17 @@ class RestPatientControllerUnitTest {
     @Test
     void testGetPatientById_NotFound() {
         when(patientService.getPatientById(1L)).thenThrow(new ResourceNotFoundException("Patient", "id", 1L));
-        ResponseEntity<?> response = patientController.getPatientById(1L);
+        ResponseEntity<PatientDTO> response = patientController.getPatientById(1L);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Patient no encontrado con id : '1'", errorResponse.get("error"));
+        assertNull(response.getBody());
     }
 
     @Test
     void testCreatePatient_Success() {
         when(patientService.createPatient(any(PatientDTO.class))).thenReturn(testPatient1);
-        ResponseEntity<?> response = patientController.createPatient(testPatient1);
+        ResponseEntity<PatientDTO> response = patientController.createPatient(testPatient1);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        PatientDTO patient = (PatientDTO) response.getBody();
+        PatientDTO patient = response.getBody();
         assertNotNull(patient);
         assertEquals(1L, patient.getPatientId());
         assertEquals("A+", patient.getBloodGroup());
@@ -112,20 +103,17 @@ class RestPatientControllerUnitTest {
     void testCreatePatient_BadRequest() {
         when(patientService.createPatient(any(PatientDTO.class)))
                 .thenThrow(new InvalidOperationException("Invalid data"));
-        ResponseEntity<?> response = patientController.createPatient(testPatient1);
+        ResponseEntity<PatientDTO> response = patientController.createPatient(testPatient1);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Invalid data", errorResponse.get("error"));
+        assertNull(response.getBody());
     }
 
     @Test
     void testUpdatePatient_Success() {
         when(patientService.updatePatient(any(PatientDTO.class))).thenReturn(testPatient1);
-        ResponseEntity<?> response = patientController.updatePatient(1L, testPatient1);
+        ResponseEntity<PatientDTO> response = patientController.updatePatient(1L, testPatient1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        PatientDTO patient = (PatientDTO) response.getBody();
+        PatientDTO patient = response.getBody();
         assertNotNull(patient);
         assertEquals(1L, patient.getPatientId());
         assertEquals("A+", patient.getBloodGroup());
@@ -136,17 +124,14 @@ class RestPatientControllerUnitTest {
     void testUpdatePatient_BadRequest() {
         when(patientService.updatePatient(any(PatientDTO.class)))
                 .thenThrow(new InvalidOperationException("Invalid data"));
-        ResponseEntity<?> response = patientController.updatePatient(1L, testPatient1);
+        ResponseEntity<PatientDTO> response = patientController.updatePatient(1L, testPatient1);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Invalid data", errorResponse.get("error"));
+        assertNull(response.getBody());
     }
 
     @Test
     void testDeletePatient_Success() {
-        ResponseEntity<?> response = patientController.deletePatient(1L);
+        ResponseEntity<Void> response = patientController.deletePatient(1L);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(patientService, times(1)).deletePatient(1L);
     }
@@ -154,11 +139,8 @@ class RestPatientControllerUnitTest {
     @Test
     void testDeletePatient_NotFound() {
         doThrow(new ResourceNotFoundException("Patient", "id", 1L)).when(patientService).deletePatient(anyLong());
-        ResponseEntity<?> response = patientController.deletePatient(1L);
+        ResponseEntity<Void> response = patientController.deletePatient(1L);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Patient no encontrado con id : '1'", errorResponse.get("error"));
+        assertNull(response.getBody());
     }
 }

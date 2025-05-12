@@ -2,6 +2,7 @@ package org.thevoids.oncologic.controller.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
@@ -12,7 +13,6 @@ import static org.mockito.Mockito.when;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,6 @@ import org.thevoids.oncologic.dto.MedicalHistoryDTO;
 import org.thevoids.oncologic.service.MedicalHistoryService;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.exception.InvalidOperationException;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RestMedicalHistoryControllerUnitTest {
 
@@ -70,16 +69,14 @@ class RestMedicalHistoryControllerUnitTest {
         when(medicalHistoryService.getAllMedicalHistories())
                 .thenReturn(Arrays.asList(testMedicalHistory1, testMedicalHistory2));
         // Act
-        ResponseEntity<?> response = medicalHistoryController.getAllMedicalHistories();
+        ResponseEntity<List<MedicalHistoryDTO>> response = medicalHistoryController.getAllMedicalHistories();
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertTrue(response.getBody() instanceof List);
-        List<?> medicalHistories = (List<?>) response.getBody();
+        List<MedicalHistoryDTO> medicalHistories = response.getBody();
         assertEquals(2, medicalHistories.size());
-        assertTrue(medicalHistories.get(0) instanceof MedicalHistoryDTO);
-        assertEquals("Lung Cancer", ((MedicalHistoryDTO) medicalHistories.get(0)).getDiagnosis());
-        assertEquals("Breast Cancer", ((MedicalHistoryDTO) medicalHistories.get(1)).getDiagnosis());
+        assertEquals("Lung Cancer", medicalHistories.get(0).getDiagnosis());
+        assertEquals("Breast Cancer", medicalHistories.get(1).getDiagnosis());
     }
 
     @Test
@@ -87,13 +84,10 @@ class RestMedicalHistoryControllerUnitTest {
         // Arrange
         when(medicalHistoryService.getAllMedicalHistories()).thenThrow(new RuntimeException("Database error"));
         // Act
-        ResponseEntity<?> response = medicalHistoryController.getAllMedicalHistories();
+        ResponseEntity<List<MedicalHistoryDTO>> response = medicalHistoryController.getAllMedicalHistories();
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Database error", errorResponse.get("error"));
+        assertNull(response.getBody());
     }
 
     @Test
@@ -101,10 +95,10 @@ class RestMedicalHistoryControllerUnitTest {
         // Arrange
         when(medicalHistoryService.getMedicalHistoryById(1L)).thenReturn(testMedicalHistory1);
         // Act
-        ResponseEntity<?> response = medicalHistoryController.getMedicalHistoryById(1L);
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.getMedicalHistoryById(1L);
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        MedicalHistoryDTO medicalHistory = (MedicalHistoryDTO) response.getBody();
+        MedicalHistoryDTO medicalHistory = response.getBody();
         assertNotNull(medicalHistory);
         assertEquals(1L, medicalHistory.getHistoryId());
         assertEquals("Lung Cancer", medicalHistory.getDiagnosis());
@@ -116,13 +110,10 @@ class RestMedicalHistoryControllerUnitTest {
         when(medicalHistoryService.getMedicalHistoryById(1L))
                 .thenThrow(new ResourceNotFoundException("MedicalHistory", "id", 1L));
         // Act
-        ResponseEntity<?> response = medicalHistoryController.getMedicalHistoryById(1L);
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.getMedicalHistoryById(1L);
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("MedicalHistory no encontrado con id : '1'", errorResponse.get("error"));
+        assertNull(response.getBody());
     }
 
     @Test
@@ -130,10 +121,10 @@ class RestMedicalHistoryControllerUnitTest {
         // Arrange
         when(medicalHistoryService.createMedicalHistory(any(MedicalHistoryDTO.class))).thenReturn(testMedicalHistory1);
         // Act
-        ResponseEntity<?> response = medicalHistoryController.createMedicalHistory(testMedicalHistory1);
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.createMedicalHistory(testMedicalHistory1);
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        MedicalHistoryDTO medicalHistory = (MedicalHistoryDTO) response.getBody();
+        MedicalHistoryDTO medicalHistory = response.getBody();
         assertNotNull(medicalHistory);
         assertEquals(1L, medicalHistory.getHistoryId());
         assertEquals("Lung Cancer", medicalHistory.getDiagnosis());
@@ -145,13 +136,10 @@ class RestMedicalHistoryControllerUnitTest {
         when(medicalHistoryService.createMedicalHistory(any(MedicalHistoryDTO.class)))
                 .thenThrow(new InvalidOperationException("Invalid data"));
         // Act
-        ResponseEntity<?> response = medicalHistoryController.createMedicalHistory(testMedicalHistory1);
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.createMedicalHistory(testMedicalHistory1);
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Invalid data", errorResponse.get("error"));
+        assertNull(response.getBody());
     }
 
     @Test
@@ -159,10 +147,11 @@ class RestMedicalHistoryControllerUnitTest {
         // Arrange
         when(medicalHistoryService.updateMedicalHistory(any(MedicalHistoryDTO.class))).thenReturn(testMedicalHistory1);
         // Act
-        ResponseEntity<?> response = medicalHistoryController.updateMedicalHistory(1L, testMedicalHistory1);
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.updateMedicalHistory(1L,
+                testMedicalHistory1);
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        MedicalHistoryDTO medicalHistory = (MedicalHistoryDTO) response.getBody();
+        MedicalHistoryDTO medicalHistory = response.getBody();
         assertNotNull(medicalHistory);
         assertEquals(1L, medicalHistory.getHistoryId());
         assertEquals("Lung Cancer", medicalHistory.getDiagnosis());
@@ -175,21 +164,20 @@ class RestMedicalHistoryControllerUnitTest {
         when(medicalHistoryService.updateMedicalHistory(any(MedicalHistoryDTO.class)))
                 .thenThrow(new InvalidOperationException("Invalid data"));
         // Act
-        ResponseEntity<?> response = medicalHistoryController.updateMedicalHistory(1L, testMedicalHistory1);
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.updateMedicalHistory(1L,
+                testMedicalHistory1);
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Invalid data", errorResponse.get("error"));
+        assertNull(response.getBody());
     }
 
     @Test
     void testDeleteMedicalHistory_Success() {
         // Act
-        ResponseEntity<?> response = medicalHistoryController.deleteMedicalHistory(1L);
+        ResponseEntity<Void> response = medicalHistoryController.deleteMedicalHistory(1L);
         // Assert
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody());
         verify(medicalHistoryService, times(1)).deleteMedicalHistory(1L);
     }
 
@@ -199,12 +187,9 @@ class RestMedicalHistoryControllerUnitTest {
         doThrow(new ResourceNotFoundException("MedicalHistory", "id", 1L)).when(medicalHistoryService)
                 .deleteMedicalHistory(anyLong());
         // Act
-        ResponseEntity<?> response = medicalHistoryController.deleteMedicalHistory(1L);
+        ResponseEntity<Void> response = medicalHistoryController.deleteMedicalHistory(1L);
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("MedicalHistory no encontrado con id : '1'", errorResponse.get("error"));
+        assertNull(response.getBody());
     }
 }
