@@ -1,8 +1,8 @@
 package org.thevoids.oncologic.service;
 
-import org.thevoids.oncologic.dto.ScheduleDTO;
-
 import java.util.List;
+
+import org.thevoids.oncologic.dto.entity.ScheduleDTO;
 
 public interface ScheduleService {
     List<ScheduleDTO> getAllSchedules();

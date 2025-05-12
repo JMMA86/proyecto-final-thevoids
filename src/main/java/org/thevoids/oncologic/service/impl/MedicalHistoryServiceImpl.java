@@ -1,7 +1,7 @@
 package org.thevoids.oncologic.service.impl;
 
 import org.springframework.stereotype.Service;
-import org.thevoids.oncologic.dto.MedicalHistoryDTO;
+import org.thevoids.oncologic.dto.entity.MedicalHistoryDTO;
 import org.thevoids.oncologic.entity.MedicalHistory;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.exception.InvalidOperationException;
@@ -18,6 +18,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     private final MedicalHistoryMapper medicalHistoryMapper;
 
     public MedicalHistoryServiceImpl(MedicalHistoryRepository medicalHistoryRepository,
+
             MedicalHistoryMapper medicalHistoryMapper) {
         this.medicalHistoryRepository = medicalHistoryRepository;
         this.medicalHistoryMapper = medicalHistoryMapper;
@@ -60,7 +61,8 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
         }
 
         if (!medicalHistoryRepository.existsById(medicalHistoryDTO.getHistoryId())) {
-            throw new ResourceNotFoundException("MedicalHistory", "id", medicalHistoryDTO.getHistoryId());
+            throw new ResourceNotFoundException(
+                    "MedicalHistory", "id", medicalHistoryDTO.getHistoryId());
         }
 
         MedicalHistory medicalHistory = medicalHistoryMapper.toMedicalHistory(medicalHistoryDTO);

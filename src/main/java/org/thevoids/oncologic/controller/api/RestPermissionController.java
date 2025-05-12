@@ -22,9 +22,17 @@ import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.PermissionMapper;
 import org.thevoids.oncologic.service.PermissionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v1/permissions")
+@Tag(name = "Permisos", description = "API para la gestión de permisos del sistema")
 public class RestPermissionController {
 
     @Autowired
@@ -38,6 +46,12 @@ public class RestPermissionController {
      *
      * @return a list of all permissions as DTOs.
      */
+    @Operation(summary = "Obtener todos los permisos", description = "Recupera una lista de todos los permisos disponibles")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de permisos recuperada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = PermissionDTO.class))),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver permisos")
+    })
     @PreAuthorize("hasAuthority('VIEW_PERMISSIONS')")
     @GetMapping
     public ResponseEntity<List<PermissionDTO>> getAllPermissions() {
@@ -55,12 +69,22 @@ public class RestPermissionController {
     /**
      * Retrieves a specific permission by its ID.
      *
-     * @param permissionId the ID of the permission to retrieve.
+     * @param id the ID of the permission to retrieve.
      * @return the permission with the specified ID as a DTO.
      */
+    @Operation(summary = "Obtener permiso por ID", description = "Recupera un permiso específico por su ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Permiso encontrado",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = PermissionDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Permiso no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver permisos")
+    })
     @PreAuthorize("hasAuthority('VIEW_PERMISSIONS')")
     @GetMapping("/{permissionId}")
-    public ResponseEntity<PermissionDTO> getPermissionById(@PathVariable Long permissionId) {
+    public ResponseEntity<PermissionDTO> getPermissionById(
+        @Parameter(description = "ID del permiso a buscar")
+        @PathVariable Long permissionId
+    ) {
         try {
             PermissionDTO permissionDTO = permissionMapper.toPermissionDTO(
                 permissionService.getPermission(permissionId)
@@ -80,9 +104,19 @@ public class RestPermissionController {
      * @param permissionDTO the permission to create as a DTO.
      * @return the created permission as a DTO.
      */
+    @Operation(summary = "Crear permiso", description = "Crea un nuevo permiso en el sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Permiso creado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = PermissionDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Datos de permiso inválidos"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para crear permisos")
+    })
     @PreAuthorize("hasAuthority('ADD_PERMISSIONS')")
     @PostMapping
-    public ResponseEntity<PermissionDTO> createPermission(@RequestBody PermissionDTO permissionDTO) {
+    public ResponseEntity<PermissionDTO> createPermission(
+        @Parameter(description = "Datos del permiso a crear")
+        @RequestBody PermissionDTO permissionDTO
+    ) {
         try {
             Permission permission = permissionMapper.toPermission(permissionDTO);
             Permission createdPermission = permissionService.createPermission(permission);
@@ -98,13 +132,26 @@ public class RestPermissionController {
     /**
      * Updates an existing permission.
      *
-     * @param permissionId the ID of the permission to update.
-     * @param permissionDTO the updated permission data.
+     * @param id the ID of the permission to update.
+     * @param permissionDTO the updated permission as a DTO.
      * @return the updated permission as a DTO.
      */
+    @Operation(summary = "Actualizar permiso", description = "Actualiza un permiso existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Permiso actualizado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = PermissionDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Permiso no encontrado"),
+        @ApiResponse(responseCode = "400", description = "Datos de actualización inválidos"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para actualizar permisos")
+    })
     @PreAuthorize("hasAuthority('EDIT_PERMISSIONS')")
     @PutMapping("/{permissionId}")
-    public ResponseEntity<PermissionDTO> updatePermission(@PathVariable Long permissionId, @RequestBody PermissionDTO permissionDTO) {
+    public ResponseEntity<PermissionDTO> updatePermission(
+        @Parameter(description = "ID del permiso a actualizar")
+        @PathVariable Long permissionId,
+        @Parameter(description = "Datos del permiso a actualizar")
+        @RequestBody PermissionDTO permissionDTO
+    ) {
         try {
             Permission existingPermission = permissionService.getPermission(permissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Permiso", "id", permissionId));
@@ -120,14 +167,23 @@ public class RestPermissionController {
     }
 
     /**
-     * Deletes a permission.
+     * Deletes a permission by its ID.
      *
-     * @param permissionId the ID of the permission to delete.
-     * @return a success or error response.
+     * @param id the ID of the permission to delete.
+     * @return a response entity with no content.
      */
+    @Operation(summary = "Eliminar permiso", description = "Elimina un permiso del sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Permiso eliminado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Permiso no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para eliminar permisos")
+    })
     @PreAuthorize("hasAuthority('DELETE_PERMISSIONS')")
     @DeleteMapping("/{permissionId}")
-    public ResponseEntity<Void> deletePermission(@PathVariable Long permissionId) {
+    public ResponseEntity<Void> deletePermission(
+        @Parameter(description = "ID del permiso a eliminar")
+        @PathVariable Long permissionId
+    ) {
         try {
             permissionService.deletePermission(permissionId);
             return ResponseEntity.ok().build();

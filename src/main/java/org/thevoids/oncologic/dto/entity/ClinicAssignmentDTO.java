@@ -1,4 +1,4 @@
-package org.thevoids.oncologic.dto;
+package org.thevoids.oncologic.dto.entity;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,11 +11,10 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TaskDTO {
+public class ClinicAssignmentDTO {
     private Long id;
-    private String description;
-    private Boolean completed;
-    private Date startDate;
-    private Date endDate;
-    private Long appointmentId;
+    private Date startTime;
+    private Date endTime;
+    private Long clinicId;
+    private Long userId;
 }

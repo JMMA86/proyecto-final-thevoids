@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Date;
 
 import org.junit.jupiter.api.Test;
-import org.thevoids.oncologic.dto.AppointmentDTO;
+import org.thevoids.oncologic.dto.entity.AppointmentDTO;
 import org.thevoids.oncologic.entity.Appointment;
 import org.thevoids.oncologic.entity.AppointmentType;
 import org.thevoids.oncologic.entity.ClinicAssignment;

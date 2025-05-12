@@ -1,20 +1,24 @@
 package org.thevoids.oncologic.service;
 
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thevoids.oncologic.entity.Clinic;
 import org.thevoids.oncologic.repository.ClinicRepository;
 import org.thevoids.oncologic.service.impl.ClinicServiceImpl;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ClinicServiceUnitTest {
@@ -29,8 +33,7 @@ public class ClinicServiceUnitTest {
     void getAllClinicsReturnsAllClinics() {
         List<Clinic> expectedClinics = List.of(
                 createClinic(1L, "Clinic A", "Address A", "123456", "Specialty A", 50),
-                createClinic(2L, "Clinic B", "Address B", "654321", "Specialty B", 75)
-        );
+                createClinic(2L, "Clinic B", "Address B", "654321", "Specialty B", 75));
 
         when(clinicRepository.findAll()).thenReturn(expectedClinics);
 
@@ -82,8 +85,8 @@ public class ClinicServiceUnitTest {
 
     @Test
     void createClinicThrowsExceptionWhenClinicIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicService.createClinic(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> clinicService.createClinic(null));
 
         assertEquals("Clinic cannot be null", exception.getMessage());
         verify(clinicRepository, never()).save(any());
@@ -116,8 +119,8 @@ public class ClinicServiceUnitTest {
     void updateClinicThrowsExceptionWhenClinicIsNull() {
         Long id = 1L;
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicService.updateClinic(id, null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> clinicService.updateClinic(id, null));
 
         assertEquals("Clinic cannot be null", exception.getMessage());
         verify(clinicRepository, never()).save(any());
@@ -130,8 +133,8 @@ public class ClinicServiceUnitTest {
 
         when(clinicRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicService.updateClinic(id, clinic));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> clinicService.updateClinic(id, clinic));
 
         assertEquals("Clinic with id " + id + " does not exist", exception.getMessage());
         verify(clinicRepository, never()).save(any());
@@ -154,8 +157,8 @@ public class ClinicServiceUnitTest {
 
         when(clinicRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                clinicService.deleteClinic(id));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> clinicService.deleteClinic(id));
 
         assertEquals("Clinic with id " + id + " does not exist", exception.getMessage());
         verify(clinicRepository, never()).deleteById(any());

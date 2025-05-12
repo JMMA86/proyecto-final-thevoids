@@ -3,7 +3,7 @@ package org.thevoids.oncologic.mapper;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
-import org.thevoids.oncologic.dto.AppointmentTypeDTO;
+import org.thevoids.oncologic.dto.entity.AppointmentTypeDTO;
 import org.thevoids.oncologic.entity.AppointmentType;
 
 class AppointmentTypeMapperUnitTest {

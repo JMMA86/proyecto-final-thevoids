@@ -11,7 +11,7 @@ public interface ClinicService {
 
     Clinic createClinic(Clinic clinic);
 
-    Clinic updateClinic(Long id, Clinic clinic);
+    Clinic updateClinic(Long id, Clinic clinic); // Updates only the attributes of the existing entity
 
     void deleteClinic(Long id);
 }

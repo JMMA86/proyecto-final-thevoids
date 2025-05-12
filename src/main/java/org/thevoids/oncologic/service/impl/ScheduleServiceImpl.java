@@ -1,7 +1,7 @@
 package org.thevoids.oncologic.service.impl;
 
 import org.springframework.stereotype.Service;
-import org.thevoids.oncologic.dto.ScheduleDTO;
+import org.thevoids.oncologic.dto.entity.ScheduleDTO;
 import org.thevoids.oncologic.entity.Schedule;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.exception.InvalidOperationException;

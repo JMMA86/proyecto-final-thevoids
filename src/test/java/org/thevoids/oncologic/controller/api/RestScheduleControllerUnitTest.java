@@ -15,7 +15,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.thevoids.oncologic.dto.ScheduleDTO;
+import org.thevoids.oncologic.dto.entity.ScheduleDTO;
 import org.thevoids.oncologic.service.ScheduleService;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.exception.InvalidOperationException;

@@ -2,7 +2,7 @@ package org.thevoids.oncologic.service.impl;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.thevoids.oncologic.dto.LabDTO;
+import org.thevoids.oncologic.dto.entity.LabDTO;
 import org.thevoids.oncologic.entity.Lab;
 import org.thevoids.oncologic.entity.Patient;
 import org.thevoids.oncologic.entity.User;
@@ -62,13 +62,15 @@ public class LabServiceImpl implements LabService {
         // Fetch the complete entities to avoid null references
         if (lab.getPatient() != null && lab.getPatient().getPatientId() != null) {
             Patient patient = patientRepository.findById(lab.getPatient().getPatientId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", lab.getPatient().getPatientId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Patient", "id", lab.getPatient().getPatientId()));
             lab.setPatient(patient);
         }
 
         if (lab.getLabTechnician() != null && lab.getLabTechnician().getUserId() != null) {
             User user = userRepository.findById(lab.getLabTechnician().getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", lab.getLabTechnician().getUserId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "User", "id", lab.getLabTechnician().getUserId()));
             lab.setLabTechnician(user);
         }
 

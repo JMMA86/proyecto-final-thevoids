@@ -2,7 +2,7 @@ package org.thevoids.oncologic.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
-import org.thevoids.oncologic.dto.AppointmentTypeDTO;
+import org.thevoids.oncologic.dto.entity.AppointmentTypeDTO;
 import org.thevoids.oncologic.entity.AppointmentType;
 
 @Mapper(componentModel = "spring")

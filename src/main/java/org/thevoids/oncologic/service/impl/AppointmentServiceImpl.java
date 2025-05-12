@@ -29,8 +29,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             AppointmentRepository appointmentRepository,
             AppointmentTypeRepository appointmentTypeRepository,
             PatientRepository patientRepository,
-            ClinicAssignmentRepository clinicAssignmentRepository
-    ) {
+            ClinicAssignmentRepository clinicAssignmentRepository) {
         this.appointmentRepository = appointmentRepository;
         this.appointmentTypeRepository = appointmentTypeRepository;
         this.patientRepository = patientRepository;
@@ -49,14 +48,19 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public Appointment createAppointment(Long patientId, Long clinicAssignmentId, Long appointmentTypeId, Date dateTime) {
+    public Appointment createAppointment(Long patientId, Long clinicAssignmentId, Long appointmentTypeId,
+            Date dateTime) {
         if (patientId == null || clinicAssignmentId == null || appointmentTypeId == null || dateTime == null) {
             StringBuilder errorMessage = new StringBuilder("Missing required parameter(s): ");
 
-            if (patientId == null) errorMessage.append("patientId, ");
-            if (clinicAssignmentId == null) errorMessage.append("clinicAssignmentId, ");
-            if (appointmentTypeId == null) errorMessage.append("appointmentTypeId, ");
-            if (dateTime == null) errorMessage.append("dateTime, ");
+            if (patientId == null)
+                errorMessage.append("patientId, ");
+            if (clinicAssignmentId == null)
+                errorMessage.append("clinicAssignmentId, ");
+            if (appointmentTypeId == null)
+                errorMessage.append("appointmentTypeId, ");
+            if (dateTime == null)
+                errorMessage.append("dateTime, ");
 
             // Remove trailing comma and space
             errorMessage.setLength(errorMessage.length() - 2);
@@ -65,16 +69,14 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         Patient patient = patientRepository.findById(patientId).orElseThrow(
-                () -> new IllegalArgumentException("Patient with id " + patientId + " does not exist")
-        );
+                () -> new IllegalArgumentException("Patient with id " + patientId + " does not exist"));
 
         ClinicAssignment clinicAssignment = clinicAssignmentRepository.findById(clinicAssignmentId).orElseThrow(
-                () -> new IllegalArgumentException("ClinicAssignment with id " + clinicAssignmentId + " does not exist")
-        );
+                () -> new IllegalArgumentException(
+                        "ClinicAssignment with id " + clinicAssignmentId + " does not exist"));
 
         AppointmentType appointmentType = appointmentTypeRepository.findById(appointmentTypeId).orElseThrow(
-                () -> new IllegalArgumentException("AppointmentType with id " + appointmentTypeId + " does not exist")
-        );
+                () -> new IllegalArgumentException("AppointmentType with id " + appointmentTypeId + " does not exist"));
 
         Appointment appointment = new Appointment();
 
@@ -98,11 +100,25 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Appointment ID cannot be null");
         }
 
-        if (!appointmentRepository.existsById(appointment.getAppointmentId())) {
-            throw new IllegalArgumentException("Appointment with id " + appointment.getAppointmentId() + " does not exist");
-        }
+        Appointment existing = appointmentRepository.findById(appointment.getAppointmentId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Appointment with id " + appointment.getAppointmentId() + " does not exist"));
 
-        return appointmentRepository.save(appointment);
+        // Only update fields from the input appointment
+        if (appointment.getDateTime() != null)
+            existing.setDateTime(appointment.getDateTime());
+        if (appointment.getStatus() != null)
+            existing.setStatus(appointment.getStatus());
+        if (appointment.getPatient() != null && appointment.getPatient().getPatientId() != null)
+            existing.getPatient().setPatientId(appointment.getPatient().getPatientId());
+        if (appointment.getDoctor() != null && appointment.getDoctor().getUserId() != null)
+            existing.getDoctor().setUserId(appointment.getDoctor().getUserId());
+        if (appointment.getAppointmentType() != null && appointment.getAppointmentType().getTypeId() != null)
+            existing.getAppointmentType().setTypeId(appointment.getAppointmentType().getTypeId());
+        if (appointment.getClinicAssignment() != null && appointment.getClinicAssignment().getId() != null)
+            existing.getClinicAssignment().setId(appointment.getClinicAssignment().getId());
+
+        return appointmentRepository.save(existing);
     }
 
     @Override

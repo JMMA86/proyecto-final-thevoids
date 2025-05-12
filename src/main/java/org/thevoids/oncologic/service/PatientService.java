@@ -1,8 +1,8 @@
 package org.thevoids.oncologic.service;
 
-import org.thevoids.oncologic.dto.PatientDTO;
-
 import java.util.List;
+
+import org.thevoids.oncologic.dto.entity.PatientDTO;
 
 public interface PatientService {
     PatientDTO getPatientById(Long id);
