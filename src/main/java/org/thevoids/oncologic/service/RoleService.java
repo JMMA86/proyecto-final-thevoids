@@ -9,9 +9,9 @@ public interface RoleService {
 
     Role createRole(Role role);
 
-    void deleteRole(Role role);
+    Role deleteRole(Role role);
 
-    void updateRole(Role role);
+    Role updateRole(Role role);
 
     Role getRole(Long roleId);
 }

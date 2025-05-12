@@ -1,18 +1,18 @@
 package org.thevoids.oncologic.service;
 
-import org.thevoids.oncologic.entity.Lab;
-
 import java.util.Date;
 import java.util.List;
 
-public interface LabService {
-    Lab getLabById(Long id);
+import org.thevoids.oncologic.dto.entity.LabDTO;
 
-    Lab updateLab(Lab lab);
+public interface LabService {
+    LabDTO getLabById(Long id);
+
+    LabDTO updateLab(LabDTO labDTO);
 
     void deleteLab(Long id);
 
-    List<Lab> getAllLabs();
+    List<LabDTO> getAllLabs();
 
-    Lab assignLab(Long patientId, Long userId, Date requestDate);
+    LabDTO assignLab(Long patientId, Long userId, Date requestDate);
 }

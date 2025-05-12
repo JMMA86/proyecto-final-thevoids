@@ -32,7 +32,7 @@
         <div class="mb-4">
             <label for="roleId" class="block text-gray-700 font-bold mb-2">Role:</label>
             <select id="roleId" name="roleId" th:field="*{roleId}" required 
-                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="w-full px-3 py-2 border border-grayp-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="-1" disabled selected>Select a role</option>
                 <option th:each="role : ${roles}" th:value="${role.roleId}" th:text="${role.roleName}"></option>
             </select>

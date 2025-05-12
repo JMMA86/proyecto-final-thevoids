@@ -1,0 +1,480 @@
+# Oncologic API Postman Tests
+
+This file contains instructions for using the Postman collection for testing the Oncologic API. The collection includes tests for the following controllers:
+- LabController
+- MedicalHistoryController
+- PatientController
+- ScheduleController
+
+## Setup Instructions
+
+1. Download and install Postman from [https://www.postman.com/downloads/](https://www.postman.com/downloads/)
+2. Import the collection file from `src/test/postman/OncologicAPI.postman_collection.json`
+3. Create an environment in Postman with the following variables:
+   - `baseUrl`: The base URL of your API (e.g., `http://localhost:8080`)
+   - `username`: A valid username for authentication
+   - `password`: The password for the username
+   - `token`: This will be automatically set after login
+   - `patientId`: This will be automatically set after creating a patient
+   - `userId`: A valid user ID for creating resources
+   - `technicianId`: A valid technician ID for lab tests
+   - `medicalHistoryId`: This will be automatically set after creating a medical history
+   - `scheduleId`: This will be automatically set after creating a schedule
+   - `labId`: This will be automatically set after creating a lab
+
+4. Select the environment you created
+
+## Collection Structure
+
+The collection is organized into the following folders, which will run sequentially:
+
+## Authentication
+
+### Login
+- Method: POST
+- URL: {{baseUrl}}/api/v1/auth/login
+- Headers: Content-Type: application/json
+- Body (raw JSON):
+```json
+{
+    "username": "{{username}}",
+    "password": "{{password}}"
+}
+```
+- Tests:
+```javascript
+var jsonData = JSON.parse(responseBody);
+pm.environment.set("token", jsonData.accessToken);
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Token is present", function () {
+    pm.expect(jsonData.accessToken).to.exist;
+});
+```
+
+## Patient Tests
+
+### Create Patient
+- Method: POST
+- URL: {{baseUrl}}/api/v1/patients
+- Headers: 
+  - Content-Type: application/json
+  - Authorization: Bearer {{token}}
+- Body (raw JSON):
+```json
+{
+    "userId": {{userId}},
+    "bloodGroup": "O+",
+    "allergies": "None",
+    "familyHistory": "No significant history"
+}
+```
+- Pre-request Script:
+```javascript
+// Ensure we have a token before making this request
+if (!pm.environment.get("token")) {
+    console.log("No token found. Please run the Login request first.");
+}
+```
+- Tests:
+```javascript
+var jsonData = JSON.parse(responseBody);
+pm.environment.set("patientId", jsonData.patientId);
+pm.test("Status code is 201", function () {
+    pm.response.to.have.status(201);
+});
+pm.test("Patient ID is present", function () {
+    pm.expect(jsonData.patientId).to.exist;
+});
+```
+
+### Get All Patients
+- Method: GET
+- URL: {{baseUrl}}/api/v1/patients
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Response is an array", function () {
+    var jsonData = pm.response.json();
+    pm.expect(Array.isArray(jsonData)).to.be.true;
+});
+```
+
+### Get Patient by ID
+- Method: GET
+- URL: {{baseUrl}}/api/v1/patients/{{patientId}}
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Patient ID matches", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.patientId.toString()).to.equal(pm.environment.get("patientId").toString());
+});
+```
+
+### Update Patient
+- Method: PUT
+- URL: {{baseUrl}}/api/v1/patients/{{patientId}}
+- Headers: 
+  - Content-Type: application/json
+  - Authorization: Bearer {{token}}
+- Body (raw JSON):
+```json
+{
+    "userId": {{userId}},
+    "bloodGroup": "O+",
+    "allergies": "Penicillin",
+    "familyHistory": "No significant history"
+}
+```
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Updated field is correct", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.allergies).to.equal("Penicillin");
+});
+```
+
+## Medical History Tests
+
+### Create Medical History
+- Method: POST
+- URL: {{baseUrl}}/api/v1/medical-histories
+- Headers: 
+  - Content-Type: application/json
+  - Authorization: Bearer {{token}}
+- Body (raw JSON):
+```json
+{
+    "patientId": {{patientId}},
+    "diagnosis": "Hypertension",
+    "treatment": "Medication and lifestyle changes",
+    "medications": "Lisinopril 10mg daily",
+    "recordDate": "{{$isoTimestamp}}"
+}
+```
+- Pre-request Script:
+```javascript
+// Ensure we have a patientId before making this request
+if (!pm.environment.get("patientId")) {
+    console.log("No patientId found. Please run the Create Patient request first.");
+}
+```
+- Tests:
+```javascript
+var jsonData = JSON.parse(responseBody);
+pm.environment.set("medicalHistoryId", jsonData.historyId);
+pm.test("Status code is 201", function () {
+    pm.response.to.have.status(201);
+});
+pm.test("Medical History ID is present", function () {
+    pm.expect(jsonData.historyId).to.exist;
+});
+```
+
+### Get All Medical Histories
+- Method: GET
+- URL: {{baseUrl}}/api/v1/medical-histories
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Response is an array", function () {
+    var jsonData = pm.response.json();
+    pm.expect(Array.isArray(jsonData)).to.be.true;
+});
+```
+
+### Get Medical History by ID
+- Method: GET
+- URL: {{baseUrl}}/api/v1/medical-histories/{{medicalHistoryId}}
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Medical History ID matches", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.historyId.toString()).to.equal(pm.environment.get("medicalHistoryId").toString());
+});
+```
+
+### Update Medical History
+- Method: PUT
+- URL: {{baseUrl}}/api/v1/medical-histories/{{medicalHistoryId}}
+- Headers: 
+  - Content-Type: application/json
+  - Authorization: Bearer {{token}}
+- Body (raw JSON):
+```json
+{
+    "patientId": {{patientId}},
+    "diagnosis": "Hypertension",
+    "treatment": "Updated medication regimen",
+    "medications": "Lisinopril 20mg daily",
+    "recordDate": "{{$isoTimestamp}}"
+}
+```
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Updated field is correct", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.treatment).to.equal("Updated medication regimen");
+});
+```
+
+## Schedule Tests
+
+### Create Schedule
+- Method: POST
+- URL: {{baseUrl}}/api/v1/schedule
+- Headers: 
+  - Content-Type: application/json
+  - Authorization: Bearer {{token}}
+- Body (raw JSON):
+```json
+{
+    "userId": {{userId}},
+    "dayOfWeek": "Monday",
+    "startTime": "{{$isoTimestamp}}",
+    "endTime": "{{$isoTimestamp}}"
+}
+```
+- Tests:
+```javascript
+var jsonData = JSON.parse(responseBody);
+pm.environment.set("scheduleId", jsonData.scheduleId);
+pm.test("Status code is 201", function () {
+    pm.response.to.have.status(201);
+});
+pm.test("Schedule ID is present", function () {
+    pm.expect(jsonData.scheduleId).to.exist;
+});
+```
+
+### Get All Schedules
+- Method: GET
+- URL: {{baseUrl}}/api/v1/schedule
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Response is an array", function () {
+    var jsonData = pm.response.json();
+    pm.expect(Array.isArray(jsonData)).to.be.true;
+});
+```
+
+### Get Schedule by ID
+- Method: GET
+- URL: {{baseUrl}}/api/v1/schedule/{{scheduleId}}
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Schedule ID matches", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.scheduleId.toString()).to.equal(pm.environment.get("scheduleId").toString());
+});
+```
+
+### Update Schedule
+- Method: PUT
+- URL: {{baseUrl}}/api/v1/schedule/{{scheduleId}}
+- Headers: 
+  - Content-Type: application/json
+  - Authorization: Bearer {{token}}
+- Body (raw JSON):
+```json
+{
+    "userId": {{userId}},
+    "dayOfWeek": "Tuesday",
+    "startTime": "{{$isoTimestamp}}",
+    "endTime": "{{$isoTimestamp}}"
+}
+```
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Updated field is correct", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.dayOfWeek).to.equal("Tuesday");
+});
+```
+
+## Lab Tests
+
+### Assign Lab
+- Method: POST
+- URL: {{baseUrl}}/api/v1/labs/assign?patientId={{patientId}}&technicianId={{technicianId}}&requestDate={{$isoTimestamp}}
+- Headers: Authorization: Bearer {{token}}
+- Pre-request Script:
+```javascript
+// Ensure we have a patientId before making this request
+if (!pm.environment.get("patientId")) {
+    console.log("No patientId found. Please run the Create Patient request first.");
+}
+```
+- Tests:
+```javascript
+var jsonData = JSON.parse(responseBody);
+pm.environment.set("labId", jsonData.labId);
+pm.test("Status code is 201", function () {
+    pm.response.to.have.status(201);
+});
+pm.test("Lab ID is present", function () {
+    pm.expect(jsonData.labId).to.exist;
+});
+```
+
+### Get All Labs
+- Method: GET
+- URL: {{baseUrl}}/api/v1/labs
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Response is an array", function () {
+    var jsonData = pm.response.json();
+    pm.expect(Array.isArray(jsonData)).to.be.true;
+});
+```
+
+### Get Lab by ID
+- Method: GET
+- URL: {{baseUrl}}/api/v1/labs/{{labId}}
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Lab ID matches", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.labId.toString()).to.equal(pm.environment.get("labId").toString());
+});
+```
+
+### Update Lab
+- Method: PUT
+- URL: {{baseUrl}}/api/v1/labs/{{labId}}
+- Headers: 
+  - Content-Type: application/json
+  - Authorization: Bearer {{token}}
+- Body (raw JSON):
+```json
+{
+    "patientId": {{patientId}},
+    "labTechnicianId": {{technicianId}},
+    "testType": "Blood Test",
+    "requestDate": "{{$isoTimestamp}}",
+    "completionDate": "{{$isoTimestamp}}",
+    "result": "Normal",
+    "attachment": "report.pdf"
+}
+```
+- Tests:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Updated field is correct", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.testType).to.equal("Blood Test");
+});
+```
+
+## Cleanup
+
+### Delete Lab
+- Method: DELETE
+- URL: {{baseUrl}}/api/v1/labs/{{labId}}
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 204", function () {
+    pm.response.to.have.status(204);
+});
+```
+
+### Delete Medical History
+- Method: DELETE
+- URL: {{baseUrl}}/api/v1/medical-histories/{{medicalHistoryId}}
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 204", function () {
+    pm.response.to.have.status(204);
+});
+```
+
+### Delete Schedule
+- Method: DELETE
+- URL: {{baseUrl}}/api/v1/schedule/{{scheduleId}}
+- Headers: Authorization: Bearer {{token}}
+- Tests:
+```javascript
+pm.test("Status code is 204", function () {
+    pm.response.to.have.status(204);
+});
+```
+
+## Running the Collection
+
+1. Make sure you have set up all the environment variables
+2. In Postman, click on the "Runner" button (or use the Collection Runner feature)
+3. Select the "Oncologic API - Complete Test Suite" collection
+4. Select your environment
+5. Click the "Run" button to execute all tests in sequence
+
+The collection is already organized to ensure that dependencies between requests are respected (e.g., creating a patient before creating a medical history that references it). The tests will run in the following order:
+
+1. Authentication
+   - Login
+2. Patient Tests
+   - Create Patient
+   - Get All Patients
+   - Get Patient by ID
+   - Update Patient
+3. Medical History Tests
+   - Create Medical History
+   - Get All Medical Histories
+   - Get Medical History by ID
+   - Update Medical History
+   - Delete Medical History
+4. Lab Tests
+   - Assign Lab
+   - Get All Labs
+   - Get Lab by ID
+   - Update Lab
+   - Delete Lab
+5. Schedule Tests
+   - Create Schedule
+   - Get All Schedules
+   - Get Schedule by ID
+   - Update Schedule
+   - Delete Schedule

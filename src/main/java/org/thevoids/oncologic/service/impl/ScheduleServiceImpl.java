@@ -1,61 +1,76 @@
 package org.thevoids.oncologic.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.thevoids.oncologic.dto.entity.ScheduleDTO;
 import org.thevoids.oncologic.entity.Schedule;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
+import org.thevoids.oncologic.mapper.ScheduleMapper;
 import org.thevoids.oncologic.repository.ScheduleRepository;
 import org.thevoids.oncologic.service.ScheduleService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleRepository scheduleRepository;
+    private final ScheduleMapper scheduleMapper;
 
-    public ScheduleServiceImpl(ScheduleRepository scheduleRepository) {
+    public ScheduleServiceImpl(ScheduleRepository scheduleRepository, ScheduleMapper scheduleMapper) {
         this.scheduleRepository = scheduleRepository;
+        this.scheduleMapper = scheduleMapper;
     }
 
     @Override
-    public List<Schedule> getAllSchedules() {
-        return scheduleRepository.findAll();
+    public List<ScheduleDTO> getAllSchedules() {
+        List<Schedule> schedules = scheduleRepository.findAll();
+        return schedules.stream()
+                .map(scheduleMapper::toScheduleDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Schedule getScheduleById(Long id) {
-        return scheduleRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Schedule with id " + id + " does not exist"));
+    public ScheduleDTO getScheduleById(Long id) {
+        Schedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule", "id", id));
+        return scheduleMapper.toScheduleDTO(schedule);
     }
 
     @Override
-    public Schedule createSchedule(Schedule schedule) {
-        if (schedule == null) {
-            throw new IllegalArgumentException("Schedule cannot be null");
+    public ScheduleDTO createSchedule(ScheduleDTO scheduleDTO) {
+        if (scheduleDTO == null) {
+            throw new InvalidOperationException("Schedule cannot be null");
         }
 
-        return scheduleRepository.save(schedule);
+        Schedule schedule = scheduleMapper.toSchedule(scheduleDTO);
+        Schedule savedSchedule = scheduleRepository.save(schedule);
+        return scheduleMapper.toScheduleDTO(savedSchedule);
     }
 
     @Override
-    public Schedule updateSchedule(Schedule schedule) {
-        if (schedule == null) {
-            throw new IllegalArgumentException("Schedule cannot be null");
+    public ScheduleDTO updateSchedule(ScheduleDTO scheduleDTO) {
+        if (scheduleDTO == null) {
+            throw new InvalidOperationException("Schedule cannot be null");
         }
 
-        if (schedule.getScheduleId() == null) {
-            throw new IllegalArgumentException("Schedule ID cannot be null");
+        if (scheduleDTO.getScheduleId() == null) {
+            throw new InvalidOperationException("Schedule ID cannot be null");
         }
 
-        if (!scheduleRepository.existsById(schedule.getScheduleId())) {
-            throw new IllegalArgumentException("Schedule with id " + schedule.getScheduleId() + " does not exist");
+        if (!scheduleRepository.existsById(scheduleDTO.getScheduleId())) {
+            throw new ResourceNotFoundException("Schedule", "id", scheduleDTO.getScheduleId());
         }
 
-        return scheduleRepository.save(schedule);
+        Schedule schedule = scheduleMapper.toSchedule(scheduleDTO);
+        Schedule updatedSchedule = scheduleRepository.save(schedule);
+        return scheduleMapper.toScheduleDTO(updatedSchedule);
     }
 
     @Override
     public void deleteSchedule(Long id) {
         if (!scheduleRepository.existsById(id)) {
-            throw new IllegalArgumentException("Schedule with id " + id + " does not exist");
+            throw new ResourceNotFoundException("Schedule", "id", id);
         }
 
         scheduleRepository.deleteById(id);

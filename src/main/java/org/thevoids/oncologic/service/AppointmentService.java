@@ -12,7 +12,7 @@ public interface AppointmentService {
 
     Appointment createAppointment(Long patientId, Long ClinicAssigmentId, Long appointmentTypeId, Date dateTime);
 
-    Appointment updateAppointment(Appointment appointment);
+    Appointment updateAppointment(Appointment appointment); // Updates only the attributes of the existing entity
 
     void deleteAppointment(Long id);
 }

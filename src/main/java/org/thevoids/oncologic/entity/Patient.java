@@ -31,15 +31,15 @@ public class Patient {
     @Column(name = "family_history", length = 500)
     private String familyHistory;
 
-    @OneToMany(mappedBy = "patient")
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Appointment> appointments;
 
-    @OneToMany(mappedBy = "patient")
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<MedicalHistory> medicalHistories;
 
-    @OneToMany(mappedBy = "patient")
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Lab> labs;
 

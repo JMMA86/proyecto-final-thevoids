@@ -1,4 +1,4 @@
-package org.thevoids.oncologic.dto;
+package org.thevoids.oncologic.dto.entity;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -16,4 +16,4 @@ public class AuthRequest {
         this.username = username;
         this.password = password;
     }
-}
+} 

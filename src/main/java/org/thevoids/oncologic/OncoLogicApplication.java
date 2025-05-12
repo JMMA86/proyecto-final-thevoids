@@ -2,12 +2,13 @@ package org.thevoids.oncologic;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 @SpringBootApplication
-public class OncoLogicApplication {
+public class OncoLogicApplication extends SpringBootServletInitializer {
 
-    public static void main(String[] args) {
-        SpringApplication.run(OncoLogicApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(OncoLogicApplication.class, args);
+  }
 
 }

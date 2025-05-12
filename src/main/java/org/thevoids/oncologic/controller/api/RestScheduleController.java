@@ -1,0 +1,180 @@
+package org.thevoids.oncologic.controller.api;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.thevoids.oncologic.dto.entity.ScheduleDTO;
+import org.thevoids.oncologic.service.ScheduleService;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.InvalidOperationException;
+
+import java.util.List;
+
+@Tag(name = "Horarios", description = "API para la gestión de horarios de médicos")
+@RestController
+@RequestMapping("/api/v1/schedules")
+public class RestScheduleController {
+    @Autowired
+    private ScheduleService scheduleService;
+
+    public RestScheduleController(ScheduleService scheduleService) {
+        this.scheduleService = scheduleService;
+    }
+
+    /**
+     * Retrieves all schedules.
+     *
+     * @return a response entity containing a list of schedule DTOs.
+     */
+    @Operation(summary = "Obtener horario por ID", description = "Recupera un horario específico por su ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horario encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Horario no encontrado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para ver horarios")
+    })
+    @PreAuthorize("hasAuthority('VIEW_SCHEDULES')")
+    @GetMapping
+    public ResponseEntity<List<ScheduleDTO>> getAllSchedules() {
+        try {
+            List<ScheduleDTO> schedules = scheduleService.getAllSchedules();
+            return ResponseEntity.ok(schedules);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    /**
+     * Retrieves a schedule by its ID.
+     *
+     * @param id the ID of the schedule to retrieve.
+     * @return a response entity containing the schedule DTO.
+     */
+    @Operation(summary = "Obtener horario por ID", description = "Recupera un horario específico por su ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horario encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Horario no encontrado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para ver horarios")
+    })
+    @PreAuthorize("hasAuthority('VIEW_SCHEDULES')")
+    @GetMapping("/{id}")
+    public ResponseEntity<ScheduleDTO> getScheduleById(@PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        try {
+            ScheduleDTO schedule = scheduleService.getScheduleById(id);
+            return ResponseEntity.ok(schedule);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    /**
+     * Creates a new schedule.
+     *
+     * @param scheduleDTO the schedule DTO to create.
+     * @return a response entity containing the created schedule DTO.
+     */
+    @Operation(summary = "Crear horario", description = "Crea un nuevo horario para un médico")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horario creado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos de horario inválidos"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para crear horarios")
+    })
+    @PreAuthorize("hasAuthority('CREATE_SCHEDULES')")
+    @PostMapping
+    public ResponseEntity<ScheduleDTO> createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
+        if (scheduleDTO == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        try {
+            ScheduleDTO createdSchedule = scheduleService.createSchedule(scheduleDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdSchedule);
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(null);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    /**
+     * Retrieves a schedule by its ID.
+     *
+     * @param id the ID of the schedule to retrieve.
+     * @return a response entity containing the schedule DTO.
+     */
+    @Operation(summary = "Obtener horario por ID", description = "Recupera un horario específico por su ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horario encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Horario no encontrado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para ver horarios") })
+    @PreAuthorize("hasAuthority('UPDATE_SCHEDULES')")
+    @PutMapping("/{id}")
+    public ResponseEntity<ScheduleDTO> updateSchedule(@PathVariable Long id, @RequestBody ScheduleDTO scheduleDTO) {
+        if (scheduleDTO == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        try {
+            scheduleDTO.setScheduleId(id);
+            ScheduleDTO updatedSchedule = scheduleService.updateSchedule(scheduleDTO);
+            return ResponseEntity.ok(updatedSchedule);
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(null);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    /**
+     * Deletes a schedule by its ID.
+     *
+     * @param id the ID of the schedule to delete.
+     * @return a response entity with no content.
+     */
+    @Operation(summary = "Eliminar horario", description = "Elimina un horario del sistema")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horario eliminado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Horario no encontrado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para eliminar horarios")
+    })
+    @PreAuthorize("hasAuthority('DELETE_SCHEDULES')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSchedule(
+            @Parameter(description = "ID del horario a eliminar") @PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        try {
+            scheduleService.deleteSchedule(id);
+            return ResponseEntity.noContent().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+}

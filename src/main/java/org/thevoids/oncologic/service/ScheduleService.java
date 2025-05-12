@@ -1,17 +1,17 @@
 package org.thevoids.oncologic.service;
 
-import org.thevoids.oncologic.entity.Schedule;
-
 import java.util.List;
 
+import org.thevoids.oncologic.dto.entity.ScheduleDTO;
+
 public interface ScheduleService {
-    List<Schedule> getAllSchedules();
+    List<ScheduleDTO> getAllSchedules();
 
-    Schedule getScheduleById(Long id);
+    ScheduleDTO getScheduleById(Long id);
 
-    Schedule createSchedule(Schedule schedule);
+    ScheduleDTO createSchedule(ScheduleDTO scheduleDTO);
 
-    Schedule updateSchedule(Schedule schedule);
+    ScheduleDTO updateSchedule(ScheduleDTO scheduleDTO);
 
     void deleteSchedule(Long id);
 }

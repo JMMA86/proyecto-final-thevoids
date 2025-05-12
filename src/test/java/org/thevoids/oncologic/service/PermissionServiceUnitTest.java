@@ -18,6 +18,8 @@ import org.mockito.MockitoAnnotations;
 import org.thevoids.oncologic.entity.Permission;
 import org.thevoids.oncologic.repository.PermissionRepository;
 import org.thevoids.oncologic.service.impl.PermissionServiceImpl;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
 
 class PermissionServiceUnitTest {
 
@@ -70,7 +72,7 @@ class PermissionServiceUnitTest {
         when(permissionRepository.existsById(permission.getPermissionId())).thenReturn(true);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> permissionService.createPermission(permission));
+        assertThrows(ResourceAlreadyExistsException.class, () -> permissionService.createPermission(permission));
     }
 
     @Test
@@ -87,25 +89,28 @@ class PermissionServiceUnitTest {
         when(permissionRepository.existsById(newPermission.getPermissionId())).thenReturn(true);
 
         // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class, () -> {
             permissionService.createPermission(newPermission);
         });
 
-        assertEquals("Permission already exists", exception.getMessage());
+        assertEquals("Permiso ya existe con id : '1'", exception.getMessage());
         verify(permissionRepository, never()).save(any(Permission.class));
     }
-
+    
     @Test
     void deletePermission_WhenCalled_DeletesPermission() {
         // Arrange
         Long permissionId = 1L;
+        Permission permission = new Permission();
+        permission.setPermissionId(permissionId);
         when(permissionRepository.existsById(permissionId)).thenReturn(true);
+        when(permissionRepository.findById(permissionId)).thenReturn(Optional.of(permission));
 
         // Act
         permissionService.deletePermission(permissionId);
 
         // Assert
-        verify(permissionRepository, times(1)).deleteById(permissionId);
+        verify(permissionRepository, times(1)).delete(permission);
     }
 
     @Test
@@ -115,7 +120,7 @@ class PermissionServiceUnitTest {
         when(permissionRepository.existsById(permissionId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> permissionService.deletePermission(permissionId));
+        assertThrows(ResourceNotFoundException.class, () -> permissionService.deletePermission(permissionId));
     }
 
     @Test
@@ -140,7 +145,7 @@ class PermissionServiceUnitTest {
         when(permissionRepository.existsById(permission.getPermissionId())).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> permissionService.updatePermission(permission));
+        assertThrows(ResourceNotFoundException.class, () -> permissionService.updatePermission(permission));
     }
 
     @Test
@@ -165,6 +170,6 @@ class PermissionServiceUnitTest {
         when(permissionRepository.existsById(permissionId)).thenReturn(false);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> permissionService.getPermission(permissionId));
+        assertThrows(ResourceNotFoundException.class, () -> permissionService.getPermission(permissionId));
     }
 }

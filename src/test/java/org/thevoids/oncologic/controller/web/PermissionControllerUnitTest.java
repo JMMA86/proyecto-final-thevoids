@@ -21,7 +21,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.Model;
-import org.thevoids.oncologic.dto.PermissionDTO;
+import org.thevoids.oncologic.dto.entity.PermissionDTO;
 import org.thevoids.oncologic.entity.Permission;
 import org.thevoids.oncologic.mapper.PermissionMapper;
 import org.thevoids.oncologic.service.PermissionService;

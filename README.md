@@ -97,3 +97,43 @@ This will generate a code coverage report using **JaCoCo**. You can find the rep
 ### Latest coverage achieved
 
 ![Coverage Report](/doc/coverage/coverage.png)
+
+![Postman Coverage Report](/doc/coverage/postman.png)
+
+## Swagger
+
+This project includes comprehensive API documentation using Swagger/OpenAPI 3.0. The API endpoints are thoroughly documented with detailed descriptions, request/response schemas, and possible HTTP status codes.
+
+![Swagger page](/doc/swagger/swagger.png)
+
+To access the Swagger documentation:
+
+1. Run the application locally
+2. Navigate to: `http://localhost:8080/swagger-ui/index.html`
+
+The documentation includes detailed information about all REST endpoints:
+- RestAppointmentController.java
+- RestAppointmentTypeController.java
+- RestAuthController.java
+- RestClinicAssignmentController.java
+- RestClinicController.java
+- RestHomeController.java
+- RestLabController.java
+- RestMedicalHistoryController.java
+- RestPatientController.java
+- RestPermissionController.java
+- RestRoleController.java
+- RestScheduleController.java
+- RestSpecialtyController.java
+- RestTaskController.java
+- RestUserController.java
+- RestUserSpecialtyController.java
+
+Each endpoint is annotated with:
+- Operation descriptions in Spanish
+- Required permissions
+- Expected request/response schemas
+- Possible response codes and their meanings
+- Parameter descriptions
+
+The documentation is implemented using annotations like `@Operation`, `@ApiResponses`, `@Parameter`, and `@Tag`, making it easy for developers to understand and interact with the API endpoints through the Swagger UI interface.

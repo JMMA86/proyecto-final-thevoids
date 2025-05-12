@@ -5,7 +5,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.thevoids.oncologic.dto.entity.ScheduleDTO;
 import org.thevoids.oncologic.entity.Schedule;
+import org.thevoids.oncologic.exception.InvalidOperationException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.mapper.ScheduleMapper;
 import org.thevoids.oncologic.repository.ScheduleRepository;
 import org.thevoids.oncologic.service.impl.ScheduleServiceImpl;
 
@@ -19,151 +23,163 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class ScheduleServiceUnitTest {
 
-    @Mock
-    private ScheduleRepository scheduleRepository;
+        @Mock
+        private ScheduleRepository scheduleRepository;
 
-    @InjectMocks
-    private ScheduleServiceImpl scheduleService;
+        @Mock
+        private ScheduleMapper scheduleMapper;
 
-    @Test
-    void getAllSchedulesReturnsAllSchedules() {
-        List<Schedule> expectedSchedules = List.of(
-                createSchedule(1L),
-                createSchedule(2L)
-        );
+        @InjectMocks
+        private ScheduleServiceImpl scheduleService;
 
-        when(scheduleRepository.findAll()).thenReturn(expectedSchedules);
+        @Test
+        void getAllSchedulesReturnsAllSchedules() {
+                List<Schedule> schedules = List.of(
+                                createSchedule(1L),
+                                createSchedule(2L));
 
-        List<Schedule> result = scheduleService.getAllSchedules();
+                List<ScheduleDTO> expectedScheduleDTOs = List.of(
+                                createScheduleDTO(1L),
+                                createScheduleDTO(2L));
 
-        assertEquals(2, result.size());
-        assertEquals(expectedSchedules, result);
-    }
+                when(scheduleRepository.findAll()).thenReturn(schedules);
+                when(scheduleMapper.toScheduleDTO(schedules.get(0))).thenReturn(expectedScheduleDTOs.get(0));
+                when(scheduleMapper.toScheduleDTO(schedules.get(1))).thenReturn(expectedScheduleDTOs.get(1));
 
-    @Test
-    void getScheduleByIdReturnsScheduleWhenExists() {
-        Long id = 1L;
-        Schedule expectedSchedule = createSchedule(id);
+                List<ScheduleDTO> result = scheduleService.getAllSchedules();
 
-        when(scheduleRepository.findById(id)).thenReturn(Optional.of(expectedSchedule));
+                assertEquals(2, result.size());
+                assertEquals(expectedScheduleDTOs, result);
+                verify(scheduleRepository).findAll();
+                verify(scheduleMapper).toScheduleDTO(schedules.get(0));
+                verify(scheduleMapper).toScheduleDTO(schedules.get(1));
+        }
 
-        Schedule result = scheduleService.getScheduleById(id);
+        @Test
+        void getScheduleByIdReturnsScheduleWhenExists() {
+                Long id = 1L;
+                Schedule schedule = createSchedule(id);
 
-        assertNotNull(result);
-        assertEquals(id, result.getScheduleId());
-    }
+                ScheduleDTO expectedScheduleDTO = createScheduleDTO(id);
 
-    @Test
-    void getScheduleByIdThrowsExceptionWhenNotExists() {
-        Long id = 1L;
+                when(scheduleRepository.findById(id)).thenReturn(Optional.of(schedule));
+                when(scheduleMapper.toScheduleDTO(schedule)).thenReturn(expectedScheduleDTO);
 
-        when(scheduleRepository.findById(id)).thenReturn(Optional.empty());
+                ScheduleDTO result = scheduleService.getScheduleById(id);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.getScheduleById(id));
+                assertNotNull(result);
+                assertEquals(id, result.getScheduleId());
+                verify(scheduleMapper).toScheduleDTO(schedule);
+        }
 
-        assertEquals("Schedule with id 1 does not exist", exception.getMessage());
-    }
+        @Test
+        void getScheduleByIdThrowsExceptionWhenNotExists() {
+                Long id = 1L;
+                when(scheduleRepository.findById(id)).thenReturn(Optional.empty());
+                assertThrows(ResourceNotFoundException.class, () -> scheduleService.getScheduleById(id));
+        }
 
-    @Test
-    void createScheduleSuccessfullyCreatesSchedule() {
-        Schedule schedule = createSchedule(null);
-        Schedule savedSchedule = createSchedule(1L);
+        @Test
+        void createScheduleSuccessfullyCreatesSchedule() {
+                ScheduleDTO scheduleDTO = createScheduleDTO(null);
 
-        when(scheduleRepository.save(schedule)).thenReturn(savedSchedule);
+                Schedule schedule = createSchedule(null);
+                Schedule savedSchedule = createSchedule(1L);
 
-        Schedule result = scheduleService.createSchedule(schedule);
+                ScheduleDTO savedScheduleDTO = createScheduleDTO(1L);
 
-        assertNotNull(result);
-        assertEquals(savedSchedule, result);
-        verify(scheduleRepository).save(schedule);
-    }
+                when(scheduleMapper.toSchedule(scheduleDTO)).thenReturn(schedule);
+                when(scheduleRepository.save(schedule)).thenReturn(savedSchedule);
+                when(scheduleMapper.toScheduleDTO(savedSchedule)).thenReturn(savedScheduleDTO);
 
-    @Test
-    void createScheduleThrowsExceptionWhenScheduleIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.createSchedule(null));
+                ScheduleDTO result = scheduleService.createSchedule(scheduleDTO);
 
-        assertEquals("Schedule cannot be null", exception.getMessage());
-        verify(scheduleRepository, never()).save(any());
-    }
+                assertNotNull(result);
+                assertEquals(1L, result.getScheduleId());
+                verify(scheduleMapper).toSchedule(scheduleDTO);
+                verify(scheduleRepository).save(schedule);
+                verify(scheduleMapper).toScheduleDTO(savedSchedule);
+        }
 
-    @Test
-    void updateScheduleSuccessfullyUpdatesSchedule() {
-        Long id = 1L;
-        Schedule schedule = createSchedule(id);
+        @Test
+        void createScheduleThrowsExceptionWhenScheduleIsNull() {
+                assertThrows(InvalidOperationException.class, () -> scheduleService.createSchedule(null));
+                verify(scheduleRepository, never()).save(any());
+        }
 
-        when(scheduleRepository.existsById(id)).thenReturn(true);
-        when(scheduleRepository.save(schedule)).thenReturn(schedule);
+        @Test
+        void updateScheduleSuccessfullyUpdatesSchedule() {
+                Long id = 1L;
+                ScheduleDTO scheduleDTO = createScheduleDTO(id);
 
-        Schedule result = scheduleService.updateSchedule(schedule);
+                Schedule schedule = createSchedule(id);
+                Schedule updatedSchedule = createSchedule(id);
 
-        assertNotNull(result);
-        assertEquals(schedule, result);
-        verify(scheduleRepository).save(schedule);
-    }
+                ScheduleDTO updatedScheduleDTO = createScheduleDTO(id);
 
-    @Test
-    void updateScheduleThrowsExceptionWhenScheduleIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(null));
+                when(scheduleRepository.existsById(id)).thenReturn(true);
+                when(scheduleMapper.toSchedule(scheduleDTO)).thenReturn(schedule);
+                when(scheduleRepository.save(schedule)).thenReturn(updatedSchedule);
+                when(scheduleMapper.toScheduleDTO(updatedSchedule)).thenReturn(updatedScheduleDTO);
 
-        assertEquals("Schedule cannot be null", exception.getMessage());
-        verify(scheduleRepository, never()).save(any());
-    }
+                ScheduleDTO result = scheduleService.updateSchedule(scheduleDTO);
 
-    @Test
-    void updateScheduleThrowsExceptionWhenIdIsNull() {
-        Schedule schedule = createSchedule(null);
+                assertNotNull(result);
+                assertEquals(id, result.getScheduleId());
+                verify(scheduleMapper).toSchedule(scheduleDTO);
+                verify(scheduleRepository).save(schedule);
+                verify(scheduleMapper).toScheduleDTO(updatedSchedule);
+        }
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(schedule));
+        @Test
+        void updateScheduleThrowsExceptionWhenScheduleIsNull() {
+                assertThrows(InvalidOperationException.class, () -> scheduleService.updateSchedule(null));
+                verify(scheduleRepository, never()).save(any());
+        }
 
-        assertEquals("Schedule ID cannot be null", exception.getMessage());
-        verify(scheduleRepository, never()).save(any());
-    }
+        @Test
+        void updateScheduleThrowsExceptionWhenIdIsNull() {
+                ScheduleDTO scheduleDTO = createScheduleDTO(null);
+                assertThrows(InvalidOperationException.class, () -> scheduleService.updateSchedule(scheduleDTO));
+                verify(scheduleRepository, never()).save(any());
+                verify(scheduleMapper, never()).toSchedule(any(ScheduleDTO.class));
+        }
 
-    @Test
-    void updateScheduleThrowsExceptionWhenScheduleDoesNotExist() {
-        Long id = 1L;
-        Schedule schedule = createSchedule(id);
+        @Test
+        void updateScheduleThrowsExceptionWhenScheduleDoesNotExist() {
+                Long id = 1L;
+                ScheduleDTO scheduleDTO = createScheduleDTO(id);
+                when(scheduleRepository.existsById(id)).thenReturn(false);
+                assertThrows(ResourceNotFoundException.class, () -> scheduleService.updateSchedule(scheduleDTO));
+                verify(scheduleRepository, never()).save(any());
+                verify(scheduleMapper, never()).toSchedule(any(ScheduleDTO.class));
+        }
 
-        when(scheduleRepository.existsById(id)).thenReturn(false);
+        @Test
+        void deleteScheduleSuccessfullyDeletesSchedule() {
+                Long id = 1L;
+                when(scheduleRepository.existsById(id)).thenReturn(true);
+                scheduleService.deleteSchedule(id);
+                verify(scheduleRepository).deleteById(id);
+        }
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.updateSchedule(schedule));
+        @Test
+        void deleteScheduleThrowsExceptionWhenScheduleDoesNotExist() {
+                Long id = 1L;
+                when(scheduleRepository.existsById(id)).thenReturn(false);
+                assertThrows(ResourceNotFoundException.class, () -> scheduleService.deleteSchedule(id));
+                verify(scheduleRepository, never()).deleteById(any());
+        }
 
-        assertEquals("Schedule with id 1 does not exist", exception.getMessage());
-        verify(scheduleRepository, never()).save(any());
-    }
+        private Schedule createSchedule(Long id) {
+                Schedule schedule = new Schedule();
+                schedule.setScheduleId(id);
+                return schedule;
+        }
 
-    @Test
-    void deleteScheduleSuccessfullyDeletesSchedule() {
-        Long id = 1L;
-
-        when(scheduleRepository.existsById(id)).thenReturn(true);
-
-        scheduleService.deleteSchedule(id);
-
-        verify(scheduleRepository).deleteById(id);
-    }
-
-    @Test
-    void deleteScheduleThrowsExceptionWhenScheduleDoesNotExist() {
-        Long id = 1L;
-
-        when(scheduleRepository.existsById(id)).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                scheduleService.deleteSchedule(id));
-
-        assertEquals("Schedule with id 1 does not exist", exception.getMessage());
-        verify(scheduleRepository, never()).deleteById(any());
-    }
-
-    private Schedule createSchedule(Long id) {
-        Schedule schedule = new Schedule();
-        schedule.setScheduleId(id);
-        return schedule;
-    }
+        private ScheduleDTO createScheduleDTO(Long id) {
+                ScheduleDTO scheduleDTO = new ScheduleDTO();
+                scheduleDTO.setScheduleId(id);
+                return scheduleDTO;
+        }
 }
