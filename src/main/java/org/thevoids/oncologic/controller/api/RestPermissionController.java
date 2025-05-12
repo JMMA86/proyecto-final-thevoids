@@ -83,12 +83,12 @@ public class RestPermissionController {
     @GetMapping("/{permissionId}")
     public ResponseEntity<PermissionDTO> getPermissionById(
         @Parameter(description = "ID del permiso a buscar")
-        @PathVariable Long id
+        @PathVariable Long permissionId
     ) {
         try {
             PermissionDTO permissionDTO = permissionMapper.toPermissionDTO(
-                permissionService.getPermission(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Permiso", "id", id))
+                permissionService.getPermission(permissionId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Permiso", "id", permissionId))
             );
             return ResponseEntity.ok(permissionDTO);
         } catch (ResourceNotFoundException e) {
@@ -148,13 +148,13 @@ public class RestPermissionController {
     @PutMapping("/{permissionId}")
     public ResponseEntity<PermissionDTO> updatePermission(
         @Parameter(description = "ID del permiso a actualizar")
-        @PathVariable Long id,
+        @PathVariable Long permissionId,
         @Parameter(description = "Datos del permiso a actualizar")
         @RequestBody PermissionDTO permissionDTO
     ) {
         try {
-            Permission existingPermission = permissionService.getPermission(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Permiso", "id", id));
+            Permission existingPermission = permissionService.getPermission(permissionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Permiso", "id", permissionId));
             existingPermission.setPermissionName(permissionDTO.getPermissionName());
             Permission updatedPermission = permissionService.updatePermission(existingPermission);
             PermissionDTO updatedPermissionDTO = permissionMapper.toPermissionDTO(updatedPermission);
@@ -182,10 +182,10 @@ public class RestPermissionController {
     @DeleteMapping("/{permissionId}")
     public ResponseEntity<Void> deletePermission(
         @Parameter(description = "ID del permiso a eliminar")
-        @PathVariable Long id
+        @PathVariable Long permissionId
     ) {
         try {
-            permissionService.deletePermission(id);
+            permissionService.deletePermission(permissionId);
             return ResponseEntity.ok().build();
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

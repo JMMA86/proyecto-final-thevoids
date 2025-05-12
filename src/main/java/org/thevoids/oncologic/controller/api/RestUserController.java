@@ -23,6 +23,7 @@ import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.AssignedRoles;
+import org.thevoids.oncologic.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,6 +51,13 @@ public class RestUserController {
      *
      * @return a list of all users as DTOs.
      */
+    @Operation(summary = "Obtener todos los usuarios", description = "Recupera una lista de todos los usuarios del sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de usuarios recuperada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class))),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver usuarios"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PreAuthorize("hasAuthority('VIEW_USERS')")
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
