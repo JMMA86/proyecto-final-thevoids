@@ -56,12 +56,6 @@ To run the project, simply use the command:
 .\mvnw spring-boot:run
 ```
 
-To run the tests, use the command:
-
-```bash
-.\mvnw test
-```
-
 ## URLs allowed so far
 
 ### Public Resources
@@ -90,6 +84,8 @@ To run unit and integration tests, use the following command:
 ```bash
 .\mvnw clean test
 ```
+
+To run postman collection, sign in postman -> import -> Run
 
 This will generate a code coverage report using **JaCoCo**. You can find the report at  
 `target/site/jacoco/index.html`.
