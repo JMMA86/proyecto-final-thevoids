@@ -10,7 +10,6 @@ import org.thevoids.oncologic.exception.InvalidOperationException;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/labs")
@@ -22,79 +21,77 @@ public class RestLabController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllLabs() {
+    public ResponseEntity<List<LabDTO>> getAllLabs() {
         try {
             List<LabDTO> labs = labService.getAllLabs();
             return ResponseEntity.ok(labs);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(null);
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getLabById(@PathVariable Long id) {
+    public ResponseEntity<LabDTO> getLabById(@PathVariable Long id) {
         try {
             LabDTO lab = labService.getLabById(id);
             return ResponseEntity.ok(lab);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(null);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(null);
         }
     }
 
-    @PostMapping("/assign")
-    public ResponseEntity<?> assignLab(
-            @RequestParam Long patientId,
-            @RequestParam Long technicianId,
-            @RequestParam Date requestDate) {
+    @PostMapping
+    public ResponseEntity<LabDTO> assignLab(@RequestBody LabDTO labDTO) {
         try {
-            LabDTO createdLab = labService.assignLab(patientId, technicianId, requestDate);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdLab);
+            Long patientId = labDTO.getPatientId();
+            Long userId = labDTO.getLabTechnicianId();
+            Date requestDate = labDTO.getRequestDate();
+            LabDTO createdLabDTO = labService.assignLab(patientId, userId, requestDate);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdLabDTO);
         } catch (InvalidOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (ResourceNotFoundException e) {
+                    .body(null);
+        } catch (ResourceNotFoundException | IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(null);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(null);
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateLab(@PathVariable Long id, @RequestBody LabDTO labDTO) {
+    public ResponseEntity<LabDTO> updateLab(@PathVariable Long id, @RequestBody LabDTO labDTO) {
         try {
             labDTO.setLabId(id);
             LabDTO updatedLab = labService.updateLab(labDTO);
             return ResponseEntity.ok(updatedLab);
         } catch (InvalidOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(null);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(null);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(null);
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteLab(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteLab(@PathVariable Long id) {
         try {
             labService.deleteLab(id);
             return ResponseEntity.noContent().build();
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

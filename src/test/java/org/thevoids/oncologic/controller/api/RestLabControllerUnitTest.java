@@ -2,6 +2,7 @@ package org.thevoids.oncologic.controller.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -13,7 +14,6 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -97,10 +97,9 @@ class RestLabControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Database error", errorResponse.get("error"));
+        // For INTERNAL_SERVER_ERROR, body is expected to be null (controller returns
+        // .body(null))
+        assertNull(response.getBody());
     }
 
     @Test
@@ -129,10 +128,8 @@ class RestLabControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Lab no encontrado con id : '1'", errorResponse.get("error"));
+        // For NOT_FOUND, body is expected to be null (controller returns .body(null))
+        assertNull(response.getBody());
     }
 
     @Test
@@ -141,11 +138,15 @@ class RestLabControllerUnitTest {
         when(labService.assignLab(1L, 1L, testDate)).thenReturn(testLab1);
 
         // Act
-        ResponseEntity<?> response = labController.assignLab(1L, 1L, testDate);
+        LabDTO request = new LabDTO();
+        request.setPatientId(1L);
+        request.setLabTechnicianId(1L);
+        request.setRequestDate(testDate);
+        ResponseEntity<LabDTO> response = labController.assignLab(request);
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        LabDTO lab = (LabDTO) response.getBody();
+        LabDTO lab = response.getBody();
         assertNotNull(lab);
         assertEquals(1L, lab.getLabId());
         assertEquals("Blood Test", lab.getTestType());
@@ -157,14 +158,16 @@ class RestLabControllerUnitTest {
         when(labService.assignLab(1L, 1L, testDate)).thenThrow(new InvalidOperationException("Invalid data"));
 
         // Act
-        ResponseEntity<?> response = labController.assignLab(1L, 1L, testDate);
+        LabDTO request = new LabDTO();
+        request.setPatientId(1L);
+        request.setLabTechnicianId(1L);
+        request.setRequestDate(testDate);
+        ResponseEntity<LabDTO> response = labController.assignLab(request);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Invalid data", errorResponse.get("error"));
+        // For BAD_REQUEST, body is expected to be null (controller returns .body(null))
+        assertNull(response.getBody());
     }
 
     @Test
@@ -194,10 +197,8 @@ class RestLabControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Invalid data", errorResponse.get("error"));
+        // For BAD_REQUEST, body is expected to be null (controller returns .body(null))
+        assertNull(response.getBody());
     }
 
     @Test
@@ -220,9 +221,7 @@ class RestLabControllerUnitTest {
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
-        assertNotNull(errorResponse);
-        assertEquals("Lab no encontrado con id : '1'", errorResponse.get("error"));
+        // For NOT_FOUND, body is expected to be null (controller returns .build())
+        assertNull(response.getBody());
     }
 }
