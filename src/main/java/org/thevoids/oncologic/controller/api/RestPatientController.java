@@ -66,7 +66,9 @@ public class RestPatientController {
     @GetMapping("/{id}")
     public ResponseEntity<PatientDTO> getPatientById(
             @Parameter(description = "ID del paciente a buscar") @PathVariable Long id) {
-
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             PatientDTO patient = patientService.getPatientById(id);
             return ResponseEntity.ok(patient);
@@ -94,6 +96,9 @@ public class RestPatientController {
     @PreAuthorize("hasAuthority('CREATE_PATIENTS')")
     @PostMapping
     public ResponseEntity<PatientDTO> createPatient(@RequestBody PatientDTO patientDTO) {
+        if (patientDTO == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             PatientDTO createdPatient = patientService.createPatient(patientDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdPatient);
@@ -126,6 +131,9 @@ public class RestPatientController {
     @PreAuthorize("hasAuthority('UPDATE_PATIENTS')")
     @PutMapping("/{id}")
     public ResponseEntity<PatientDTO> updatePatient(@PathVariable Long id, @RequestBody PatientDTO patientDTO) {
+        if (patientDTO == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             patientDTO.setPatientId(id);
             PatientDTO updatedPatient = patientService.updatePatient(patientDTO);
@@ -158,6 +166,9 @@ public class RestPatientController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePatient(
             @Parameter(description = "ID del paciente a eliminar") @PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             patientService.deletePatient(id);
             return ResponseEntity.noContent().build();

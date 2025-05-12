@@ -68,6 +68,9 @@ public class RestScheduleController {
     @PreAuthorize("hasAuthority('VIEW_SCHEDULES')")
     @GetMapping("/{id}")
     public ResponseEntity<ScheduleDTO> getScheduleById(@PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             ScheduleDTO schedule = scheduleService.getScheduleById(id);
             return ResponseEntity.ok(schedule);
@@ -95,6 +98,9 @@ public class RestScheduleController {
     @PreAuthorize("hasAuthority('CREATE_SCHEDULES')")
     @PostMapping
     public ResponseEntity<ScheduleDTO> createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
+        if (scheduleDTO == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             ScheduleDTO createdSchedule = scheduleService.createSchedule(scheduleDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdSchedule);
@@ -124,6 +130,9 @@ public class RestScheduleController {
     @PreAuthorize("hasAuthority('UPDATE_SCHEDULES')")
     @PutMapping("/{id}")
     public ResponseEntity<ScheduleDTO> updateSchedule(@PathVariable Long id, @RequestBody ScheduleDTO scheduleDTO) {
+        if (scheduleDTO == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             scheduleDTO.setScheduleId(id);
             ScheduleDTO updatedSchedule = scheduleService.updateSchedule(scheduleDTO);
@@ -156,6 +165,9 @@ public class RestScheduleController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSchedule(
             @Parameter(description = "ID del horario a eliminar") @PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             scheduleService.deleteSchedule(id);
             return ResponseEntity.noContent().build();

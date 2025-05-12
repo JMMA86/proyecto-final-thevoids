@@ -64,7 +64,9 @@ public class RestLabController {
     @GetMapping("/{id}")
     public ResponseEntity<LabDTO> getLabById(
             @Parameter(description = "ID del examen a buscar") @PathVariable Long id) {
-
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             LabDTO lab = labService.getLabById(id);
             return ResponseEntity.ok(lab);
@@ -80,6 +82,9 @@ public class RestLabController {
     @PreAuthorize("hasAuthority('ASSIGN_LABS')")
     @PostMapping
     public ResponseEntity<LabDTO> assignLab(@RequestBody LabDTO labDTO) {
+        if (labDTO == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             Long patientId = labDTO.getPatientId();
             Long userId = labDTO.getLabTechnicianId();
@@ -117,6 +122,9 @@ public class RestLabController {
     public ResponseEntity<LabDTO> updateLab(
             @Parameter(description = "ID del examen a actualizar") @PathVariable Long id,
             @Parameter(description = "Datos del examen a actualizar") @RequestBody LabDTO labDTO) {
+        if (labDTO == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             labDTO.setLabId(id);
             LabDTO updatedLab = labService.updateLab(labDTO);
@@ -149,6 +157,9 @@ public class RestLabController {
     @DeleteMapping("/{id}")
     public ResponseEntity<LabDTO> deleteLab(
             @Parameter(description = "ID del examen a eliminar") @PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             labService.deleteLab(id);
             return ResponseEntity.noContent().build();

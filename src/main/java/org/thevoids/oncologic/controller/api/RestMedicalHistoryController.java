@@ -65,6 +65,9 @@ public class RestMedicalHistoryController {
     @Parameter(description = "ID de la historia médica a buscar")
     @GetMapping("/{id}")
     public ResponseEntity<MedicalHistoryDTO> getMedicalHistoryById(@PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             MedicalHistoryDTO history = medicalHistoryService.getMedicalHistoryById(id);
             return ResponseEntity.ok(history);
@@ -90,6 +93,9 @@ public class RestMedicalHistoryController {
     @PreAuthorize("hasAuthority('CREATE_MEDICAL_HISTORIES')")
     @PostMapping
     public ResponseEntity<MedicalHistoryDTO> createMedicalHistory(@RequestBody MedicalHistoryDTO dto) {
+        if (dto == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             MedicalHistoryDTO created = medicalHistoryService.createMedicalHistory(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -121,6 +127,9 @@ public class RestMedicalHistoryController {
     @PutMapping("/{id}")
     public ResponseEntity<MedicalHistoryDTO> updateMedicalHistory(@PathVariable Long id,
             @RequestBody MedicalHistoryDTO dto) {
+        if (dto == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             dto.setHistoryId(id);
             MedicalHistoryDTO updated = medicalHistoryService.updateMedicalHistory(dto);
@@ -150,6 +159,9 @@ public class RestMedicalHistoryController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMedicalHistory(
             @Parameter(description = "ID de la historia médica a eliminar") @PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         try {
             medicalHistoryService.deleteMedicalHistory(id);
             return ResponseEntity.noContent().build();

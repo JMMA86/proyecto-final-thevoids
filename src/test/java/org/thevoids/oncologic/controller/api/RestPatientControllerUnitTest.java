@@ -89,6 +89,12 @@ class RestPatientControllerUnitTest {
     }
 
     @Test
+    void testGetPatientById_NullId() {
+        ResponseEntity<PatientDTO> response = patientController.getPatientById(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
     void testCreatePatient_Success() {
         when(patientService.createPatient(any(PatientDTO.class))).thenReturn(testPatient1);
         ResponseEntity<PatientDTO> response = patientController.createPatient(testPatient1);
@@ -106,6 +112,12 @@ class RestPatientControllerUnitTest {
         ResponseEntity<PatientDTO> response = patientController.createPatient(testPatient1);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNull(response.getBody());
+    }
+
+    @Test
+    void testCreatePatient_NullBody() {
+        ResponseEntity<PatientDTO> response = patientController.createPatient(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
@@ -130,6 +142,12 @@ class RestPatientControllerUnitTest {
     }
 
     @Test
+    void testUpdatePatient_NullBody() {
+        ResponseEntity<PatientDTO> response = patientController.updatePatient(1L, null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
     void testDeletePatient_Success() {
         ResponseEntity<Void> response = patientController.deletePatient(1L);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
@@ -141,6 +159,51 @@ class RestPatientControllerUnitTest {
         doThrow(new ResourceNotFoundException("Patient", "id", 1L)).when(patientService).deletePatient(anyLong());
         ResponseEntity<Void> response = patientController.deletePatient(1L);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testDeletePatient_NullId() {
+        ResponseEntity<Void> response = patientController.deletePatient(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testGetPatientById_RuntimeException() {
+        when(patientService.getPatientById(1L)).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<PatientDTO> response = patientController.getPatientById(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    void testGetAllPatients_RuntimeException() {
+        when(patientService.getAllPatients()).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<List<PatientDTO>> response = patientController.getAllPatients();
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testCreatePatient_RuntimeException() {
+        when(patientService.createPatient(any(PatientDTO.class))).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<PatientDTO> response = patientController.createPatient(testPatient1);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testUpdatePatient_RuntimeException() {
+        when(patientService.updatePatient(any(PatientDTO.class))).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<PatientDTO> response = patientController.updatePatient(1L, testPatient1);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testDeletePatient_RuntimeException() {
+        doThrow(new RuntimeException("Unexpected error")).when(patientService).deletePatient(anyLong());
+        ResponseEntity<Void> response = patientController.deletePatient(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNull(response.getBody());
     }
 }

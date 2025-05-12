@@ -192,4 +192,70 @@ class RestMedicalHistoryControllerUnitTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody());
     }
+
+    @Test
+    void testGetMedicalHistoryById_NullId() {
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.getMedicalHistoryById(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testCreateMedicalHistory_NullBody() {
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.createMedicalHistory(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testUpdateMedicalHistory_NullBody() {
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.updateMedicalHistory(1L, null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testDeleteMedicalHistory_NullId() {
+        ResponseEntity<Void> response = medicalHistoryController.deleteMedicalHistory(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testGetMedicalHistoryById_RuntimeException() {
+        when(medicalHistoryService.getMedicalHistoryById(1L)).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.getMedicalHistoryById(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    void testGetAllMedicalHistories_RuntimeException() {
+        when(medicalHistoryService.getAllMedicalHistories()).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<List<MedicalHistoryDTO>> response = medicalHistoryController.getAllMedicalHistories();
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testCreateMedicalHistory_RuntimeException() {
+        when(medicalHistoryService.createMedicalHistory(any(MedicalHistoryDTO.class)))
+                .thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.createMedicalHistory(testMedicalHistory1);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testUpdateMedicalHistory_RuntimeException() {
+        when(medicalHistoryService.updateMedicalHistory(any(MedicalHistoryDTO.class)))
+                .thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<MedicalHistoryDTO> response = medicalHistoryController.updateMedicalHistory(1L,
+                testMedicalHistory1);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testDeleteMedicalHistory_RuntimeException() {
+        doThrow(new RuntimeException("Unexpected error")).when(medicalHistoryService).deleteMedicalHistory(anyLong());
+        ResponseEntity<Void> response = medicalHistoryController.deleteMedicalHistory(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
 }

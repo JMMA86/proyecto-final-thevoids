@@ -133,6 +133,14 @@ class RestLabControllerUnitTest {
     }
 
     @Test
+    void testGetLabById_NullId() {
+        // Act
+        ResponseEntity<?> response = labController.getLabById(null);
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
     void testAssignLab_Success() {
         // Arrange
         when(labService.assignLab(1L, 1L, testDate)).thenReturn(testLab1);
@@ -171,6 +179,14 @@ class RestLabControllerUnitTest {
     }
 
     @Test
+    void testAssignLab_NullRequest() {
+        // Act
+        ResponseEntity<LabDTO> response = labController.assignLab(null);
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
     void testUpdateLab_Success() {
         // Arrange
         when(labService.updateLab(any(LabDTO.class))).thenReturn(testLab1);
@@ -202,6 +218,14 @@ class RestLabControllerUnitTest {
     }
 
     @Test
+    void testUpdateLab_NullBody() {
+        // Act
+        ResponseEntity<?> response = labController.updateLab(1L, null);
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
     void testDeleteLab_Success() {
         // Act
         ResponseEntity<?> response = labController.deleteLab(1L);
@@ -222,6 +246,57 @@ class RestLabControllerUnitTest {
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         // For NOT_FOUND, body is expected to be null (controller returns .build())
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testDeleteLab_NullId() {
+        // Act
+        ResponseEntity<?> response = labController.deleteLab(null);
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testGetLabById_RuntimeException() {
+        when(labService.getLabById(1L)).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<?> response = labController.getLabById(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    void testGetAllLabs_RuntimeException() {
+        when(labService.getAllLabs()).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<?> response = labController.getAllLabs();
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testAssignLab_RuntimeException() {
+        when(labService.assignLab(anyLong(), anyLong(), any())).thenThrow(new RuntimeException("Unexpected error"));
+        LabDTO request = new LabDTO();
+        request.setPatientId(1L);
+        request.setLabTechnicianId(1L);
+        request.setRequestDate(new java.util.Date());
+        ResponseEntity<LabDTO> response = labController.assignLab(request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testUpdateLab_RuntimeException() {
+        when(labService.updateLab(any(LabDTO.class))).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<?> response = labController.updateLab(1L, testLab1);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testDeleteLab_RuntimeException() {
+        doThrow(new RuntimeException("Unexpected error")).when(labService).deleteLab(anyLong());
+        ResponseEntity<?> response = labController.deleteLab(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNull(response.getBody());
     }
 }

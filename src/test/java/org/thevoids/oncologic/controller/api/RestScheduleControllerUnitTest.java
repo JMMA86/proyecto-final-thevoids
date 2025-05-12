@@ -79,6 +79,12 @@ class RestScheduleControllerUnitTest {
     }
 
     @Test
+    void testGetScheduleById_NullId() {
+        ResponseEntity<ScheduleDTO> response = scheduleController.getScheduleById(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
     void testCreateSchedule_Success() {
         when(scheduleService.createSchedule(any(ScheduleDTO.class))).thenReturn(testSchedule1);
         ResponseEntity<ScheduleDTO> response = scheduleController.createSchedule(testSchedule1);
@@ -95,6 +101,12 @@ class RestScheduleControllerUnitTest {
         ResponseEntity<ScheduleDTO> response = scheduleController.createSchedule(testSchedule1);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNull(response.getBody());
+    }
+
+    @Test
+    void testCreateSchedule_NullBody() {
+        ResponseEntity<ScheduleDTO> response = scheduleController.createSchedule(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
@@ -118,6 +130,12 @@ class RestScheduleControllerUnitTest {
     }
 
     @Test
+    void testUpdateSchedule_NullBody() {
+        ResponseEntity<ScheduleDTO> response = scheduleController.updateSchedule(1L, null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
     void testDeleteSchedule_Success() {
         ResponseEntity<Void> response = scheduleController.deleteSchedule(1L);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
@@ -129,6 +147,53 @@ class RestScheduleControllerUnitTest {
         doThrow(new ResourceNotFoundException("Schedule", "id", 1L)).when(scheduleService).deleteSchedule(anyLong());
         ResponseEntity<Void> response = scheduleController.deleteSchedule(1L);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testDeleteSchedule_NullId() {
+        ResponseEntity<Void> response = scheduleController.deleteSchedule(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testGetScheduleById_RuntimeException() {
+        when(scheduleService.getScheduleById(1L)).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<ScheduleDTO> response = scheduleController.getScheduleById(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    void testGetAllSchedules_RuntimeException() {
+        when(scheduleService.getAllSchedules()).thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<List<ScheduleDTO>> response = scheduleController.getAllSchedules();
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testCreateSchedule_RuntimeException() {
+        when(scheduleService.createSchedule(any(ScheduleDTO.class)))
+                .thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<ScheduleDTO> response = scheduleController.createSchedule(testSchedule1);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testUpdateSchedule_RuntimeException() {
+        when(scheduleService.updateSchedule(any(ScheduleDTO.class)))
+                .thenThrow(new RuntimeException("Unexpected error"));
+        ResponseEntity<ScheduleDTO> response = scheduleController.updateSchedule(1L, testSchedule1);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testDeleteSchedule_RuntimeException() {
+        doThrow(new RuntimeException("Unexpected error")).when(scheduleService).deleteSchedule(anyLong());
+        ResponseEntity<Void> response = scheduleController.deleteSchedule(1L);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNull(response.getBody());
     }
 }
