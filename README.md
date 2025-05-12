@@ -98,6 +98,8 @@ This will generate a code coverage report using **JaCoCo**. You can find the rep
 
 ![Coverage Report](/doc/coverage/coverage.png)
 
+![Postman Coverage Report](/doc/coverage/postman.png)
+
 ## Swagger
 
 This project includes comprehensive API documentation using Swagger/OpenAPI 3.0. The API endpoints are thoroughly documented with detailed descriptions, request/response schemas, and possible HTTP status codes.

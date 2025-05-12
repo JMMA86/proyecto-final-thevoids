@@ -142,16 +142,18 @@ public class PatientServiceUnitTest {
         @Test
         void deletePatientSuccessfullyDeletesPatient() {
                 Long id = 1L;
-                when(patientRepository.existsById(id)).thenReturn(true);
+                Patient patient = new Patient();
+                patient.setPatientId(id);
+                when(patientRepository.findById(id)).thenReturn(Optional.of(patient));
                 patientService.deletePatient(id);
-                verify(patientRepository).deleteById(id);
+                verify(patientRepository).delete(patient);
         }
 
         @Test
         void deletePatientThrowsExceptionWhenPatientDoesNotExist() {
                 Long id = 1L;
-                when(patientRepository.existsById(id)).thenReturn(false);
+                when(patientRepository.findById(id)).thenReturn(Optional.empty());
                 assertThrows(ResourceNotFoundException.class, () -> patientService.deletePatient(id));
-                verify(patientRepository, never()).deleteById(any());
+                verify(patientRepository, never()).delete(any());
         }
 }
