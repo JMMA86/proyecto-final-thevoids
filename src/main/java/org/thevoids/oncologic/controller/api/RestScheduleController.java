@@ -54,6 +54,13 @@ public class RestScheduleController {
      * @param id the ID of the schedule to retrieve.
      * @return a response entity containing the schedule DTO.
      */
+    @Operation(summary = "Obtener horario por ID", description = "Recupera un horario específico por su ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Horario encontrado",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Horario no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver horarios")
+    })
     @PreAuthorize("hasAuthority('VIEW_SCHEDULES')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getScheduleById(

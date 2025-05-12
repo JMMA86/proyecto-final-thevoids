@@ -214,6 +214,13 @@ public class RestUserController {
      * @param roleId the ID of the role to add.
      * @return a success or error response.
      */
+    @Operation(summary = "Asignar rol a usuario", description = "Asigna un rol a un usuario")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Rol asignado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserWithRolesDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Usuario o rol no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para asignar roles")
+    })
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @PostMapping("/{userId}/roles/{roleId}")
     public ResponseEntity<UserWithRolesDTO> assignRoleToUser(
@@ -242,6 +249,13 @@ public class RestUserController {
      * @param roleId the ID of the role to remove.
      * @return a success or error response.
      */
+    @Operation(summary = "Eliminar rol de usuario", description = "Elimina un rol de un usuario")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Rol eliminado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserWithRolesDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Usuario o rol no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para eliminar roles")
+    })
     @PreAuthorize("hasAuthority('EDIT_USERS')")
     @DeleteMapping("/{userId}/roles/{roleId}")
     public ResponseEntity<UserWithRolesDTO> removeRoleFromUser(
