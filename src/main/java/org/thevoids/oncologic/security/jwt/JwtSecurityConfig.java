@@ -1,5 +1,7 @@
 package org.thevoids.oncologic.security.jwt;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -10,6 +12,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 import org.thevoids.oncologic.security.CustomAccessDeniedHandler;
 import org.thevoids.oncologic.service.impl.CustomUserDetailsServiceImpl;
 import org.thevoids.oncologic.utils.JwtService;
@@ -27,6 +30,13 @@ public class JwtSecurityConfig {
     @Order(1)
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(request -> {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+                configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+                configuration.setAllowedHeaders(List.of("*"));
+                return configuration;
+            }))
             .securityMatcher("/api/v1/**")
             .userDetailsService(userDetailsService)
             .authorizeHttpRequests(
