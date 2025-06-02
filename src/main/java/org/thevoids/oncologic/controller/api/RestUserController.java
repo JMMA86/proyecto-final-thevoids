@@ -128,8 +128,10 @@ public class RestUserController {
         @RequestBody UserDTO userDTO
     ) {
         try {
+            userDTO.setStatus("active");
             User user = userMapper.toUser(userDTO);
             User createdUser = userService.createUser(user);
+            assignedRolesService.assignRoleToUser(userDTO.getRoleId(), createdUser.getUserId());
             UserDTO createdUserDTO = userMapper.toUserDTO(createdUser);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUserDTO);
         } catch (ResourceAlreadyExistsException e) {
