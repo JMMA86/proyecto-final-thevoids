@@ -15,12 +15,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.thevoids.oncologic.dto.entity.RoleDTO;
 import org.thevoids.oncologic.dto.entity.UserDTO;
 import org.thevoids.oncologic.dto.entity.UserWithRolesDTO;
+import org.thevoids.oncologic.entity.Role;
 import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.exception.ResourceAlreadyExistsException;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.mapper.RoleMapper;
 import org.thevoids.oncologic.mapper.UserMapper;
 import org.thevoids.oncologic.service.AssignedRoles;
 import org.thevoids.oncologic.service.UserService;
@@ -42,6 +45,9 @@ public class RestUserController {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private RoleMapper roleMapper;
 
     @Autowired
     private AssignedRoles assignedRolesService;
@@ -202,6 +208,38 @@ public class RestUserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (InvalidOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Get roles assigned to a user.
+     * 
+     * @param userId the ID of the user.
+     * @return a list of roles assigned to the user.
+     */
+    @Operation(summary = "Obtener roles de usuario", description = "Recupera los roles asignados a un usuario")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Roles recuperados exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserWithRolesDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver roles de usuarios")
+    })
+    @PreAuthorize("hasAuthority('VIEW_USERS')")
+    @GetMapping("/{userId}/roles")
+    public ResponseEntity<List<RoleDTO>> getUserRoles(
+        @Parameter(description = "ID del usuario")
+        @PathVariable Long userId
+    ) {
+        try {
+            List<Role> roles = assignedRolesService.getRolesFromUser(userId);
+            List<RoleDTO> roleDTOs = roles.stream()
+                    .map(roleMapper::toRoleDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(roleDTOs);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
