@@ -204,6 +204,12 @@ public class RestUserController {
     ) {
         try {
             User user = userService.getUserById(userId);
+            List<Role> roles = assignedRolesService.getRolesFromUser(userId);
+            if (!roles.isEmpty()) {
+                for (Role role : roles) {
+                    assignedRolesService.removeRoleFromUser(role.getRoleId(), userId);
+                }
+            }
             userService.deleteUser(user);
             return ResponseEntity.ok().build();
         } catch (ResourceNotFoundException e) {
