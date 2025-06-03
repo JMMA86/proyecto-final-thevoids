@@ -10,8 +10,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -52,22 +56,33 @@ public class JwtService {
     }
 
     public String extractUsername(String token) {
+        return getClaims(token).get("identification", String.class);
+    }
+    
+    public boolean isTokenExpired(String token) {
+        try {
+            return getClaims(token).getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true;
+        }
+    }
+    
+    private Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes()))
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .get("identification", String.class);
+                .getBody();
     }
     
     public boolean validateToken(String token, UserDetails userDetails) {
         try {
             final String username = extractUsername(token);
-            return userDetails.getUsername().equals(username);
-        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
+            return userDetails.getUsername().equals(username) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            return false;
+        } catch (MalformedJwtException | SignatureException | IllegalArgumentException e) {
             return false;
         }
     }
-
-
 }
