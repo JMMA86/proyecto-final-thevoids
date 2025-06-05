@@ -14,7 +14,7 @@ public interface MedicalHistoryMapper {
     @Mapping(source = "patient.patientId", target = "patientId")
     MedicalHistoryDTO toMedicalHistoryDTO(MedicalHistory medicalHistory);
 
-    @Mapping(source = "patientId", target = "patient.patientId")
+    @Mapping(target = "patient", ignore = true)
     MedicalHistory toMedicalHistory(MedicalHistoryDTO medicalHistoryDTO);
 
     // Convert a list of MedicalHistory entities to a list of MedicalHistoryDTOs

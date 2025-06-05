@@ -17,10 +17,11 @@ public interface AppointmentMapper {
     @Mapping(source = "clinicAssignment.id", target = "clinicAssignmentId")
     AppointmentDTO toAppointmentDTO(Appointment appointment);
 
-    @Mapping(source = "patientId", target = "patient.patientId")
-    @Mapping(source = "doctorId", target = "doctor.userId")
-    @Mapping(source = "appointmentTypeId", target = "appointmentType.typeId")
-    @Mapping(source = "clinicAssignmentId", target = "clinicAssignment.id")
+    @Mapping(target = "patient", ignore = true)
+    @Mapping(target = "doctor", ignore = true)
+    @Mapping(target = "appointmentType", ignore = true)
+    @Mapping(target = "clinicAssignment", ignore = true)
+    @Mapping(target = "tasks", ignore = true)
     Appointment toAppointment(AppointmentDTO appointmentDTO);
 
     Iterable<AppointmentDTO> toAppointmentDTOs(Iterable<Appointment> appointments);

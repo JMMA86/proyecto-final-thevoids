@@ -24,8 +24,8 @@ public class Appointment {
 
     @Column(name = "status", length = 200, nullable = false)
     private String status = "pending";
-    
-    @ManyToOne
+
+    @ManyToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
@@ -42,7 +42,7 @@ public class Appointment {
     private List<Task> tasks;
 
     @ManyToOne
-    @JoinColumn(name="clinic_assignment_id", nullable = false)
+    @JoinColumn(name = "clinic_assignment_id", nullable = false)
     private ClinicAssignment clinicAssignment;
 
     // Getters and setters

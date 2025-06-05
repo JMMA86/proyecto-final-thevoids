@@ -15,8 +15,8 @@ public interface LabMapper {
     @Mapping(source = "labTechnician.userId", target = "labTechnicianId")
     LabDTO toLabDTO(Lab lab);
 
-    @Mapping(source = "patientId", target = "patient.patientId")
-    @Mapping(source = "labTechnicianId", target = "labTechnician.userId")
+    @Mapping(target = "patient", ignore = true)
+    @Mapping(target = "labTechnician", ignore = true)
     Lab toLab(LabDTO labDTO);
 
     // Convert a list of Lab entities to a list of LabDTOs

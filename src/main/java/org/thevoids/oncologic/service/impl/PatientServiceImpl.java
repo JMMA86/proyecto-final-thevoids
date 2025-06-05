@@ -52,11 +52,15 @@ public class PatientServiceImpl implements PatientService {
             throw new InvalidOperationException("Patient ID cannot be null");
         }
 
-        if (!patientRepository.existsById(patientDTO.getPatientId())) {
-            throw new ResourceNotFoundException("Patient", "id", patientDTO.getPatientId());
-        }
+        Patient patient = patientRepository.findById(patientDTO.getPatientId())
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", patientDTO.getPatientId()));
 
-        Patient patient = patientMapper.toPatient(patientDTO);
+        // Update only the fields from DTO (do not replace the entity)
+        patient.setBloodGroup(patientDTO.getBloodGroup());
+        patient.setAllergies(patientDTO.getAllergies());
+        patient.setFamilyHistory(patientDTO.getFamilyHistory());
+        // Do not update user or child collections here
+
         Patient updatedPatient = patientRepository.save(patient);
         return patientMapper.toPatientDTO(updatedPatient);
     }
@@ -66,11 +70,12 @@ public class PatientServiceImpl implements PatientService {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
-        if (patient.getMedicalHistories() != null) {
-            patient.getMedicalHistories().clear();
-        }
-        if (patient.getLabs() != null) {
-            patient.getLabs().clear();
+        if (patient.getAppointments() != null) {
+            for (var appointment : patient.getAppointments()) {
+                if (appointment.getTasks() != null) {
+                    appointment.getTasks().clear();
+                }
+            }
         }
         patientRepository.delete(patient);
     }
