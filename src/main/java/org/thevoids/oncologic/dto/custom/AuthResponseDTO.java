@@ -12,16 +12,19 @@ import java.util.List;
 public class AuthResponseDTO {
     private String token;
     private String username;
+    private Long userId;
     private List<RoleWithPermissionsDTO> roles;
-    
-    public AuthResponseDTO(String token, String username, List<RoleWithPermissionsDTO> roles) {
+
+    public AuthResponseDTO(String token, String username, Long userId, List<RoleWithPermissionsDTO> roles) {
         this.token = token;
         this.username = username;
+        this.userId = userId;
         this.roles = roles;
     }
 
-    public AuthResponseDTO(String token, String username) {
+    public AuthResponseDTO(String token, String username, Long userId) {
         this.token = token;
         this.username = username;
+        this.userId = userId;
     }
 }

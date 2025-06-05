@@ -58,61 +58,49 @@ public class RestAuthController {
 
     /**
      * Login method to authenticate user and generate JWT token.
+     * 
      * @param request AuthRequest object containing username and password
      * @return JWT token if authentication is successful
      */
     @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y genera un token JWT")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Autenticación exitosa",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponseDTO.class))),
-        @ApiResponse(responseCode = "401", description = "Credenciales inválidas"),
-        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+            @ApiResponse(responseCode = "200", description = "Autenticación exitosa", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Credenciales inválidas"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(
-        @Parameter(description = "Datos de autenticación")
-        @RequestBody AuthRequest request
-    ) {
+            @Parameter(description = "Datos de autenticación") @RequestBody AuthRequest request) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
-                            request.getPassword()
-                    )
-            );
+                            request.getPassword()));
 
             UserDetails userDetails = customUserDetailsServiceImpl.loadUserByUsername(request.getUsername());
             String token = jwtService.generateToken(userDetails);
-            
             // Obtener el usuario por username
             User user = userService.getUserByIdentification(request.getUsername());
-            
             // Obtener los roles del usuario
             List<Role> userRoles = assignedRolesService.getRolesFromUser(user.getUserId());
-            
             // Convertir roles a DTO con permisos
             List<RoleWithPermissionsDTO> rolesWithPermissions = userRoles.stream()
-                .map(role -> {
-                    // Obtener permisos del rol
-                    List<Permission> rolePermissions = rolePermissionService.getPermissionsFromRole(role.getRoleId());
-                    
-                    // Convertir permisos a DTO
-                    List<PermissionDTO> permissionDTOs = rolePermissions.stream()
-                        .map(permission -> new PermissionDTO(
-                            permission.getPermissionId(),
-                            permission.getPermissionName()
-                        ))
-                        .collect(Collectors.toList());
-                    
-                    return new RoleWithPermissionsDTO(
-                        role.getRoleId(),
-                        role.getRoleName(),
-                        permissionDTOs
-                    );
-                })
-                .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(new AuthResponseDTO(token, request.getUsername(), rolesWithPermissions));
+                    .map(role -> {
+                        List<Permission> rolePermissions = rolePermissionService
+                                .getPermissionsFromRole(role.getRoleId());
+                        List<PermissionDTO> permissionDTOs = rolePermissions.stream()
+                                .map(permission -> new PermissionDTO(
+                                        permission.getPermissionId(),
+                                        permission.getPermissionName()))
+                                .collect(Collectors.toList());
+                        return new RoleWithPermissionsDTO(
+                                role.getRoleId(),
+                                role.getRoleName(),
+                                permissionDTOs);
+                    })
+                    .collect(Collectors.toList());
+            return ResponseEntity
+                    .ok(new AuthResponseDTO(token, request.getUsername(), user.getUserId(), rolesWithPermissions));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e) {
