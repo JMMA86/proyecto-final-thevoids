@@ -22,6 +22,17 @@ import org.thevoids.oncologic.dto.entity.AuthRequest;
 import org.thevoids.oncologic.dto.custom.AuthResponseDTO;
 import org.thevoids.oncologic.service.impl.CustomUserDetailsServiceImpl;
 import org.thevoids.oncologic.utils.JwtService;
+import org.thevoids.oncologic.dto.entity.RoleWithPermissionsDTO;
+import org.thevoids.oncologic.dto.entity.PermissionDTO;
+import org.thevoids.oncologic.entity.User;
+import org.thevoids.oncologic.entity.Role;
+import org.thevoids.oncologic.entity.Permission;
+import org.thevoids.oncologic.service.UserService;
+import org.thevoids.oncologic.service.AssignedRoles;
+import org.thevoids.oncologic.service.RolePermissionService;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -35,6 +46,15 @@ public class RestAuthController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private AssignedRoles assignedRolesService;
+
+    @Autowired
+    private RolePermissionService rolePermissionService;
 
     /**
      * Login method to authenticate user and generate JWT token.
@@ -64,7 +84,35 @@ public class RestAuthController {
             UserDetails userDetails = customUserDetailsServiceImpl.loadUserByUsername(request.getUsername());
             String token = jwtService.generateToken(userDetails);
             
-            return ResponseEntity.ok(new AuthResponseDTO(token, request.getUsername()));
+            // Obtener el usuario por username
+            User user = userService.getUserByIdentification(request.getUsername());
+            
+            // Obtener los roles del usuario
+            List<Role> userRoles = assignedRolesService.getRolesFromUser(user.getUserId());
+            
+            // Convertir roles a DTO con permisos
+            List<RoleWithPermissionsDTO> rolesWithPermissions = userRoles.stream()
+                .map(role -> {
+                    // Obtener permisos del rol
+                    List<Permission> rolePermissions = rolePermissionService.getPermissionsFromRole(role.getRoleId());
+                    
+                    // Convertir permisos a DTO
+                    List<PermissionDTO> permissionDTOs = rolePermissions.stream()
+                        .map(permission -> new PermissionDTO(
+                            permission.getPermissionId(),
+                            permission.getPermissionName()
+                        ))
+                        .collect(Collectors.toList());
+                    
+                    return new RoleWithPermissionsDTO(
+                        role.getRoleId(),
+                        role.getRoleName(),
+                        permissionDTOs
+                    );
+                })
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(new AuthResponseDTO(token, request.getUsername(), rolesWithPermissions));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e) {
