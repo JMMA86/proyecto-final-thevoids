@@ -94,17 +94,35 @@ INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (4, 3);  -- EDIT_U
 
 -- Insert sample data into Users
 INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, password, status)
-VALUES ('Admin', '123456789', '1980-05-15', 'Male', '123 Main St', '555-1234', 'john.doe@example.com', '$2a$12$bvKiQLOf1zhcFThcgVVNT.4MHfP6VZE23vVMhkHoZepYCN3z03X2G', 'active');
+VALUES ('Admin', '123456789', '1980-05-15', 'Male', '123 Main St', '555-1234', 'john.doe@example.com', '$2a$12$7Ni.4Byq96tNSgEOy1mtiufyDWTq4wveUP7bQnd1AhIgNwojcwT/2', 'active');
 
 INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, password, status)
-VALUES ('Jane Smith', '111111111', '1990-08-25', 'Female', '456 Elm St', '555-5678', 'jane.smith@example.com', '$2a$12$bvKiQLOf1zhcFThcgVVNT.4MHfP6VZE23vVMhkHoZepYCN3z03X2G', 'active');
+VALUES ('Jane Smith', '111111111', '1990-08-25', 'Female', '456 Elm St', '555-5678', 'jane.smith@example.com', '$2a$12$7Ni.4Byq96tNSgEOy1mtiufyDWTq4wveUP7bQnd1AhIgNwojcwT/2', 'active');
 
 INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, password, status)
-VALUES ('Alice Johnson', '456789123', '1985-03-10', 'Female', '789 Oak St', '555-9012', 'alice.johnson@example.com', '$2a$12$bvKiQLOf1zhcFThcgVVNT.4MHfP6VZE23vVMhkHoZepYCN3z03X2G', 'active');
+VALUES ('Johnny Sins', '456789123', '1985-03-10', 'Female', '789 Oak St', '555-9012', 'alice.johnson@example.com', '$2a$12$7Ni.4Byq96tNSgEOy1mtiufyDWTq4wveUP7bQnd1AhIgNwojcwT/2', 'active');
+
+INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, password, status)
+VALUES ('Bob Wilson', '789123456', '1992-07-15', 'Male', '321 Pine St', '555-3456', 'bob.wilson@example.com', '$2a$12$7Ni.4Byq96tNSgEOy1mtiufyDWTq4wveUP7bQnd1AhIgNwojcwT/2', 'active');
+
+INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, password, status)
+VALUES ('Maria Garcia', '654321789', '1988-12-03', 'Female', '456 Cedar Ave', '555-7890', 'maria.garcia@example.com', '$2a$12$7Ni.4Byq96tNSgEOy1mtiufyDWTq4wveUP7bQnd1AhIgNwojcwT/2', 'active');
+
+INSERT INTO Users (full_name, identification, birth_date, gender, address, phone, email, password, status)
+VALUES ('Sarah Connor', '987654321', '1975-05-20', 'Female', '789 Future St', '555-4567', 'sarah.connor@example.com', '$2a$12$7Ni.4Byq96tNSgEOy1mtiufyDWTq4wveUP7bQnd1AhIgNwojcwT/2', 'active');
 
 -- Insert sample data into Patients
 INSERT INTO Patients (user_id, blood_group, allergies, family_history)
 VALUES (2, 'A+', 'Pollen', 'Diabetes');
+
+INSERT INTO Patients (user_id, blood_group, allergies, family_history)
+VALUES (4, 'O-', 'Penicillin', 'Hypertension');
+
+INSERT INTO Patients (user_id, blood_group, allergies, family_history)
+VALUES (5, 'B+', 'Nuts', 'Heart Disease');
+
+INSERT INTO Patients (user_id, blood_group, allergies, family_history)
+VALUES (6, 'AB+', 'None', 'Cancer');
 
 -- Insert sample data into Clinics
 INSERT INTO Clinics (name, address, phone, specialty, capacity)
@@ -127,11 +145,11 @@ VALUES ('2023-10-01 08:00:00', '2023-10-01 16:00:00', 1, 1);
 
 -- Insert sample data into Appointments
 INSERT INTO Appointments (date_time, status, patient_id, doctor_id, type_id, clinic_assignment_id)
-VALUES ('2023-10-02 10:00:00', 'pending', 1, 1, 1, 1);
+VALUES ('2023-10-02 10:00:00', 'pending', 1, 3, 1, 1);
 
 -- Insert sample data into MedicalHistory
 INSERT INTO Medical_History (patient_id, diagnosis, treatment, medications)
-VALUES (1, 'Cancer', 'Chemotherapy', 'Medicine A, Medicine B');
+VALUES (2, 'Cancer', 'Chemotherapy', 'Medicine A, Medicine B');
 
 -- Insert sample data into Labs
 INSERT INTO Labs (patient_id, lab_technician_id, test_type, request_date, completion_date, result, attachment)
@@ -146,7 +164,10 @@ INSERT INTO Schedules (user_id, day_of_week, start_time, end_time)
 VALUES (1, 'Monday', '2023-10-02 08:00:00', '2023-10-02 16:00:00');
 
 -- Insert sample data into AssignedRole
-INSERT INTO Assigned_Roles (user_id, role_id) VALUES (1, 1); -- Assign Admin role to the user
-INSERT INTO Assigned_Roles (user_id, role_id) VALUES (1, 2); -- John Doe is assigned as a Doctor
-INSERT INTO Assigned_Roles (user_id, role_id) VALUES (2, 3); -- Jane Smith is assigned as a Patient
-INSERT INTO Assigned_Roles (user_id, role_id) VALUES (3, 2); -- Alice Johnson is assigned as a Lab Technician
+INSERT INTO Assigned_Roles (user_id, role_id) VALUES (1, 1); -- Admin is assigned Admin role
+INSERT INTO Assigned_Roles (user_id, role_id) VALUES (3, 3); -- Johnny is assigned as a Doctor
+INSERT INTO Assigned_Roles (user_id, role_id) VALUES (2, 5); -- Jane Smith is assigned as a Patient
+INSERT INTO Assigned_Roles (user_id, role_id) VALUES (3, 4); -- Alice Johnson is assigned as a Lab Technician
+INSERT INTO Assigned_Roles (user_id, role_id) VALUES (4, 5); -- Bob Wilson is assigned as a Patient
+INSERT INTO Assigned_Roles (user_id, role_id) VALUES (5, 5); -- Maria Garcia is assigned as a Patient
+INSERT INTO Assigned_Roles (user_id, role_id) VALUES (6, 2); -- Sarah Connor is assigned as a Receptionist

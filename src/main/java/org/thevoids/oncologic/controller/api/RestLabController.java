@@ -1,5 +1,37 @@
 package org.thevoids.oncologic.controller.api;
 
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.thevoids.oncologic.dto.entity.LabDTO;
+import org.thevoids.oncologic.exception.InvalidOperationException;
+import org.thevoids.oncologic.exception.ResourceNotFoundException;
+import org.thevoids.oncologic.service.FileService;
+import org.thevoids.oncologic.service.LabService;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -7,18 +39,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.thevoids.oncologic.dto.entity.LabDTO;
-import org.thevoids.oncologic.service.LabService;
-import org.thevoids.oncologic.exception.ResourceNotFoundException;
-import org.thevoids.oncologic.exception.InvalidOperationException;
-
-import java.util.Date;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/labs")
@@ -26,6 +46,10 @@ import java.util.List;
 public class RestLabController {
     @Autowired
     private LabService labService;
+    @Autowired
+    private FileService fileService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * Retrieves all labs.
@@ -89,7 +113,11 @@ public class RestLabController {
             Long patientId = labDTO.getPatientId();
             Long userId = labDTO.getLabTechnicianId();
             Date requestDate = labDTO.getRequestDate();
-            LabDTO createdLabDTO = labService.assignLab(patientId, userId, requestDate);
+            String testType = labDTO.getTestType();
+            Date completionDate = labDTO.getCompletionDate();
+            String result = labDTO.getResult();
+            LabDTO createdLabDTO = labService.assignLab(patientId, userId, requestDate, testType, completionDate,
+                    result);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdLabDTO);
         } catch (InvalidOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -138,6 +166,132 @@ public class RestLabController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(null);
+        }
+    }
+
+    /**
+     * Assigns a lab with file attachment.
+     *
+     * @param labData the lab data as JSON string.
+     * @param file    the file attachment (optional).
+     * @return the created lab as a DTO.
+     */
+    @Operation(summary = "Asignar examen con archivo", description = "Asigna un nuevo examen de laboratorio con archivo adjunto opcional")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Examen asignado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LabDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos de asignación inválidos"),
+            @ApiResponse(responseCode = "404", description = "Paciente o técnico no encontrado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para asignar exámenes")
+    })
+    @PreAuthorize("hasAuthority('ASSIGN_LABS')")
+    @PostMapping(value = "/with-file", consumes = { "multipart/form-data" })
+    public ResponseEntity<LabDTO> assignLabWithFile(
+            @Parameter(description = "Datos del examen en formato JSON") @RequestParam("labData") String labData,
+            @Parameter(description = "Archivo adjunto (opcional)") @RequestParam(value = "file", required = false) MultipartFile file) {
+        try {
+            LabDTO labDTO = objectMapper.readValue(labData, LabDTO.class);
+            if (labDTO == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+            Long patientId = labDTO.getPatientId();
+            Long userId = labDTO.getLabTechnicianId();
+            Date requestDate = labDTO.getRequestDate();
+            String testType = labDTO.getTestType();
+            Date completionDate = labDTO.getCompletionDate();
+            String result = labDTO.getResult();
+
+            LabDTO createdLabDTO = labService.assignLabWithFile(patientId, userId, requestDate, testType,
+                    completionDate, result, file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdLabDTO);
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(null);
+        } catch (ResourceNotFoundException | IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    /**
+     * Updates a lab with file attachment.
+     *
+     * @param id      the ID of the lab to update.
+     * @param labData the updated lab data as JSON string.
+     * @param file    the file attachment (optional).
+     * @return the updated lab as a DTO.
+     */
+    @Operation(summary = "Actualizar examen con archivo", description = "Actualiza un examen de laboratorio con archivo adjunto opcional")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Examen actualizado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LabDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Examen no encontrado"),
+            @ApiResponse(responseCode = "400", description = "Datos de actualización inválidos"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para actualizar exámenes")
+    })
+    @PreAuthorize("hasAuthority('UPDATE_LABS')")
+    @PutMapping(value = "/{id}/with-file", consumes = { "multipart/form-data" })
+    public ResponseEntity<LabDTO> updateLabWithFile(
+            @Parameter(description = "ID del examen a actualizar") @PathVariable Long id,
+            @Parameter(description = "Datos del examen en formato JSON") @RequestParam("labData") String labData,
+            @Parameter(description = "Archivo adjunto (opcional)") @RequestParam(value = "file", required = false) MultipartFile file) {
+        try {
+            LabDTO labDTO = objectMapper.readValue(labData, LabDTO.class);
+            if (labDTO == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+            labDTO.setLabId(id);
+            LabDTO updatedLab = labService.updateLabWithFile(labDTO, file);
+            return ResponseEntity.ok(updatedLab);
+        } catch (InvalidOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(null);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    /**
+     * Serves uploaded files.
+     *
+     * @param filename the name of the file to serve.
+     * @return the file as a Resource.
+     */
+    @Operation(summary = "Descargar archivo adjunto", description = "Descarga un archivo adjunto de un examen de laboratorio")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Archivo descargado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Archivo no encontrado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para descargar archivos")
+    })
+    @PreAuthorize("hasAuthority('VIEW_LABS')")
+    @GetMapping("/files/{filename:.+}")
+    public ResponseEntity<Resource> serveFile(
+            @Parameter(description = "Nombre del archivo a descargar") @PathVariable String filename) {
+        try {
+            String filePath = "labs/" + filename;
+            String fullPath = fileService.getFullPath(filePath);
+            Path path = Paths.get(fullPath);
+            Resource resource = new UrlResource(path.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (MalformedURLException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

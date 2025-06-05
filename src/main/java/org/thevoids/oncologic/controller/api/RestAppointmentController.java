@@ -19,6 +19,7 @@ import org.thevoids.oncologic.dto.entity.AppointmentDTO;
 import org.thevoids.oncologic.entity.Appointment;
 import org.thevoids.oncologic.mapper.AppointmentMapper;
 import org.thevoids.oncologic.service.AppointmentService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -47,9 +48,8 @@ public class RestAppointmentController {
      */
     @Operation(summary = "Obtener todas las citas", description = "Recupera una lista de todas las citas disponibles")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lista de citas recuperada exitosamente",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AppointmentDTO.class))),
-        @ApiResponse(responseCode = "403", description = "No autorizado para ver citas")
+            @ApiResponse(responseCode = "200", description = "Lista de citas recuperada exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AppointmentDTO.class))),
+            @ApiResponse(responseCode = "403", description = "No autorizado para ver citas")
     })
     @PreAuthorize("hasAuthority('VIEW_APPOINTMENTS')")
     @GetMapping
@@ -72,17 +72,14 @@ public class RestAppointmentController {
      */
     @Operation(summary = "Obtener cita por ID", description = "Recupera una cita específica por su ID")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cita encontrada",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AppointmentDTO.class))),
-        @ApiResponse(responseCode = "404", description = "Cita no encontrada"),
-        @ApiResponse(responseCode = "403", description = "No autorizado para ver citas")
+            @ApiResponse(responseCode = "200", description = "Cita encontrada", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AppointmentDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Cita no encontrada"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para ver citas")
     })
     @PreAuthorize("hasAuthority('VIEW_APPOINTMENTS')")
     @GetMapping("/{id}")
     public ResponseEntity<AppointmentDTO> getAppointmentById(
-        @Parameter(description = "ID de la cita a buscar")
-        @PathVariable Long id
-    ) {
+            @Parameter(description = "ID de la cita a buscar") @PathVariable Long id) {
         try {
             Appointment appointment = appointmentService.getAppointmentById(id);
             return ResponseEntity.ok(appointmentMapper.toAppointmentDTO(appointment));
@@ -101,17 +98,14 @@ public class RestAppointmentController {
      */
     @Operation(summary = "Crear nueva cita", description = "Crea una nueva cita médica en el sistema")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cita creada exitosamente",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AppointmentDTO.class))),
-        @ApiResponse(responseCode = "400", description = "Datos de cita inválidos"),
-        @ApiResponse(responseCode = "403", description = "No autorizado para crear citas")
+            @ApiResponse(responseCode = "200", description = "Cita creada exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AppointmentDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos de cita inválidos"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para crear citas")
     })
     @PreAuthorize("hasAuthority('ADD_APPOINTMENTS')")
     @PostMapping
     public ResponseEntity<AppointmentDTO> createAppointment(
-        @Parameter(description = "Datos de la cita a crear")
-        @RequestBody AppointmentDTO dto
-    ) {
+            @Parameter(description = "Datos de la cita a crear") @RequestBody AppointmentDTO dto) {
         try {
             Appointment appointment = appointmentService.createAppointment(
                     dto.getPatientId(),
@@ -135,20 +129,16 @@ public class RestAppointmentController {
      */
     @Operation(summary = "Actualizar cita", description = "Actualiza los datos de una cita existente")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cita actualizada exitosamente",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AppointmentDTO.class))),
-        @ApiResponse(responseCode = "404", description = "Cita no encontrada"),
-        @ApiResponse(responseCode = "400", description = "Datos de actualización inválidos"),
-        @ApiResponse(responseCode = "403", description = "No autorizado para actualizar citas")
+            @ApiResponse(responseCode = "200", description = "Cita actualizada exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AppointmentDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Cita no encontrada"),
+            @ApiResponse(responseCode = "400", description = "Datos de actualización inválidos"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para actualizar citas")
     })
     @PreAuthorize("hasAuthority('EDIT_APPOINTMENTS')")
     @PutMapping("/{id}")
     public ResponseEntity<AppointmentDTO> updateAppointment(
-        @Parameter(description = "ID de la cita a actualizar")
-        @PathVariable Long id,
-        @Parameter(description = "Datos de la cita a actualizar")
-        @RequestBody AppointmentDTO dto
-    ) {
+            @Parameter(description = "ID de la cita a actualizar") @PathVariable Long id,
+            @Parameter(description = "Datos de la cita a actualizar") @RequestBody AppointmentDTO dto) {
         try {
             Appointment existing = appointmentService.getAppointmentById(id);
             // Only update fields from DTO
@@ -171,6 +161,7 @@ public class RestAppointmentController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -183,16 +174,14 @@ public class RestAppointmentController {
      */
     @Operation(summary = "Eliminar cita", description = "Elimina una cita del sistema")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cita eliminada exitosamente"),
-        @ApiResponse(responseCode = "404", description = "Cita no encontrada"),
-        @ApiResponse(responseCode = "403", description = "No autorizado para eliminar citas")
+            @ApiResponse(responseCode = "200", description = "Cita eliminada exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Cita no encontrada"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para eliminar citas")
     })
     @PreAuthorize("hasAuthority('DELETE_APPOINTMENTS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAppointment(
-        @Parameter(description = "ID de la cita a eliminar")
-        @PathVariable Long id
-    ) {
+            @Parameter(description = "ID de la cita a eliminar") @PathVariable Long id) {
         try {
             appointmentService.deleteAppointment(id);
             return ResponseEntity.ok().build();
