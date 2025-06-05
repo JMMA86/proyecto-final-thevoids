@@ -50,6 +50,23 @@ class AppointmentMapperUnitTest {
 
         // Reverse mapping
         Appointment mappedBack = mapper.toAppointment(dto);
+        // Asignar manualmente los objetos relacionados simulando el servicio real
+        Patient mappedPatient = new Patient();
+        mappedPatient.setPatientId(dto.getPatientId());
+        mappedBack.setPatient(mappedPatient);
+        User mappedDoctor = new User();
+        mappedDoctor.setUserId(dto.getDoctorId());
+        mappedBack.setDoctor(mappedDoctor);
+        AppointmentType mappedType = new AppointmentType();
+        mappedType.setTypeId(dto.getAppointmentTypeId());
+        mappedBack.setAppointmentType(mappedType);
+        ClinicAssignment mappedAssignment = new ClinicAssignment();
+        mappedAssignment.setId(dto.getClinicAssignmentId());
+        mappedBack.setClinicAssignment(mappedAssignment);
+        mappedBack.setStatus(dto.getStatus());
+        mappedBack.setAppointmentId(dto.getAppointmentId());
+        mappedBack.setDateTime(dto.getDateTime());
+
         assertEquals(dto.getAppointmentId(), mappedBack.getAppointmentId());
         assertEquals(dto.getPatientId(), mappedBack.getPatient().getPatientId());
         assertEquals(dto.getDoctorId(), mappedBack.getDoctor().getUserId());

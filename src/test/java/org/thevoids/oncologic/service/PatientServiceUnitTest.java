@@ -101,8 +101,7 @@ public class PatientServiceUnitTest {
                 PatientDTO updatedPatientDTO = new PatientDTO();
                 updatedPatientDTO.setPatientId(id);
 
-                when(patientRepository.existsById(id)).thenReturn(true);
-                when(patientMapper.toPatient(patientDTO)).thenReturn(patient);
+                when(patientRepository.findById(id)).thenReturn(Optional.of(patient));
                 when(patientRepository.save(patient)).thenReturn(updatedPatient);
                 when(patientMapper.toPatientDTO(updatedPatient)).thenReturn(updatedPatientDTO);
 
@@ -110,8 +109,7 @@ public class PatientServiceUnitTest {
 
                 assertNotNull(result);
                 assertEquals(id, result.getPatientId());
-                verify(patientRepository).existsById(id);
-                verify(patientMapper).toPatient(patientDTO);
+                verify(patientRepository).findById(id);
                 verify(patientRepository).save(patient);
                 verify(patientMapper).toPatientDTO(updatedPatient);
         }
@@ -134,7 +132,7 @@ public class PatientServiceUnitTest {
                 Long id = 1L;
                 PatientDTO patientDTO = new PatientDTO();
                 patientDTO.setPatientId(id);
-                when(patientRepository.existsById(id)).thenReturn(false);
+                when(patientRepository.findById(id)).thenReturn(Optional.empty());
                 assertThrows(ResourceNotFoundException.class, () -> patientService.updatePatient(patientDTO));
                 verify(patientRepository, never()).save(any());
         }
