@@ -3,11 +3,14 @@ package org.thevoids.oncologic.service.impl;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.dto.entity.PatientDTO;
 import org.thevoids.oncologic.entity.Patient;
+import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.mapper.PatientMapper;
 import org.thevoids.oncologic.repository.PatientRepository;
+import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.PatientService;
+import org.thevoids.oncologic.service.UserService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,13 +18,16 @@ import java.util.stream.Collectors;
 @Service
 public class PatientServiceImpl implements PatientService {
     private final PatientRepository patientRepository;
+    private final UserService userService;
     private final PatientMapper patientMapper;
 
     public PatientServiceImpl(
             PatientRepository patientRepository,
-            PatientMapper patientMapper) {
+            PatientMapper patientMapper,
+            UserService userService) {
         this.patientRepository = patientRepository;
         this.patientMapper = patientMapper;
+        this.userService = userService;
     }
 
     @Override
@@ -36,8 +42,9 @@ public class PatientServiceImpl implements PatientService {
         if (patientDTO == null) {
             throw new InvalidOperationException("Patient cannot be null");
         }
-
         Patient patient = patientMapper.toPatient(patientDTO);
+        User user = userService.getUserById(patientDTO.getUserId());
+        patient.setUser(user);
         Patient savedPatient = patientRepository.save(patient);
         return patientMapper.toPatientDTO(savedPatient);
     }

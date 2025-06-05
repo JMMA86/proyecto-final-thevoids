@@ -67,4 +67,18 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByIdentification(identification)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "identificación", identification));
     }
+
+    @Override
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = getUserById(userId);
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new org.thevoids.oncologic.exception.InvalidOperationException("La contraseña actual es incorrecta");
+        }
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new org.thevoids.oncologic.exception.InvalidOperationException(
+                    "La nueva contraseña debe tener al menos 6 caracteres");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }
