@@ -175,4 +175,35 @@ public class RestUserSpecialtyController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    /**
+     * Retrieves the first user specialty by user ID.
+     *
+     * @param userId the ID of the user
+     * @return a response entity containing the user specialty DTO or 404 if not
+     *         found
+     */
+    @Operation(summary = "Obtener la primera especialidad de un usuario por su ID", description = "Recupera la primera especialidad asignada a un usuario específico")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Especialidad encontrada", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserSpecialtyDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Especialidad no encontrada para el usuario"),
+            @ApiResponse(responseCode = "403", description = "No autorizado para ver especialidades de usuarios"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PreAuthorize("hasAuthority('VIEW_USER_SPECIALTIES')")
+    @GetMapping("/user/{userId}/first")
+    public ResponseEntity<UserSpecialtyDTO> getUserSpecialtyByUserId(
+            @Parameter(description = "ID del usuario") @PathVariable Long userId) {
+        try {
+            Optional<UserSpecialty> userSpecialtyOpt = userSpecialtyService.getUserSpecialtyByUserId(userId);
+            if (userSpecialtyOpt.isPresent()) {
+                UserSpecialtyDTO dto = userSpecialtyMapper.toUserSpecialtyDTO(userSpecialtyOpt.get());
+                return ResponseEntity.ok(dto);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }

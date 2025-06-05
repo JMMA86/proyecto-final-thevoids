@@ -7,10 +7,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thevoids.oncologic.dto.entity.PatientDTO;
 import org.thevoids.oncologic.entity.Patient;
+import org.thevoids.oncologic.entity.User;
 import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.PatientMapper;
 import org.thevoids.oncologic.repository.PatientRepository;
+import org.thevoids.oncologic.repository.TaskRepository;
 import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.service.impl.PatientServiceImpl;
 
@@ -28,6 +30,12 @@ public class PatientServiceUnitTest {
 
         @Mock
         private UserRepository userRepository;
+
+        @Mock
+        private UserService userService;
+
+        @Mock
+        private TaskRepository taskRepository;
 
         @Mock
         private PatientMapper patientMapper;
@@ -64,12 +72,20 @@ public class PatientServiceUnitTest {
         @Test
         void createPatientSuccessfullyCreatesPatient() {
                 PatientDTO patientDTO = new PatientDTO();
+                patientDTO.setUserId(1L); // Configure the userId
+
                 Patient patient = new Patient();
                 Patient savedPatient = new Patient();
                 savedPatient.setPatientId(1L);
                 PatientDTO savedPatientDTO = new PatientDTO();
                 savedPatientDTO.setPatientId(1L);
 
+                // Create a mock User
+                User mockUser = new User();
+                mockUser.setUserId(1L);
+                mockUser.setPatient(null); // User doesn't have a patient yet
+
+                when(userService.getUserById(1L)).thenReturn(mockUser);
                 when(patientMapper.toPatient(patientDTO)).thenReturn(patient);
                 when(patientRepository.save(patient)).thenReturn(savedPatient);
                 when(patientMapper.toPatientDTO(savedPatient)).thenReturn(savedPatientDTO);
@@ -78,6 +94,7 @@ public class PatientServiceUnitTest {
 
                 assertNotNull(result);
                 assertEquals(savedPatientDTO.getPatientId(), result.getPatientId());
+                verify(userService).getUserById(1L);
                 verify(patientMapper).toPatient(patientDTO);
                 verify(patientRepository).save(patient);
                 verify(patientMapper).toPatientDTO(savedPatient);

@@ -8,10 +8,11 @@ import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.mapper.PatientMapper;
 import org.thevoids.oncologic.repository.PatientRepository;
-import org.thevoids.oncologic.repository.UserRepository;
+import org.thevoids.oncologic.repository.TaskRepository;
 import org.thevoids.oncologic.service.PatientService;
 import org.thevoids.oncologic.service.UserService;
 
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,14 +21,17 @@ public class PatientServiceImpl implements PatientService {
     private final PatientRepository patientRepository;
     private final UserService userService;
     private final PatientMapper patientMapper;
+    private final TaskRepository taskRepository;
 
     public PatientServiceImpl(
             PatientRepository patientRepository,
             PatientMapper patientMapper,
-            UserService userService) {
+            UserService userService,
+            TaskRepository taskRepository) {
         this.patientRepository = patientRepository;
         this.patientMapper = patientMapper;
         this.userService = userService;
+        this.taskRepository = taskRepository;
     }
 
     @Override
@@ -42,9 +46,13 @@ public class PatientServiceImpl implements PatientService {
         if (patientDTO == null) {
             throw new InvalidOperationException("Patient cannot be null");
         }
-        Patient patient = patientMapper.toPatient(patientDTO);
         User user = userService.getUserById(patientDTO.getUserId());
+        if (user.getPatient() != null) {
+            throw new InvalidOperationException("User already has a patient assigned");
+        }
+        Patient patient = patientMapper.toPatient(patientDTO);
         patient.setUser(user);
+        user.setPatient(patient); // Bidirectional
         Patient savedPatient = patientRepository.save(patient);
         return patientMapper.toPatientDTO(savedPatient);
     }
@@ -73,17 +81,40 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
+    @Transactional
     public void deletePatient(Long id) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
+        User user = patient.getUser();
+        if (user != null) {
+            user.setPatient(null);
+            patient.setUser(null);
+        }
+
         if (patient.getAppointments() != null) {
-            for (var appointment : patient.getAppointments()) {
+            patient.getAppointments().forEach(appointment -> {
                 if (appointment.getTasks() != null) {
+                    taskRepository.deleteAll(appointment.getTasks());
                     appointment.getTasks().clear();
                 }
-            }
+                appointment.setPatient(null);
+            });
+            patient.getAppointments().clear();
         }
+
+        // Elimina labs asociados
+        if (patient.getLabs() != null) {
+            patient.getLabs().forEach(lab -> lab.setPatient(null));
+            patient.getLabs().clear();
+        }
+
+        // Elimina historias médicas asociadas
+        if (patient.getMedicalHistories() != null) {
+            patient.getMedicalHistories().forEach(hist -> hist.setPatient(null));
+            patient.getMedicalHistories().clear();
+        }
+
         patientRepository.delete(patient);
     }
 
