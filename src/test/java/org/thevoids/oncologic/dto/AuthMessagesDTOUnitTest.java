@@ -42,7 +42,7 @@ public class AuthMessagesDTOUnitTest {
         // Arrange
         String accessToken = "sampleAccessToken";
         // Act
-        AuthResponseDTO authResponseDTO = new AuthResponseDTO(accessToken, "testUser");
+        AuthResponseDTO authResponseDTO = new AuthResponseDTO(accessToken, "testUser", 1L);
 
         // Assert
         assertNotNull(authResponseDTO);
@@ -52,7 +52,7 @@ public class AuthMessagesDTOUnitTest {
     @Test
     void testAuthResponseSetters() {
         // Arrange
-        AuthResponseDTO authResponseDTO = new AuthResponseDTO();
+        AuthResponseDTO authResponseDTO = new AuthResponseDTO(null, null, null);
 
         // Act
         authResponseDTO.setToken("newAccessToken");

@@ -7,10 +7,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thevoids.oncologic.dto.entity.MedicalHistoryDTO;
 import org.thevoids.oncologic.entity.MedicalHistory;
+import org.thevoids.oncologic.entity.Patient;
 import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.mapper.MedicalHistoryMapper;
 import org.thevoids.oncologic.repository.MedicalHistoryRepository;
+import org.thevoids.oncologic.repository.PatientRepository;
 import org.thevoids.oncologic.service.impl.MedicalHistoryServiceImpl;
 
 import java.sql.Timestamp;
@@ -29,6 +31,9 @@ public class MedicalHistoryServiceUnitTest {
 
         @Mock
         private MedicalHistoryMapper medicalHistoryMapper;
+
+        @Mock
+        private PatientRepository patientRepository;
 
         @InjectMocks
         private MedicalHistoryServiceImpl medicalHistoryService;
@@ -96,7 +101,9 @@ public class MedicalHistoryServiceUnitTest {
                 MedicalHistory entity = createMedicalHistoryEntity(null);
                 MedicalHistory savedEntity = createMedicalHistoryEntity(1L);
                 MedicalHistoryDTO outputDto = createMedicalHistoryDTO(1L);
-
+                Patient patient = new Patient();
+                patient.setPatientId(inputDto.getPatientId());
+                when(patientRepository.findById(inputDto.getPatientId())).thenReturn(Optional.of(patient));
                 when(medicalHistoryMapper.toMedicalHistory(inputDto)).thenReturn(entity);
                 when(medicalHistoryRepository.save(entity)).thenReturn(savedEntity);
                 when(medicalHistoryMapper.toMedicalHistoryDTO(savedEntity)).thenReturn(outputDto);
@@ -125,8 +132,10 @@ public class MedicalHistoryServiceUnitTest {
                 MedicalHistory entity = createMedicalHistoryEntity(id);
                 MedicalHistory updatedEntity = createMedicalHistoryEntity(id);
                 MedicalHistoryDTO outputDto = createMedicalHistoryDTO(id);
-
+                Patient patient = new Patient();
+                patient.setPatientId(inputDto.getPatientId());
                 when(medicalHistoryRepository.existsById(id)).thenReturn(true);
+                when(patientRepository.findById(inputDto.getPatientId())).thenReturn(Optional.of(patient));
                 when(medicalHistoryMapper.toMedicalHistory(inputDto)).thenReturn(entity);
                 when(medicalHistoryRepository.save(entity)).thenReturn(updatedEntity);
                 when(medicalHistoryMapper.toMedicalHistoryDTO(updatedEntity)).thenReturn(outputDto);

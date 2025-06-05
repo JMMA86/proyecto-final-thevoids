@@ -72,40 +72,40 @@ class UserControllerUnitTest {
         user.setUserId(1L);
         user.setFullName("John Doe");
         List<User> users = List.of(user);
-    
+
         UserWithRolesDTO userDTO = new UserWithRolesDTO();
         userDTO.setUserId(1L);
         userDTO.setFullName("John Doe");
-    
+
         when(userService.getAllUsers()).thenReturn(users);
         when(userMapper.toUserWithRolesDTO(user)).thenReturn(userDTO);
-    
+
         // Act
         var result = mockMvc.perform(get("/web/users"));
-    
+
         // Assert
         result.andExpect(status().isOk())
-              .andExpect(view().name("users/list"))
-              .andExpect(model().attributeExists("users"));
+                .andExpect(view().name("users/list"))
+                .andExpect(model().attributeExists("users"));
         verify(userService, times(1)).getAllUsers();
     }
-    
+
     @Test
     void showRegisterForm_ReturnsRegisterView() throws Exception {
         // Arrange
         when(roleService.getAllRoles()).thenReturn(List.of());
-    
+
         // Act
         var result = mockMvc.perform(get("/web/users/register"));
-    
+
         // Assert
         result.andExpect(status().isOk())
-              .andExpect(view().name("users/register"))
-              .andExpect(model().attributeExists("userDTO"))
-              .andExpect(model().attributeExists("roles"));
+                .andExpect(view().name("users/register"))
+                .andExpect(model().attributeExists("userDTO"))
+                .andExpect(model().attributeExists("roles"));
         verify(roleService, times(1)).getAllRoles();
     }
-    
+
     @Test
     void registerUser_SuccessfulRegistration_RedirectsToUserList() throws Exception {
         // Arrange
@@ -120,17 +120,17 @@ class UserControllerUnitTest {
 
         // Act
         var result = mockMvc.perform(post("/web/users/register")
-                            .flashAttr("userDTO", userDTO)
-                            .param("roleId", "1"));
+                .flashAttr("userDTO", userDTO)
+                .param("roleId", "1"));
 
         // Assert
         result.andExpect(status().is3xxRedirection())
-              .andExpect(redirectedUrl("/web/users"));
+                .andExpect(redirectedUrl("/web/users"));
         verify(userMapper, times(1)).toUser(any(UserDTO.class));
         verify(userService, times(1)).createUser(any(User.class));
         verify(assignedRolesService, times(1)).assignRoleToUser(1L, user.getUserId());
     }
-    
+
     @Test
     void registerUser_FailedRegistration_ReturnsRegisterViewWithError() throws Exception {
         // Arrange
@@ -143,100 +143,102 @@ class UserControllerUnitTest {
 
         // Act
         var result = mockMvc.perform(post("/web/users/register")
-                            .flashAttr("userDTO", userDTO)
-                            .param("roleId", "1"));
+                .flashAttr("userDTO", userDTO)
+                .param("roleId", "1"));
 
         // Assert
         result.andExpect(status().isOk())
-              .andExpect(view().name("users/register"))
-              .andExpect(model().attributeExists("error"))
-              .andExpect(model().attributeExists("roles"));
+                .andExpect(view().name("users/register"))
+                .andExpect(model().attributeExists("error"))
+                .andExpect(model().attributeExists("roles"));
         verify(userMapper, times(1)).toUser(any(UserDTO.class));
         verify(userService, times(1)).createUser(any(User.class));
         verify(roleService, times(1)).getAllRoles();
     }
-    
+
     @Test
     void manageRoles_ReturnsManageRolesView() throws Exception {
         // Arrange
         User user = new User();
         user.setUserId(1L);
-    
+
         UserWithRolesDTO userDTO = new UserWithRolesDTO();
         userDTO.setUserId(1L);
-    
+
         when(userService.getUserById(1L)).thenReturn(user);
         when(userMapper.toUserWithRolesDTO(user)).thenReturn(userDTO);
         when(roleService.getAllRoles()).thenReturn(List.of());
-    
+
         // Act
         var result = mockMvc.perform(get("/web/users/1/roles"));
-    
+
         // Assert
         result.andExpect(status().isOk())
-              .andExpect(view().name("users/manage_roles"))
-              .andExpect(model().attributeExists("user"))
-              .andExpect(model().attributeExists("roles"));
+                .andExpect(view().name("users/manage_roles"))
+                .andExpect(model().attributeExists("user"))
+                .andExpect(model().attributeExists("roles"));
         verify(userService, times(1)).getUserById(1L);
     }
-    
+
     @Test
     void assignRole_SuccessfulAssignment_RedirectsToManageRoles() throws Exception {
         // Arrange
         doNothing().when(assignedRolesService).assignRoleToUser(1L, 1L);
-    
+
         // Act
         var result = mockMvc.perform(post("/web/users/1/roles/assign")
-                            .param("roleId", "1"));
-    
+                .param("roleId", "1"));
+
         // Assert
         result.andExpect(status().is3xxRedirection())
-              .andExpect(redirectedUrl("/web/users/1/roles"));
+                .andExpect(redirectedUrl("/web/users/1/roles"));
         verify(assignedRolesService, times(1)).assignRoleToUser(1L, 1L);
     }
 
     @Test
     void assignRole_FailedAssignment_ReturnsManageRolesViewWithError() throws Exception {
         // Arrange
-        doThrow(new IllegalArgumentException("Error assigning role")).when(assignedRolesService).assignRoleToUser(1L, 1L);
-    
+        doThrow(new IllegalArgumentException("Error assigning role")).when(assignedRolesService).assignRoleToUser(1L,
+                1L);
+
         // Act
         var result = mockMvc.perform(post("/web/users/1/roles/assign")
-                            .param("roleId", "1"));
-    
+                .param("roleId", "1"));
+
         // Assert
         result.andExpect(status().is3xxRedirection())
-              .andExpect(redirectedUrl("/web/users/1/roles"));
+                .andExpect(redirectedUrl("/web/users/1/roles"));
         verify(assignedRolesService, times(1)).assignRoleToUser(1L, 1L);
     }
-    
+
     @Test
     void removeRole_SuccessfulRemoval_RedirectsToManageRoles() throws Exception {
         // Arrange
         doNothing().when(assignedRolesService).removeRoleFromUser(1L, 1L);
-    
+
         // Act
         var result = mockMvc.perform(post("/web/users/1/roles/remove")
-                            .param("roleId", "1"));
-    
+                .param("roleId", "1"));
+
         // Assert
         result.andExpect(status().is3xxRedirection())
-              .andExpect(redirectedUrl("/web/users/1/roles"));
+                .andExpect(redirectedUrl("/web/users/1/roles"));
         verify(assignedRolesService, times(1)).removeRoleFromUser(1L, 1L);
     }
 
     @Test
     void removeRole_FailedRemoval_ReturnsManageRolesViewWithError() throws Exception {
         // Arrange
-        doThrow(new IllegalArgumentException("Error removing role")).when(assignedRolesService).removeRoleFromUser(1L, 1L);
-    
+        doThrow(new IllegalArgumentException("Error removing role")).when(assignedRolesService).removeRoleFromUser(1L,
+                1L);
+
         // Act
         var result = mockMvc.perform(post("/web/users/1/roles/remove")
-                            .param("roleId", "1"));
-    
+                .param("roleId", "1"));
+
         // Assert
         result.andExpect(status().is3xxRedirection())
-              .andExpect(redirectedUrl("/web/users/1/roles"));
+                .andExpect(redirectedUrl("/web/users/1/roles"));
         verify(assignedRolesService, times(1)).removeRoleFromUser(1L, 1L);
     }
 
@@ -262,7 +264,7 @@ class UserControllerUnitTest {
     void testAuthRequestAndAuthResponse() {
         // Arrange
         AuthRequest authRequest = new AuthRequest("testUser", "password");
-        AuthResponseDTO authResponse = new AuthResponseDTO("sampleAccessToken", "testUser");
+        AuthResponseDTO authResponse = new AuthResponseDTO("sampleAccessToken", "testUser", 1L);
 
         // Act & Assert
         assertEquals("testUser", authRequest.getUsername());
@@ -312,9 +314,9 @@ class UserControllerUnitTest {
 
         // Assert
         result.andExpect(status().isOk())
-              .andExpect(view().name("users/manage_roles"))
-              .andExpect(model().attributeExists("user"))
-              .andExpect(model().attributeExists("roles"));
+                .andExpect(view().name("users/manage_roles"))
+                .andExpect(model().attributeExists("user"))
+                .andExpect(model().attributeExists("roles"));
 
         verify(userService, times(1)).getUserById(1L);
         verify(roleService, times(1)).getAllRoles();

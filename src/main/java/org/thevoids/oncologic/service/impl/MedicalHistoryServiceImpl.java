@@ -3,10 +3,12 @@ package org.thevoids.oncologic.service.impl;
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.dto.entity.MedicalHistoryDTO;
 import org.thevoids.oncologic.entity.MedicalHistory;
+import org.thevoids.oncologic.entity.Patient;
 import org.thevoids.oncologic.exception.ResourceNotFoundException;
 import org.thevoids.oncologic.exception.InvalidOperationException;
 import org.thevoids.oncologic.mapper.MedicalHistoryMapper;
 import org.thevoids.oncologic.repository.MedicalHistoryRepository;
+import org.thevoids.oncologic.repository.PatientRepository;
 import org.thevoids.oncologic.service.MedicalHistoryService;
 
 import java.util.List;
@@ -16,12 +18,13 @@ import java.util.stream.Collectors;
 public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     private final MedicalHistoryRepository medicalHistoryRepository;
     private final MedicalHistoryMapper medicalHistoryMapper;
+    private final PatientRepository patientRepository;
 
     public MedicalHistoryServiceImpl(MedicalHistoryRepository medicalHistoryRepository,
-
-            MedicalHistoryMapper medicalHistoryMapper) {
+            MedicalHistoryMapper medicalHistoryMapper, PatientRepository patientRepository) {
         this.medicalHistoryRepository = medicalHistoryRepository;
         this.medicalHistoryMapper = medicalHistoryMapper;
+        this.patientRepository = patientRepository;
     }
 
     @Override
@@ -44,8 +47,14 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
         if (medicalHistoryDTO == null) {
             throw new InvalidOperationException("MedicalHistory cannot be null");
         }
-
+        if (medicalHistoryDTO.getPatientId() == null) {
+            throw new InvalidOperationException("Patient ID cannot be null");
+        }
+        // Fetch managed Patient entity
+        Patient patient = patientRepository.findById(medicalHistoryDTO.getPatientId())
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", medicalHistoryDTO.getPatientId()));
         MedicalHistory medicalHistory = medicalHistoryMapper.toMedicalHistory(medicalHistoryDTO);
+        medicalHistory.setPatient(patient);
         MedicalHistory savedMedicalHistory = medicalHistoryRepository.save(medicalHistory);
         return medicalHistoryMapper.toMedicalHistoryDTO(savedMedicalHistory);
     }
@@ -55,17 +64,21 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
         if (medicalHistoryDTO == null) {
             throw new InvalidOperationException("MedicalHistory cannot be null");
         }
-
         if (medicalHistoryDTO.getHistoryId() == null) {
             throw new InvalidOperationException("MedicalHistory ID cannot be null");
         }
-
         if (!medicalHistoryRepository.existsById(medicalHistoryDTO.getHistoryId())) {
             throw new ResourceNotFoundException(
                     "MedicalHistory", "id", medicalHistoryDTO.getHistoryId());
         }
-
+        if (medicalHistoryDTO.getPatientId() == null) {
+            throw new InvalidOperationException("Patient ID cannot be null");
+        }
+        // Fetch managed Patient entity
+        Patient patient = patientRepository.findById(medicalHistoryDTO.getPatientId())
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", medicalHistoryDTO.getPatientId()));
         MedicalHistory medicalHistory = medicalHistoryMapper.toMedicalHistory(medicalHistoryDTO);
+        medicalHistory.setPatient(patient);
         MedicalHistory updatedMedicalHistory = medicalHistoryRepository.save(medicalHistory);
         return medicalHistoryMapper.toMedicalHistoryDTO(updatedMedicalHistory);
     }
