@@ -1,6 +1,8 @@
 package org.thevoids.oncologic.service.impl;
 
-import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.thevoids.oncologic.entity.Specialty;
 import org.thevoids.oncologic.entity.User;
@@ -10,7 +12,7 @@ import org.thevoids.oncologic.repository.UserRepository;
 import org.thevoids.oncologic.repository.UserSpecialtyRepository;
 import org.thevoids.oncologic.service.UserSpecialtyService;
 
-import java.util.List;
+import jakarta.transaction.Transactional;
 
 @Service
 public class UserSpecialtyServiceImpl implements UserSpecialtyService {
@@ -21,8 +23,7 @@ public class UserSpecialtyServiceImpl implements UserSpecialtyService {
     public UserSpecialtyServiceImpl(
             UserSpecialtyRepository userSpecialtyRepository,
             UserRepository userRepository,
-            SpecialtyRepository specialtyRepository
-    ) {
+            SpecialtyRepository specialtyRepository) {
         this.userSpecialtyRepository = userSpecialtyRepository;
         this.userRepository = userRepository;
         this.specialtyRepository = specialtyRepository;
@@ -50,7 +51,8 @@ public class UserSpecialtyServiceImpl implements UserSpecialtyService {
                 .orElseThrow(() -> new IllegalArgumentException("User with id " + userId + " does not exist"));
 
         Specialty specialty = specialtyRepository.findById(specialtyId)
-                .orElseThrow(() -> new IllegalArgumentException("Specialty with id " + specialtyId + " does not exist"));
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Specialty with id " + specialtyId + " does not exist"));
 
         UserSpecialty userSpecialty = new UserSpecialty();
         userSpecialty.setUser(user);
@@ -83,5 +85,21 @@ public class UserSpecialtyServiceImpl implements UserSpecialtyService {
         }
 
         userSpecialtyRepository.deleteById(id);
+    }
+
+    @Override
+    public List<UserSpecialty> getUserSpecialtiesByUserId(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+        return userSpecialtyRepository.findByUser_UserId(userId);
+    }
+
+    @Override
+    public Optional<UserSpecialty> getUserSpecialtyByUserId(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+        return userSpecialtyRepository.findFirstByUser_UserId(userId);
     }
 }

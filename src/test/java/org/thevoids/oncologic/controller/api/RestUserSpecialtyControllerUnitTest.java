@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,7 +116,7 @@ class RestUserSpecialtyControllerUnitTest {
         // Arrange
         Long userSpecialtyId = 1L;
         when(userSpecialtyService.getUserSpecialtyById(userSpecialtyId))
-            .thenThrow(new ResourceNotFoundException("UserSpecialty", "id", userSpecialtyId));
+                .thenThrow(new ResourceNotFoundException("UserSpecialty", "id", userSpecialtyId));
 
         // Act
         ResponseEntity<UserSpecialtyDTO> response = restUserSpecialtyController.getUserSpecialtyById(userSpecialtyId);
@@ -126,6 +127,72 @@ class RestUserSpecialtyControllerUnitTest {
     }
 
     @Test
+    void getUserSpecialtyByUserId_UserHasSpecialty_ReturnsUserSpecialty() {
+        // Arrange
+        Long userId = 1L;
+        User user = new User();
+        user.setUserId(userId);
+        user.setFullName("John Doe");
+
+        Specialty specialty = new Specialty();
+        specialty.setSpecialtyId(1L);
+        specialty.setSpecialtyName("Oncología");
+
+        UserSpecialty userSpecialty = new UserSpecialty();
+        userSpecialty.setId(1L);
+        userSpecialty.setUser(user);
+        userSpecialty.setSpecialty(specialty);
+
+        UserSpecialtyDTO userSpecialtyDTO = new UserSpecialtyDTO(1L, userId, 1L, "John Doe", "Oncología");
+
+        when(userSpecialtyService.getUserSpecialtyByUserId(userId)).thenReturn(Optional.of(userSpecialty));
+        when(userSpecialtyMapper.toUserSpecialtyDTO(userSpecialty)).thenReturn(userSpecialtyDTO);
+
+        // Act
+        ResponseEntity<UserSpecialtyDTO> response = restUserSpecialtyController.getUserSpecialtyByUserId(userId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        UserSpecialtyDTO retrievedUserSpecialty = response.getBody();
+        assertNotNull(retrievedUserSpecialty);
+        assertEquals(userId, retrievedUserSpecialty.getUserId());
+        assertEquals("John Doe", retrievedUserSpecialty.getUserName());
+        assertEquals("Oncología", retrievedUserSpecialty.getSpecialtyName());
+        verify(userSpecialtyService, times(1)).getUserSpecialtyByUserId(userId);
+        verify(userSpecialtyMapper, times(1)).toUserSpecialtyDTO(userSpecialty);
+    }
+
+    @Test
+    void getUserSpecialtyByUserId_UserHasNoSpecialty_ReturnsNotFound() {
+        // Arrange
+        Long userId = 1L;
+
+        when(userSpecialtyService.getUserSpecialtyByUserId(userId)).thenReturn(Optional.empty());
+
+        // Act
+        ResponseEntity<UserSpecialtyDTO> response = restUserSpecialtyController.getUserSpecialtyByUserId(userId);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(userSpecialtyService, times(1)).getUserSpecialtyByUserId(userId);
+    }
+
+    @Test
+    void getUserSpecialtyByUserId_ServiceThrowsException_ReturnsInternalServerError() {
+        // Arrange
+        Long userId = 1L;
+        when(userSpecialtyService.getUserSpecialtyByUserId(userId))
+                .thenThrow(new RuntimeException("Database connection error"));
+
+        // Act
+        ResponseEntity<UserSpecialtyDTO> response = restUserSpecialtyController.getUserSpecialtyByUserId(userId);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        verify(userSpecialtyService, times(1)).getUserSpecialtyByUserId(userId);
+    }
+
+    @Test
     void assignSpecialtyToUser_Success() {
         // Arrange
         Long userId = 1L;
@@ -133,7 +200,8 @@ class RestUserSpecialtyControllerUnitTest {
         doNothing().when(userSpecialtyService).addSpecialtyToUser(userId, specialtyId);
 
         // Act
-        ResponseEntity<UserSpecialtyDTO> response = restUserSpecialtyController.assignSpecialtyToUser(userId, specialtyId);
+        ResponseEntity<UserSpecialtyDTO> response = restUserSpecialtyController.assignSpecialtyToUser(userId,
+                specialtyId);
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -146,10 +214,11 @@ class RestUserSpecialtyControllerUnitTest {
         Long userId = 1L;
         Long specialtyId = 1L;
         doThrow(new ResourceNotFoundException("Usuario", "id", userId))
-            .when(userSpecialtyService).addSpecialtyToUser(userId, specialtyId);
+                .when(userSpecialtyService).addSpecialtyToUser(userId, specialtyId);
 
         // Act
-        ResponseEntity<UserSpecialtyDTO> response = restUserSpecialtyController.assignSpecialtyToUser(userId, specialtyId);
+        ResponseEntity<UserSpecialtyDTO> response = restUserSpecialtyController.assignSpecialtyToUser(userId,
+                specialtyId);
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -175,13 +244,12 @@ class RestUserSpecialtyControllerUnitTest {
         // Arrange
         Long userSpecialtyId = 1L;
         doThrow(new ResourceNotFoundException("UserSpecialty", "id", userSpecialtyId))
-            .when(userSpecialtyService).deleteUserSpecialty(userSpecialtyId);
+                .when(userSpecialtyService).deleteUserSpecialty(userSpecialtyId);
 
         // Act
         ResponseEntity<Void> response = restUserSpecialtyController.deleteUserSpecialty(userSpecialtyId);
 
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        // Assert assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verify(userSpecialtyService, times(1)).deleteUserSpecialty(userSpecialtyId);
     }
-} 
+}

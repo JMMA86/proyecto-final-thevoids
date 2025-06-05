@@ -40,8 +40,7 @@ public class UserSpecialtyServiceUnitTest {
     void getAllUserSpecialtiesReturnsAllUserSpecialties() {
         List<UserSpecialty> expectedUserSpecialties = List.of(
                 createUserSpecialty(1L),
-                createUserSpecialty(2L)
-        );
+                createUserSpecialty(2L));
 
         when(userSpecialtyRepository.findAll()).thenReturn(expectedUserSpecialties);
 
@@ -70,8 +69,8 @@ public class UserSpecialtyServiceUnitTest {
 
         when(userSpecialtyRepository.findById(id)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userSpecialtyService.getUserSpecialtyById(id));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.getUserSpecialtyById(id));
 
         assertEquals("UserSpecialty with id 1 does not exist", exception.getMessage());
     }
@@ -104,8 +103,8 @@ public class UserSpecialtyServiceUnitTest {
     void addSpecialtyToUserThrowsExceptionWhenUserIdIsNull() {
         Long specialtyId = 2L;
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userSpecialtyService.addSpecialtyToUser(null, specialtyId));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.addSpecialtyToUser(null, specialtyId));
 
         assertEquals("User ID and Specialty ID cannot be null", exception.getMessage());
         verify(userSpecialtyRepository, never()).save(any());
@@ -115,8 +114,8 @@ public class UserSpecialtyServiceUnitTest {
     void addSpecialtyToUserThrowsExceptionWhenSpecialtyIdIsNull() {
         Long userId = 1L;
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userSpecialtyService.addSpecialtyToUser(userId, null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.addSpecialtyToUser(userId, null));
 
         assertEquals("User ID and Specialty ID cannot be null", exception.getMessage());
         verify(userSpecialtyRepository, never()).save(any());
@@ -129,8 +128,8 @@ public class UserSpecialtyServiceUnitTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userSpecialtyService.addSpecialtyToUser(userId, specialtyId));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.addSpecialtyToUser(userId, specialtyId));
 
         assertEquals("User with id 1 does not exist", exception.getMessage());
         verify(userSpecialtyRepository, never()).save(any());
@@ -147,8 +146,8 @@ public class UserSpecialtyServiceUnitTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(specialtyRepository.findById(specialtyId)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userSpecialtyService.addSpecialtyToUser(userId, specialtyId));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.addSpecialtyToUser(userId, specialtyId));
 
         assertEquals("Specialty with id 2 does not exist", exception.getMessage());
         verify(userSpecialtyRepository, never()).save(any());
@@ -171,8 +170,8 @@ public class UserSpecialtyServiceUnitTest {
 
     @Test
     void updateUserSpecialtyThrowsExceptionWhenUserSpecialtyIsNull() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userSpecialtyService.updateUserSpecialty(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.updateUserSpecialty(null));
 
         assertEquals("UserSpecialty cannot be null", exception.getMessage());
         verify(userSpecialtyRepository, never()).save(any());
@@ -182,8 +181,8 @@ public class UserSpecialtyServiceUnitTest {
     void updateUserSpecialtyThrowsExceptionWhenIdIsNull() {
         UserSpecialty userSpecialty = new UserSpecialty();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userSpecialtyService.updateUserSpecialty(userSpecialty));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.updateUserSpecialty(userSpecialty));
 
         assertEquals("UserSpecialty ID cannot be null", exception.getMessage());
         verify(userSpecialtyRepository, never()).save(any());
@@ -196,8 +195,8 @@ public class UserSpecialtyServiceUnitTest {
 
         when(userSpecialtyRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userSpecialtyService.updateUserSpecialty(userSpecialty));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.updateUserSpecialty(userSpecialty));
 
         assertEquals("UserSpecialty with id 1 does not exist", exception.getMessage());
         verify(userSpecialtyRepository, never()).save(any());
@@ -220,16 +219,102 @@ public class UserSpecialtyServiceUnitTest {
 
         when(userSpecialtyRepository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userSpecialtyService.deleteUserSpecialty(id));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.deleteUserSpecialty(id));
 
         assertEquals("UserSpecialty with id 1 does not exist", exception.getMessage());
         verify(userSpecialtyRepository, never()).deleteById(any());
     }
 
+    @Test
+    void getUserSpecialtiesByUserIdReturnsListWhenUserHasSpecialties() {
+        Long userId = 1L;
+        List<UserSpecialty> expectedUserSpecialties = List.of(
+                createUserSpecialtyWithUserId(1L, userId),
+                createUserSpecialtyWithUserId(2L, userId));
+
+        when(userSpecialtyRepository.findByUser_UserId(userId)).thenReturn(expectedUserSpecialties);
+
+        List<UserSpecialty> result = userSpecialtyService.getUserSpecialtiesByUserId(userId);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(expectedUserSpecialties, result);
+        verify(userSpecialtyRepository).findByUser_UserId(userId);
+    }
+
+    @Test
+    void getUserSpecialtiesByUserIdReturnsEmptyListWhenUserHasNoSpecialties() {
+        Long userId = 1L;
+        List<UserSpecialty> expectedUserSpecialties = List.of();
+
+        when(userSpecialtyRepository.findByUser_UserId(userId)).thenReturn(expectedUserSpecialties);
+
+        List<UserSpecialty> result = userSpecialtyService.getUserSpecialtiesByUserId(userId);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(userSpecialtyRepository).findByUser_UserId(userId);
+    }
+
+    @Test
+    void getUserSpecialtiesByUserIdThrowsExceptionWhenUserIdIsNull() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.getUserSpecialtiesByUserId(null));
+
+        assertEquals("User ID cannot be null", exception.getMessage());
+        verify(userSpecialtyRepository, never()).findByUser_UserId(any());
+    }
+
+    @Test
+    void getUserSpecialtyByUserIdReturnsOptionalWithValueWhenUserHasSpecialty() {
+        Long userId = 1L;
+        UserSpecialty expectedUserSpecialty = createUserSpecialtyWithUserId(1L, userId);
+
+        when(userSpecialtyRepository.findFirstByUser_UserId(userId)).thenReturn(Optional.of(expectedUserSpecialty));
+
+        Optional<UserSpecialty> result = userSpecialtyService.getUserSpecialtyByUserId(userId);
+
+        assertTrue(result.isPresent());
+        assertEquals(expectedUserSpecialty, result.get());
+        verify(userSpecialtyRepository).findFirstByUser_UserId(userId);
+    }
+
+    @Test
+    void getUserSpecialtyByUserIdReturnsEmptyOptionalWhenUserHasNoSpecialty() {
+        Long userId = 1L;
+
+        when(userSpecialtyRepository.findFirstByUser_UserId(userId)).thenReturn(Optional.empty());
+
+        Optional<UserSpecialty> result = userSpecialtyService.getUserSpecialtyByUserId(userId);
+
+        assertFalse(result.isPresent());
+        verify(userSpecialtyRepository).findFirstByUser_UserId(userId);
+    }
+
+    @Test
+    void getUserSpecialtyByUserIdThrowsExceptionWhenUserIdIsNull() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userSpecialtyService.getUserSpecialtyByUserId(null));
+
+        assertEquals("User ID cannot be null", exception.getMessage());
+        verify(userSpecialtyRepository, never()).findFirstByUser_UserId(any());
+    }
+
     private UserSpecialty createUserSpecialty(Long id) {
         UserSpecialty userSpecialty = new UserSpecialty();
         userSpecialty.setId(id);
+        return userSpecialty;
+    }
+
+    private UserSpecialty createUserSpecialtyWithUserId(Long id, Long userId) {
+        UserSpecialty userSpecialty = new UserSpecialty();
+        userSpecialty.setId(id);
+
+        User user = new User();
+        user.setUserId(userId);
+        userSpecialty.setUser(user);
+
         return userSpecialty;
     }
 }

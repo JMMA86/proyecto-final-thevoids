@@ -18,8 +18,10 @@ public interface UserMapper {
 
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
+    @Mapping(source = "phone", target = "phoneNumber")
     UserDTO toUserDTO(User user);
 
+    @Mapping(source = "phoneNumber", target = "phone")
     User toUser(UserDTO userDTO);
 
     @Mapping(source = "assignedRoles", target = "roles", qualifiedByName = "mapAssignedRolesToRoleDTOs")

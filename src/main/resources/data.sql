@@ -133,7 +133,7 @@ INSERT INTO Specialties (specialty_name) VALUES ('Oncology');
 INSERT INTO Specialties (specialty_name) VALUES ('Cardiology');
 
 -- Insert sample data into UserSpecialty
-INSERT INTO User_Specialties (user_id, specialty_id) VALUES (1, 1); -- John Doe is an Oncologist
+INSERT INTO User_Specialties (user_id, specialty_id) VALUES (3, 1); -- John Doe is an Oncologist
 
 -- Insert sample data into AppointmentType
 INSERT INTO Appointment_Types (type_name, standard_duration) VALUES ('Consultation', 30);
