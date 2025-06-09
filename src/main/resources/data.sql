@@ -55,6 +55,49 @@ INSERT INTO Permissions (permission_name) VALUES ('ADD_TASKS');
 INSERT INTO Permissions (permission_name) VALUES ('EDIT_TASKS');
 INSERT INTO Permissions (permission_name) VALUES ('DELETE_TASKS');
 
+-- Add specific permissions for medical history
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_MEDICAL_HISTORY');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_MEDICAL_HISTORY');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_MEDICAL_HISTORY');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_MEDICAL_HISTORY');
+
+-- Add specific permissions for labs
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_LABS');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_LABS');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_LABS');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_LABS');
+
+-- Add specific permissions for schedules
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_SCHEDULES');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_SCHEDULES');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_SCHEDULES');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_SCHEDULES');
+
+-- Add specific permissions for specialties
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_SPECIALTIES');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_SPECIALTIES');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_SPECIALTIES');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_SPECIALTIES');
+
+-- Add specific permissions for users specialties
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_USER_SPECIALTIES');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_USER_SPECIALTIES');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_USER_SPECIALTIES');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_USER_SPECIALTIES');
+
+-- Add specific permissions for patients
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_PATIENTS');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_PATIENTS');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_PATIENTS');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_PATIENTS');
+
+-- Add specific permissions for assigned roles
+INSERT INTO Permissions (permission_name) VALUES ('VIEW_ASSIGNED_ROLES');
+INSERT INTO Permissions (permission_name) VALUES ('ADD_ASSIGNED_ROLES');
+INSERT INTO Permissions (permission_name) VALUES ('EDIT_ASSIGNED_ROLES');
+INSERT INTO Permissions (permission_name) VALUES ('DELETE_ASSIGNED_ROLES');
+
+
 -- Assign new permissions to the ADMIN role
 
 -- Users
@@ -76,6 +119,78 @@ INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 11); -- VIEW_P
 INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 12); -- ADD_PERMISSIONS
 INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 13); -- EDIT_PERMISSIONS
 INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 14); -- DELETE_PERMISSIONS
+
+-- Appointments
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 15); -- VIEW_APPOINTMENTS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 16); -- ADD_APPOINTMENTS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 17); -- EDIT_APPOINTMENTS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 18); -- DELETE_APPOINTMENTS
+
+-- Appointment Types
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 19); -- VIEW_APPOINTMENT_TYPES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 20); -- ADD_APPOINTMENT_TYPES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 21); -- EDIT_APPOINTMENT_TYPES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 22); -- DELETE_APPOINTMENT_TYPES
+
+-- Clinics
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 23); -- VIEW_CLINICS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 24); -- ADD_CLINICS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 25); -- EDIT_CLINICS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 26); -- DELETE_CLINICS
+
+-- Clinic Assignments
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 27); -- VIEW_CLINIC_ASSIGNMENTS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 28); -- ADD_CLINIC_ASSIGNMENTS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 29); -- EDIT_CLINIC_ASSIGNMENTS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 30); -- DELETE_CLINIC_ASSIGNMENTS
+
+-- Tasks
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 31); -- VIEW_TASKS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 32); -- ADD_TASKS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 33); -- EDIT_TASKS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 34); -- DELETE_TASKS
+
+-- Medical History
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 35); -- VIEW_MEDICAL_HISTORY
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 36); -- ADD_MEDICAL_HISTORY
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 37); -- EDIT_MEDICAL_HISTORY
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 38); -- DELETE_MEDICAL_HISTORY
+
+-- Labs
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 39); -- VIEW_LABS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 40); -- ADD_LABS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 41); -- EDIT_LABS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 42); -- DELETE_LABS
+
+-- Schedules
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 43); -- VIEW_SCHEDULES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 44); -- ADD_SCHEDULES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 45); -- EDIT_SCHEDULES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 46); -- DELETE_SCHEDULES
+
+-- Specialties
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 47); -- VIEW_SPECIALTIES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 48); -- ADD_SPECIALTIES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 49); -- EDIT_SPECIALTIES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 50); -- DELETE_SPECIALTIES
+
+-- User Specialties
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 51); -- VIEW_USER_SPECIALTIES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 52); -- ADD_USER_SPECIALTIES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 53); -- EDIT_USER_SPECIALTIES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 54); -- DELETE_USER_SPECIALTIES
+
+-- Patients
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 55); -- VIEW_PATIENTS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 56); -- ADD_PATIENTS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 57); -- EDIT_PATIENTS
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 58); -- DELETE_PATIENTS
+
+-- Assigned Roles
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 59); -- VIEW_ASSIGNED_ROLES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 60); -- ADD_ASSIGNED_ROLES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 61); -- EDIT_ASSIGNED_ROLES
+INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (1, 62); -- DELETE_ASSIGNED_ROLES
 
 -- Assign view, edit, and register user permissions to the RECEPCIONIST role
 INSERT INTO Roles_Permissions (role_id, permission_id) VALUES (2, 1);  -- VIEW_USERS
