@@ -344,36 +344,165 @@ jobs:
         run: |
           echo "Fixing Docker permissions and restarting Docker service..."
           ssh -o StrictHostKeyChecking=no -i deploy/ansible/ssh_key.pem ${{ vars.ADMIN_USERNAME || 'azureuser' }}@${{ needs.infrastructure.outputs.public_ip }} '
+            # Stop Docker service
             sudo systemctl stop docker
-            sudo systemctl start docker
+            
+            # Fix Docker socket permissions
+            sudo chmod 666 /var/run/docker.sock || true
+            
+            # Add user to docker group
             sudo usermod -aG docker $USER
+            
+            # Start Docker service
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            
             # Wait for Docker to be ready
-            sudo docker info
+            sleep 10
+            
+            # Test Docker access
+            if ! docker info >/dev/null 2>&1; then
+              echo "Direct docker command failed, trying with sudo..."
+              sudo docker info
+            else
+              echo "Docker is accessible!"
+            fi
+            
             # Clean up any existing containers
             sudo docker system prune -f || true
           '
 
-      - name: Run Ansible Playbook
+      - name: Test Docker access and create wrapper script
+        run: |
+          echo "Testing Docker access and creating wrapper script..."
+          ssh -o StrictHostKeyChecking=no -i deploy/ansible/ssh_key.pem ${{ vars.ADMIN_USERNAME || 'azureuser' }}@${{ needs.infrastructure.outputs.public_ip }} '
+            # Test if user can run docker commands
+            if docker ps >/dev/null 2>&1; then
+              echo "Docker works without sudo"
+              echo "#!/bin/bash" > /tmp/docker-compose-wrapper.sh
+              echo "docker-compose \"\$@\"" >> /tmp/docker-compose-wrapper.sh
+            else
+              echo "Docker needs sudo, creating sudo wrapper"
+              echo "#!/bin/bash" > /tmp/docker-compose-wrapper.sh
+              echo "sudo docker-compose \"\$@\"" >> /tmp/docker-compose-wrapper.sh
+            fi
+            chmod +x /tmp/docker-compose-wrapper.sh
+            
+            # Also create docker wrapper
+            if docker ps >/dev/null 2>&1; then
+              echo "#!/bin/bash" > /tmp/docker-wrapper.sh
+              echo "docker \"\$@\"" >> /tmp/docker-wrapper.sh
+            else
+              echo "#!/bin/bash" > /tmp/docker-wrapper.sh
+              echo "sudo docker \"\$@\"" >> /tmp/docker-wrapper.sh
+            fi
+            chmod +x /tmp/docker-wrapper.sh
+          '
+
+      - name: Modify Ansible playbook to use sudo for Docker commands
         run: |
           cd deploy/ansible
-          ansible-playbook -i inventory.yml configure-sonarqube.yml -v
+          # Create a temporary modified playbook
+          cp configure-sonarqube.yml configure-sonarqube-modified.yml
+
+          # Replace docker-compose commands with sudo versions
+          sed -i 's/docker-compose down/sudo docker-compose down/g' configure-sonarqube-modified.yml
+          sed -i 's/docker-compose up -d/sudo docker-compose up -d/g' configure-sonarqube-modified.yml
+
+          # Also handle any direct docker commands
+          sed -i 's/docker /sudo docker /g' configure-sonarqube-modified.yml
+
+      - name: Run Ansible Playbook
+        id: ansible_run
+        run: |
+          cd deploy/ansible
+          ansible-playbook -i inventory.yml configure-sonarqube-modified.yml -v
         env:
           ANSIBLE_HOST_KEY_CHECKING: false
+        continue-on-error: true
+
+      - name: Fallback - Deploy SonarQube directly with Docker
+        if: steps.ansible_run.outcome == 'failure'
+        run: |
+          echo "Ansible failed, deploying SonarQube directly..."
+          ssh -o StrictHostKeyChecking=no -i deploy/ansible/ssh_key.pem ${{ vars.ADMIN_USERNAME || 'azureuser' }}@${{ needs.infrastructure.outputs.public_ip }} '
+            # Stop any existing SonarQube containers
+            sudo docker stop sonarqube 2>/dev/null || true
+            sudo docker rm sonarqube 2>/dev/null || true
+            
+            # Create necessary directories
+            sudo mkdir -p /opt/sonarqube/data
+            sudo mkdir -p /opt/sonarqube/extensions
+            sudo mkdir -p /opt/sonarqube/logs
+            sudo chown -R 999:999 /opt/sonarqube
+            
+            # Set required system settings
+            sudo sysctl -w vm.max_map_count=262144
+            echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
+            
+            # Run SonarQube container directly
+            sudo docker run -d \
+              --name sonarqube \
+              -p 9000:9000 \
+              -v /opt/sonarqube/data:/opt/sonarqube/data \
+              -v /opt/sonarqube/extensions:/opt/sonarqube/extensions \
+              -v /opt/sonarqube/logs:/opt/sonarqube/logs \
+              -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true \
+              sonarqube:latest
+            
+            # Wait for container to start
+            sleep 30
+            
+            # Check if container is running
+            sudo docker ps | grep sonarqube || {
+              echo "SonarQube container failed to start, checking logs..."
+              sudo docker logs sonarqube
+              exit 1
+            }
+          '
 
       - name: Verify SonarQube is running
         id: sonarqube_status
         run: |
           echo "Verificando que SonarQube esté disponible..."
           SONARQUBE_READY=false
-          for i in {1..15}; do
+
+          # First check if Docker container is running
+          echo "Checking Docker container status..."
+          ssh -o StrictHostKeyChecking=no -i deploy/ansible/ssh_key.pem ${{ vars.ADMIN_USERNAME || 'azureuser' }}@${{ needs.infrastructure.outputs.public_ip }} '
+            if sudo docker ps | grep -q sonarqube; then
+              echo "✅ SonarQube container is running"
+              sudo docker logs sonarqube --tail 20
+            else
+              echo "❌ SonarQube container is not running"
+              sudo docker ps -a | grep sonarqube || echo "No SonarQube container found"
+            fi
+          '
+
+          # Now check API availability
+          for i in {1..20}; do
+            echo "Checking API availability (attempt $i/20)..."
             if curl -f -s "${{ needs.infrastructure.outputs.sonarqube_url }}/api/system/status" | grep -q "UP"; then
               echo "✅ SonarQube está funcionando correctamente!"
               SONARQUBE_READY=true
               break
+            elif curl -s "${{ needs.infrastructure.outputs.sonarqube_url }}/api/system/status"; then
+              echo "API responded but not UP yet, checking response..."
+              curl -s "${{ needs.infrastructure.outputs.sonarqube_url }}/api/system/status"
+            else
+              echo "No response from API yet..."
             fi
-            echo "Intento $i/15 - esperando 60 segundos..."
-            sleep 60
+            echo "Intento $i/20 - esperando 45 segundos..."
+            sleep 45
           done
+
+          if [ "$SONARQUBE_READY" = "false" ]; then
+            echo "❌ SonarQube no está disponible después de esperar. Verificando logs..."
+            ssh -o StrictHostKeyChecking=no -i deploy/ansible/ssh_key.pem ${{ vars.ADMIN_USERNAME || 'azureuser' }}@${{ needs.infrastructure.outputs.public_ip }} '
+              sudo docker logs sonarqube --tail 50 || echo "No logs available"
+            '
+          fi
+
           echo "ready=$SONARQUBE_READY" >> $GITHUB_OUTPUT
 
       - name: Display SonarQube Information
