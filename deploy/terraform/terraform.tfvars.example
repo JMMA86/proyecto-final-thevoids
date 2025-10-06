@@ -1,0 +1,14 @@
+# Archivo de ejemplo para variables de Terraform
+# Copia este archivo como terraform.tfvars y completa los valores
+
+# REQUERIDO: ID de tu suscripción de Azure
+subscription_id = "00000000-0000-0000-0000-000000000000"
+
+# Opcional: Personaliza estos valores según tus necesidades
+resource_group_name = "rg-sonarqube-chile"
+location           = "Chile Central"
+vm_size            = "Standard_B1s"
+admin_username     = "azureuser"
+admin_password     = "SonarQube2024!"
+allowed_cidr       = "0.0.0.0/0"  # Cambia por tu IP pública para mayor seguridad
+environment        = "dev"

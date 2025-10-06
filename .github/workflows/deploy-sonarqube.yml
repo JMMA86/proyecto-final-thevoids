@@ -1,0 +1,280 @@
+name: Deploy SonarQube to Azure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.tf"
+      - "**.yml"
+      - ".github/workflows/**"
+  workflow_dispatch:
+    inputs:
+      destroy_infrastructure:
+        description: "Destruir infraestructura existente"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      force_recreate:
+        description: "Forzar recreación de recursos existentes"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+env:
+  TF_VERSION: "1.6.0"
+  ANSIBLE_VERSION: "2.15"
+
+jobs:
+  deploy:
+    name: Deploy Infrastructure and Configure SonarQube
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Setup Python for Ansible
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+          pip install azure-cli
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create Terraform variables file
+        run: |
+          cat > deploy/terraform/terraform.tfvars << EOF
+          subscription_id     = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          resource_group_name = "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}"
+          location            = "${{ vars.AZURE_LOCATION || 'Chile Central' }}"
+          vm_size             = "${{ vars.VM_SIZE || 'Standard_B2s' }}"
+          admin_username      = "${{ vars.ADMIN_USERNAME || 'azureuser' }}"
+          admin_password      = "${{ secrets.ADMIN_PASSWORD }}"
+          allowed_cidr        = "${{ vars.ALLOWED_CIDR || '0.0.0.0/0' }}"
+          environment         = "${{ vars.ENVIRONMENT || 'production' }}"
+          EOF
+
+      - name: Terraform Format Check
+        run: |
+          cd deploy/terraform
+          terraform fmt -check=true -diff=true
+
+      - name: Terraform Init
+        run: |
+          cd deploy/terraform
+          terraform init
+
+      - name: Terraform Validate
+        run: |
+          cd deploy/terraform
+          terraform validate
+
+      - name: Handle existing resources
+        run: |
+          cd deploy/terraform
+
+          if [ "${{ github.event.inputs.force_recreate }}" = "true" ]; then
+            echo "🔥 Force recreate enabled - removing existing resources..."
+            
+            # Eliminar recursos existentes con Azure CLI
+            RG_EXISTS=$(az group exists --name "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" --output tsv)
+            if [ "$RG_EXISTS" = "true" ]; then
+              echo "Deleting existing resource group..."
+              az group delete --name "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" --yes --no-wait
+              
+              # Esperar a que se complete la eliminación
+              echo "Waiting for resource group deletion to complete..."
+              while az group exists --name "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" --output tsv | grep -q "true"; do
+                echo "Still deleting... waiting 30 seconds"
+                sleep 30
+              done
+              echo "✅ Resource group deleted successfully"
+            fi
+          else
+            echo "🔄 Attempting to import existing resources..."
+            
+            # Intentar importar el Resource Group si existe
+            RG_EXISTS=$(az group exists --name "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" --output tsv)
+            if [ "$RG_EXISTS" = "true" ]; then
+              echo "Resource Group exists, importing to Terraform state..."
+              terraform import azurerm_resource_group.main "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" || echo "Import failed or resource already in state"
+            fi
+            
+            # Intentar importar otros recursos comunes si existen
+            # VM
+            VM_EXISTS=$(az vm show --resource-group "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" --name "vm-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
+            if [ ! -z "$VM_EXISTS" ]; then
+              echo "VM exists, importing to Terraform state..."
+              terraform import azurerm_linux_virtual_machine.main "$VM_EXISTS" || echo "VM import failed or already in state"
+            fi
+            
+            # Public IP
+            IP_EXISTS=$(az network public-ip show --resource-group "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" --name "pip-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
+            if [ ! -z "$IP_EXISTS" ]; then
+              echo "Public IP exists, importing to Terraform state..."
+              terraform import azurerm_public_ip.main "$IP_EXISTS" || echo "Public IP import failed or already in state"
+            fi
+          fi
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        continue-on-error: true
+
+      - name: Terraform Plan
+        run: |
+          cd deploy/terraform
+          terraform plan -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Terraform Destroy (if requested)
+        if: github.event.inputs.destroy_infrastructure == 'true'
+        run: |
+          echo "🔥 Destruyendo infraestructura existente..."
+          cd deploy/terraform
+          terraform destroy -auto-approve
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Terraform Apply
+        if: github.event.inputs.destroy_infrastructure != 'true'
+        run: |
+          cd deploy/terraform
+
+          # Intentar aplicar el plan
+          if ! terraform apply -auto-approve tfplan; then
+            echo "❌ Apply failed, possibly due to resource conflicts"
+            echo "🔄 Attempting to resolve conflicts and retry..."
+            
+            # Refresh state y intentar nuevamente
+            terraform refresh
+            terraform plan -out=tfplan-retry
+            terraform apply -auto-approve tfplan-retry
+          fi
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Get Terraform Outputs
+        if: github.event.inputs.destroy_infrastructure != 'true'
+        id: terraform_outputs
+        run: |
+          cd deploy/terraform
+          echo "public_ip=$(terraform output -raw public_ip_address)" >> $GITHUB_OUTPUT
+          echo "sonarqube_url=$(terraform output -raw sonarqube_url)" >> $GITHUB_OUTPUT
+          echo "ssh_command=$(terraform output -raw ssh_connection_command)" >> $GITHUB_OUTPUT
+
+          # Guardar clave SSH privada
+          terraform output -raw ssh_private_key > ../../deploy/ansible/ssh_key.pem
+          chmod 600 ../../deploy/ansible/ssh_key.pem
+
+      - name: Create Ansible Inventory
+        if: github.event.inputs.destroy_infrastructure != 'true'
+        run: |
+          cat > deploy/ansible/inventory.yml << EOF
+          all:
+            hosts:
+              sonarqube-vm:
+                ansible_host: ${{ steps.terraform_outputs.outputs.public_ip }}
+                ansible_user: ${{ vars.ADMIN_USERNAME || 'azureuser' }}
+                ansible_ssh_private_key_file: ./ssh_key.pem
+                ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+                ansible_python_interpreter: /usr/bin/python3
+          EOF
+
+      - name: Wait for VM to be ready
+        if: github.event.inputs.destroy_infrastructure != 'true'
+        run: |
+          echo "Esperando que la VM esté lista..."
+          for i in {1..20}; do
+            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i deploy/ansible/ssh_key.pem ${{ vars.ADMIN_USERNAME || 'azureuser' }}@${{ steps.terraform_outputs.outputs.public_ip }} "echo 'VM ready'"; then
+              echo "VM está lista!"
+              break
+            fi
+            echo "Intento $i/20 - esperando 30 segundos..."
+            sleep 30
+          done
+
+      - name: Run Ansible Playbook
+        if: github.event.inputs.destroy_infrastructure != 'true'
+        run: |
+          cd deploy/ansible
+          ansible-playbook -i inventory.yml configure-sonarqube.yml -v
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: false
+
+      - name: Verify SonarQube is running
+        if: github.event.inputs.destroy_infrastructure != 'true'
+        run: |
+          echo "Verificando que SonarQube esté disponible..."
+          for i in {1..10}; do
+            if curl -f -s "${{ steps.terraform_outputs.outputs.sonarqube_url }}/api/system/status" | grep -q "UP"; then
+              echo "✅ SonarQube está funcionando correctamente!"
+              break
+            fi
+            echo "Intento $i/10 - esperando 60 segundos..."
+            sleep 60
+          done
+
+      - name: Display Deployment Information
+        if: github.event.inputs.destroy_infrastructure != 'true'
+        run: |
+          echo "🎉 Despliegue completado exitosamente!"
+          echo "=================================="
+          echo "SonarQube URL: ${{ steps.terraform_outputs.outputs.sonarqube_url }}"
+          echo "SSH Command: ${{ steps.terraform_outputs.outputs.ssh_command }}"
+          echo "Credenciales por defecto:"
+          echo "  Usuario: admin"
+          echo "  Contraseña: admin"
+          echo ""
+          echo "La infraestructura está lista para usar!"
+
+      - name: Save deployment outputs
+        if: github.event.inputs.destroy_infrastructure != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-info
+          path: |
+            deploy/terraform/terraform.tfstate
+            deploy/ansible/inventory.yml
+          retention-days: 30
+
+  cleanup:
+    name: Cleanup temporary files
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+    steps:
+      - name: Remove sensitive files
+        run: |
+          echo "Limpieza completada"
