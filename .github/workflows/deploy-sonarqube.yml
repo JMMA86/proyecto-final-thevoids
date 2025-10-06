@@ -112,28 +112,57 @@ jobs:
             fi
           else
             echo "🔄 Attempting to import existing resources..."
+            RG_NAME="${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}"
+            SUBSCRIPTION_ID="${{ secrets.AZURE_SUBSCRIPTION_ID }}"
             
-            # Intentar importar el Resource Group si existe
-            RG_EXISTS=$(az group exists --name "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" --output tsv)
+            # Función para importar recurso si existe
+            import_resource() {
+              local resource_type="$1"
+              local resource_name="$2"
+              local terraform_resource="$3"
+              local resource_id="$4"
+              
+              if [ ! -z "$resource_id" ] && [ "$resource_id" != "null" ]; then
+                echo "Importing $resource_type '$resource_name'..."
+                terraform import "$terraform_resource" "$resource_id" || echo "Import failed or resource already in state"
+              fi
+            }
+            
+            # Resource Group
+            RG_EXISTS=$(az group exists --name "$RG_NAME" --output tsv)
             if [ "$RG_EXISTS" = "true" ]; then
-              echo "Resource Group exists, importing to Terraform state..."
-              terraform import azurerm_resource_group.main "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" || echo "Import failed or resource already in state"
+              import_resource "Resource Group" "$RG_NAME" "azurerm_resource_group.main" "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME"
             fi
             
-            # Intentar importar otros recursos comunes si existen
-            # VM
-            VM_EXISTS=$(az vm show --resource-group "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" --name "vm-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
-            if [ ! -z "$VM_EXISTS" ]; then
-              echo "VM exists, importing to Terraform state..."
-              terraform import azurerm_linux_virtual_machine.main "$VM_EXISTS" || echo "VM import failed or already in state"
-            fi
+            # Virtual Network
+            VNET_ID=$(az network vnet show --resource-group "$RG_NAME" --name "vnet-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
+            import_resource "Virtual Network" "vnet-sonarqube" "azurerm_virtual_network.main" "$VNET_ID"
+            
+            # Subnet
+            SUBNET_ID=$(az network vnet subnet show --resource-group "$RG_NAME" --vnet-name "vnet-sonarqube" --name "internal" --query "id" --output tsv 2>/dev/null || echo "")
+            import_resource "Subnet" "internal" "azurerm_subnet.internal" "$SUBNET_ID"
+            
+            # Network Security Group
+            NSG_ID=$(az network nsg show --resource-group "$RG_NAME" --name "nsg-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
+            import_resource "Network Security Group" "nsg-sonarqube" "azurerm_network_security_group.main" "$NSG_ID"
             
             # Public IP
-            IP_EXISTS=$(az network public-ip show --resource-group "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" --name "pip-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
-            if [ ! -z "$IP_EXISTS" ]; then
-              echo "Public IP exists, importing to Terraform state..."
-              terraform import azurerm_public_ip.main "$IP_EXISTS" || echo "Public IP import failed or already in state"
+            PIP_ID=$(az network public-ip show --resource-group "$RG_NAME" --name "pip-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
+            import_resource "Public IP" "pip-sonarqube" "azurerm_public_ip.main" "$PIP_ID"
+            
+            # Network Interface
+            NIC_ID=$(az network nic show --resource-group "$RG_NAME" --name "nic-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
+            import_resource "Network Interface" "nic-sonarqube" "azurerm_network_interface.main" "$NIC_ID"
+            
+            # Network Interface Security Group Association
+            if [ ! -z "$NIC_ID" ] && [ ! -z "$NSG_ID" ]; then
+              ASSOC_ID="${NIC_ID}|${NSG_ID}"
+              import_resource "NIC-NSG Association" "nic-nsg-association" "azurerm_network_interface_security_group_association.main" "$ASSOC_ID"
             fi
+            
+            # Virtual Machine
+            VM_ID=$(az vm show --resource-group "$RG_NAME" --name "vm-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
+            import_resource "Virtual Machine" "vm-sonarqube" "azurerm_linux_virtual_machine.main" "$VM_ID"
           fi
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -174,10 +203,48 @@ jobs:
             echo "❌ Apply failed, possibly due to resource conflicts"
             echo "🔄 Attempting to resolve conflicts and retry..."
             
-            # Refresh state y intentar nuevamente
+            # Importar recursos que pueden estar causando conflictos
+            RG_NAME="${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}"
+            SUBSCRIPTION_ID="${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            
+            # Intentar importar recursos que falten después del primer fallo
+            echo "Attempting to import additional resources..."
+            
+            # Virtual Network
+            VNET_ID=$(az network vnet show --resource-group "$RG_NAME" --name "vnet-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
+            if [ ! -z "$VNET_ID" ]; then
+              terraform import azurerm_virtual_network.main "$VNET_ID" 2>/dev/null || echo "VNET import skipped"
+            fi
+            
+            # Network Security Group
+            NSG_ID=$(az network nsg show --resource-group "$RG_NAME" --name "nsg-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
+            if [ ! -z "$NSG_ID" ]; then
+              terraform import azurerm_network_security_group.main "$NSG_ID" 2>/dev/null || echo "NSG import skipped"
+            fi
+            
+            # Subnet
+            SUBNET_ID=$(az network vnet subnet show --resource-group "$RG_NAME" --vnet-name "vnet-sonarqube" --name "internal" --query "id" --output tsv 2>/dev/null || echo "")
+            if [ ! -z "$SUBNET_ID" ]; then
+              terraform import azurerm_subnet.internal "$SUBNET_ID" 2>/dev/null || echo "Subnet import skipped"
+            fi
+            
+            # Network Interface
+            NIC_ID=$(az network nic show --resource-group "$RG_NAME" --name "nic-sonarqube" --query "id" --output tsv 2>/dev/null || echo "")
+            if [ ! -z "$NIC_ID" ]; then
+              terraform import azurerm_network_interface.main "$NIC_ID" 2>/dev/null || echo "NIC import skipped"
+            fi
+            
+            # Refresh state y planificar nuevamente
             terraform refresh
             terraform plan -out=tfplan-retry
-            terraform apply -auto-approve tfplan-retry
+            
+            # Segundo intento de aplicación
+            if ! terraform apply -auto-approve tfplan-retry; then
+              echo "❌ Second apply attempt failed"
+              echo "🔍 Checking current state..."
+              terraform state list
+              exit 1
+            fi
           fi
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
