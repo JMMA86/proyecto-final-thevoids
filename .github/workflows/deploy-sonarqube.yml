@@ -674,6 +674,20 @@ jobs:
           path: trivy-reports/
           retention-days: 30
 
+      - name: Upload SARIF results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-reports/trivy-fs-results.sarif
+          category: trivy-filesystem
+
+      - name: Upload Maven SARIF results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('pom.xml') != ''
+        with:
+          sarif_file: trivy-reports/trivy-maven-results.sarif
+          category: trivy-maven
+
       - name: Display Trivy results summary
         run: |
           echo "Trivy Vulnerability Scan Results"
