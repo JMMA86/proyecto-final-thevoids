@@ -99,7 +99,7 @@ jobs:
           cd deploy/terraform
 
           if [ "${{ github.event.inputs.force_recreate }}" = "true" ]; then
-            echo "🔥 Force recreate enabled - removing existing resources..."
+            echo "Force recreate enabled - removing existing resources..."
             
             # Eliminar recursos existentes con Azure CLI
             RG_EXISTS=$(az group exists --name "${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}" --output tsv)
@@ -113,10 +113,10 @@ jobs:
                 echo "Still deleting... waiting 30 seconds"
                 sleep 30
               done
-              echo "✅ Resource group deleted successfully"
+              echo "Resource group deleted successfully"
             fi
           else
-            echo "🔄 Attempting to import existing resources..."
+            echo "Attempting to import existing resources..."
             RG_NAME="${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}"
             SUBSCRIPTION_ID="${{ secrets.AZURE_SUBSCRIPTION_ID }}"
             
@@ -189,7 +189,7 @@ jobs:
       - name: Terraform Destroy (if requested)
         if: github.event.inputs.destroy_infrastructure == 'true'
         run: |
-          echo "🔥 Destruyendo infraestructura existente..."
+          echo "Destruyendo infraestructura existente..."
           cd deploy/terraform
           terraform destroy -auto-approve
         env:
@@ -205,8 +205,8 @@ jobs:
 
           # Intentar aplicar el plan
           if ! terraform apply -auto-approve tfplan; then
-            echo "❌ Apply failed, possibly due to resource conflicts"
-            echo "🔄 Attempting to resolve conflicts and retry..."
+            echo "Apply failed, possibly due to resource conflicts"
+            echo "Attempting to resolve conflicts and retry..."
             
             # Importar recursos que pueden estar causando conflictos
             RG_NAME="${{ vars.RESOURCE_GROUP_NAME || 'rg-sonarqube-chile' }}"
@@ -245,8 +245,8 @@ jobs:
             
             # Segundo intento de aplicación
             if ! terraform apply -auto-approve tfplan-retry; then
-              echo "❌ Second apply attempt failed"
-              echo "🔍 Checking current state..."
+              echo "Second apply attempt failed"
+              echo "Checking current state..."
               terraform state list
               exit 1
             fi
@@ -471,10 +471,10 @@ jobs:
           echo "Checking Docker container status..."
           ssh -o StrictHostKeyChecking=no -i deploy/ansible/ssh_key.pem ${{ vars.ADMIN_USERNAME || 'azureuser' }}@${{ needs.infrastructure.outputs.public_ip }} '
             if sudo docker ps | grep -q sonarqube; then
-              echo "✅ SonarQube container is running"
+              echo "SonarQube container is running"
               sudo docker logs sonarqube --tail 20
             else
-              echo "❌ SonarQube container is not running"
+              echo "SonarQube container is not running"
               sudo docker ps -a | grep sonarqube || echo "No SonarQube container found"
             fi
           '
@@ -483,7 +483,7 @@ jobs:
           for i in {1..20}; do
             echo "Checking API availability (attempt $i/20)..."
             if curl -f -s "${{ needs.infrastructure.outputs.sonarqube_url }}/api/system/status" | grep -q "UP"; then
-              echo "✅ SonarQube está funcionando correctamente!"
+              echo "SonarQube está funcionando correctamente!"
               SONARQUBE_READY=true
               break
             elif curl -s "${{ needs.infrastructure.outputs.sonarqube_url }}/api/system/status"; then
@@ -497,7 +497,7 @@ jobs:
           done
 
           if [ "$SONARQUBE_READY" = "false" ]; then
-            echo "❌ SonarQube no está disponible después de esperar. Verificando logs..."
+            echo "SonarQube no está disponible después de esperar. Verificando logs..."
             ssh -o StrictHostKeyChecking=no -i deploy/ansible/ssh_key.pem ${{ vars.ADMIN_USERNAME || 'azureuser' }}@${{ needs.infrastructure.outputs.public_ip }} '
               sudo docker logs sonarqube --tail 50 || echo "No logs available"
             '
@@ -507,7 +507,7 @@ jobs:
 
       - name: Display SonarQube Information
         run: |
-          echo "🎉 SonarQube configurado exitosamente!"
+          echo "SonarQube configurado exitosamente!"
           echo "=================================="
           echo "SonarQube URL: ${{ needs.infrastructure.outputs.sonarqube_url }}"
           echo "SSH Command: ${{ needs.infrastructure.outputs.ssh_command }}"
@@ -552,7 +552,7 @@ jobs:
           echo "Esperando a que SonarQube esté completamente listo para análisis..."
           for i in {1..10}; do
             if curl -f -s "${{ needs.infrastructure.outputs.sonarqube_url }}/api/system/health" | grep -q "GREEN"; then
-              echo "✅ SonarQube está listo para análisis!"
+              echo "SonarQube está listo para análisis!"
               break
             fi
             echo "Intento $i/10 - esperando 30 segundos..."
@@ -569,9 +569,9 @@ jobs:
           if echo "$TOKEN_RESPONSE" | grep -q "token"; then
             TOKEN=$(echo "$TOKEN_RESPONSE" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
             echo "sonar_token=$TOKEN" >> $GITHUB_OUTPUT
-            echo "✅ Token generado exitosamente"
+            echo "Token generado exitosamente"
           else
-            echo "❌ Error generando token, usando credenciales básicas"
+            echo "Error generando token, usando credenciales básicas"
             echo "sonar_token=" >> $GITHUB_OUTPUT
           fi
 
@@ -590,20 +590,105 @@ jobs:
           chmod +x mvnw
 
           if [ ! -z "$SONAR_TOKEN" ]; then
-            echo "🔍 Ejecutando análisis con token..."
+            echo "Ejecutando análisis con token..."
             ./mvnw sonar:sonar \
               -Dsonar.projectKey=proyecto-final-thevoids \
               -Dsonar.projectName="Proyecto Final TheVoids" \
               -Dsonar.host.url=$SONAR_HOST_URL \
               -Dsonar.token=$SONAR_TOKEN
           else
-            echo "🔍 Ejecutando análisis con credenciales básicas..."
+            echo "Ejecutando análisis con credenciales básicas..."
             ./mvnw sonar:sonar \
               -Dsonar.projectKey=proyecto-final-thevoids \
               -Dsonar.projectName="Proyecto Final TheVoids" \
               -Dsonar.host.url=$SONAR_HOST_URL \
               -Dsonar.login=admin \
               -Dsonar.password=admin
+          fi
+
+      - name: Install Trivy
+        run: |
+          # Install Trivy for vulnerability scanning
+          sudo apt-get update
+          sudo apt-get install wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+
+      - name: Run Trivy vulnerability scan
+        run: |
+          echo "Ejecutando análisis de vulnerabilidades con Trivy..."
+
+          # Create reports directory
+          mkdir -p trivy-reports
+
+          # Scan filesystem for vulnerabilities (code, configs, secrets)
+          echo "Scanning filesystem for vulnerabilities..."
+          trivy fs . \
+            --format sarif \
+            --output trivy-reports/trivy-fs-results.sarif \
+            --severity HIGH,CRITICAL \
+            --scanners vuln,secret,config
+
+          # Scan filesystem for all vulnerabilities (human readable)
+          echo "Generating detailed vulnerability report..."
+          trivy fs . \
+            --format table \
+            --output trivy-reports/trivy-fs-report.txt \
+            --severity LOW,MEDIUM,HIGH,CRITICAL \
+            --scanners vuln,secret,config
+
+          # Scan Maven dependencies
+          echo "Scanning Maven dependencies..."
+          if [ -f "pom.xml" ]; then
+            trivy fs . \
+              --format sarif \
+              --output trivy-reports/trivy-maven-results.sarif \
+              --severity HIGH,CRITICAL \
+              --scanners vuln \
+              --dependency-tree
+          fi
+
+          # Generate summary
+          echo "TRIVY VULNERABILITY SCAN SUMMARY" > trivy-reports/summary.txt
+          echo "=====================================" >> trivy-reports/summary.txt
+          echo "Scan completed at: $(date)" >> trivy-reports/summary.txt
+          echo "" >> trivy-reports/summary.txt
+
+          # Count vulnerabilities by severity
+          if [ -f "trivy-reports/trivy-fs-report.txt" ]; then
+            echo "Vulnerability counts:" >> trivy-reports/summary.txt
+            grep -c "HIGH" trivy-reports/trivy-fs-report.txt >> trivy-reports/summary.txt 2>/dev/null || echo "HIGH: 0" >> trivy-reports/summary.txt
+            grep -c "CRITICAL" trivy-reports/trivy-fs-report.txt >> trivy-reports/summary.txt 2>/dev/null || echo "CRITICAL: 0" >> trivy-reports/summary.txt
+            echo "" >> trivy-reports/summary.txt
+          fi
+
+          echo "Trivy scan completed!"
+
+      - name: Upload Trivy scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-vulnerability-reports
+          path: trivy-reports/
+          retention-days: 30
+
+      - name: Display Trivy results summary
+        run: |
+          echo "Trivy Vulnerability Scan Results"
+          echo "===================================="
+
+          if [ -f "trivy-reports/summary.txt" ]; then
+            cat trivy-reports/summary.txt
+          fi
+
+          # Show critical and high vulnerabilities
+          if [ -f "trivy-reports/trivy-fs-report.txt" ]; then
+            echo ""
+            echo "Critical and High Vulnerabilities:"
+            echo "------------------------------------"
+            grep -A 5 -B 1 "CRITICAL\|HIGH" trivy-reports/trivy-fs-report.txt | head -20 || echo "No critical/high vulnerabilities found!"
           fi
 
       - name: Wait for analysis to complete
@@ -614,7 +699,7 @@ jobs:
           # Verificar que el proyecto aparezca en SonarQube
           for i in {1..10}; do
             if curl -u admin:admin -f -s "${{ needs.infrastructure.outputs.sonarqube_url }}/api/projects/search?projects=proyecto-final-thevoids" | grep -q "proyecto-final-thevoids"; then
-              echo "✅ Análisis completado y proyecto visible en SonarQube!"
+              echo "Análisis completado y proyecto visible en SonarQube!"
               break
             fi
             echo "Intento $i/10 - esperando 15 segundos..."
@@ -623,12 +708,19 @@ jobs:
 
       - name: Display analysis results
         run: |
-          echo "🎉 Análisis de código completado!"
-          echo "=================================="
+          echo "Análisis de código y vulnerabilidades completado!"
+          echo "===================================================="
+          echo ""
+          echo "SonarQube Analysis:"
           echo "Ver resultados en: ${{ needs.infrastructure.outputs.sonarqube_url }}/dashboard?id=proyecto-final-thevoids"
           echo ""
-          echo "Proyecto: proyecto-final-thevoids"
-          echo "SonarQube: ${{ needs.infrastructure.outputs.sonarqube_url }}"
+          echo "Trivy Security Scan:"
+          echo "Los reportes de vulnerabilidades están disponibles en los artifacts del workflow"
+          echo ""
+          echo "Resumen:"
+          echo "- Proyecto: proyecto-final-thevoids"
+          echo "- SonarQube: ${{ needs.infrastructure.outputs.sonarqube_url }}"
+          echo "- Security Scan: Trivy (ver artifacts para detalles)"
 
   cleanup:
     name: Cleanup temporary files
@@ -655,7 +747,7 @@ jobs:
                 repo: context.repo.repo,
                 artifact_id: 'deployment-artifacts'
               });
-              console.log('✅ Sensitive artifacts cleaned up');
+              console.log('Sensitive artifacts cleaned up');
             } catch (error) {
-              console.log('ℹ️ No sensitive artifacts to clean up');
+              console.log('No sensitive artifacts to clean up');
             }
