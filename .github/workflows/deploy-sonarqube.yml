@@ -577,6 +577,8 @@ jobs:
 
       - name: Run tests and generate coverage
         run: |
+          # Fix Maven wrapper permissions
+          chmod +x mvnw
           ./mvnw clean test jacoco:report
 
       - name: Run SonarQube analysis
@@ -584,6 +586,9 @@ jobs:
           SONAR_TOKEN: ${{ steps.sonar_token.outputs.sonar_token }}
           SONAR_HOST_URL: ${{ needs.infrastructure.outputs.sonarqube_url }}
         run: |
+          # Ensure Maven wrapper has execute permissions
+          chmod +x mvnw
+
           if [ ! -z "$SONAR_TOKEN" ]; then
             echo "🔍 Ejecutando análisis con token..."
             ./mvnw sonar:sonar \
