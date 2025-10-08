@@ -474,12 +474,25 @@ jobs:
           # First check if Docker container is running
           echo "Checking Docker container status..."
           ssh -o StrictHostKeyChecking=no -i deploy/ansible/ssh_key.pem ${{ vars.ADMIN_USERNAME || 'azureuser' }}@${{ needs.infrastructure.outputs.public_ip }} '
-            if sudo docker ps | grep -q sonarqube; then
-              echo "SonarQube container is running"
-              sudo docker logs sonarqube --tail 20
+            # Check if any SonarQube container exists and is running
+            CONTAINER_ID=$(sudo docker ps -q --filter "name=sonarqube" 2>/dev/null || echo "")
+            if [ ! -z "$CONTAINER_ID" ]; then
+              echo "SonarQube container is running (ID: $CONTAINER_ID)"
+              sudo docker logs $CONTAINER_ID --tail 20 2>/dev/null || echo "Could not retrieve logs"
             else
               echo "SonarQube container is not running"
-              sudo docker ps -a | grep sonarqube || echo "No SonarQube container found"
+              # Check if container exists but is stopped
+              STOPPED_CONTAINER=$(sudo docker ps -a -q --filter "name=sonarqube" 2>/dev/null || echo "")
+              if [ ! -z "$STOPPED_CONTAINER" ]; then
+                echo "Found stopped SonarQube container, attempting to start it..."
+                sudo docker start $STOPPED_CONTAINER || echo "Failed to start container"
+                sleep 10
+              else
+                echo "No SonarQube container found at all"
+                # List all containers for debugging
+                echo "All containers:"
+                sudo docker ps -a || echo "Could not list containers"
+              fi
             fi
           '
 
@@ -503,7 +516,16 @@ jobs:
           if [ "$SONARQUBE_READY" = "false" ]; then
             echo "SonarQube no está disponible después de esperar. Verificando logs..."
             ssh -o StrictHostKeyChecking=no -i deploy/ansible/ssh_key.pem ${{ vars.ADMIN_USERNAME || 'azureuser' }}@${{ needs.infrastructure.outputs.public_ip }} '
-              sudo docker logs sonarqube --tail 50 || echo "No logs available"
+              # Find SonarQube container and get logs
+              CONTAINER_ID=$(sudo docker ps -a -q --filter "name=sonarqube" 2>/dev/null || echo "")
+              if [ ! -z "$CONTAINER_ID" ]; then
+                echo "Getting logs from container $CONTAINER_ID:"
+                sudo docker logs $CONTAINER_ID --tail 50 2>/dev/null || echo "Could not retrieve container logs"
+              else
+                echo "No SonarQube container found for log retrieval"
+                echo "Available containers:"
+                sudo docker ps -a 2>/dev/null || echo "Could not list containers"
+              fi
             '
           fi
 
